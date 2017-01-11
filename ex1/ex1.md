@@ -57,7 +57,7 @@ Some languages, such as CPython, are not _thread-safe_. This is to say that the 
 
 - With this in mind: What is the workaround for the GIL (Hint: it's another module)?
  
-Use anouther lanuage
+There is a hack to spawn an interperter per thread. This makes it thread safe, but is not true parrallelssimsms.
 
 #
 

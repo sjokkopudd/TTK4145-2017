@@ -58,7 +58,9 @@ Some languages, such as CPython, are not _thread-safe_. This is to say that the 
 - With this in mind: What is the workaround for the GIL (Hint: it's another module)?
  
 Use anouther lanuage
- 
+
+#
+
 - What does `func GOMAXPROCS(n int) int` change? 
 
 GOMAXPROCS sets the maximum number of CPUs that can be executing simultaneously and returns the previous setting. If n < 1, it does not change the current setting. The number of logical CPUs on the local machine can be queried with NumCPU. This call will go away when the scheduler improves.

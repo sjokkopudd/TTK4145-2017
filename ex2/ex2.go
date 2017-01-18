@@ -9,27 +9,41 @@ import (
     "runtime"
 )
 
-var a int = 0
-
-func add() {
+func add(num chan int) {
+	
 	for i := 0; i < 10000; i++ {
+		a := <- num
 		a++
+		num <- a
 	}
 }
 
-func sub() {
+func sub(num chan int) {
+	
 	for i := 0; i < 10000; i++ {
+		a := <- num
 		a--
+		num <- a
 	}
 }
+
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	
+	num := make(chan int, 1)
+	num <- 0
 
-	go add()
-	go sub()
+	a := <-num
+	fmt.Println(a)
+
+	num <- 0
+
+	go add(num)
+	go sub(num)
 
 	time.Sleep(300*time.Millisecond)
 
+	a =<-num
 	fmt.Println(a)
 }

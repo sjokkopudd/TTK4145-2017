@@ -25,11 +25,16 @@ Hvis en heis er underveis med en oppgave når det oppstår en oppgave med lavere
 ## Hva hvis?
 
 * En pakke ikke kommer frem?
-  * Heisene vil alltid vente på å få acknowledge signal fra alle de andre heisene som koresponderer til en melding heisen selv har sendt. Dersom heisen mangler acknowledge fra en eller flere heiser etter en gitt tidsperiode forsøker den å sende meldingen på nytt til de mangledne heisene et fastsatt antall ganger. 
+ * Heisene vil alltid vente på å få acknowledge signal fra alle de andre heisene som koresponderer til en melding heisen selv har sendt. Dersom heisen mangler acknowledge fra en eller flere heiser etter en gitt tidsperiode forsøker den å sende meldingen på nytt til de mangledne heisene et fastsatt antall ganger. 
   
 * Når er en heis død?
-  * En heis som ikke sender acknowledge på en melding vil bli ansett som død av heisen som venter på acknowledge. Den ventende heisen vil da si ifra til den andre heisene at den tror at den andre heisen er død. De andre heisene vil forsøke én gang å få tak i den potensielt døde heisen. Dersom de får svar av den vil de be den ventende heisen om å forsøke å få tak i den døde igjen. Dersom dette ikke går vil heisen bli erklært helt død, og kostnaden dens vil bli satt til uendelig. 
+ * En heis som ikke sender acknowledge på en melding vil bli ansett som død av heisen som venter på acknowledge. Den ventende heisen vil da si ifra til de andre heisene at den tror at den ikkeresponderende heisen er død. De andre heisene vil forsøke én gang å få tak i den potensielt døde heisen. Dersom de får svar av den vil de be den ventende heisen om å forsøke å få tak i den døde igjen. Dersom dette ikke går vil heisen bli erklært helt død, og kostnaden dens vil bli satt til uendelig. 
   
 * En heis faller ut av nettverket?
-  * 
-
+ * En heis som er erklært død må ikke bare hindres fra å bli tilegnet nye oppdrag, men dens gamle oppdrag må også tas over av de andre heisene. Siden kosten til den døde heisen er satt til uendelig vil dette bare bety at beregningen av oppdragskost vil føre til at en annen heis har lavere kost en den døde, og den vil dermed ta oppdraget.
+ * En heis som ikke får kontakt med noen andre heiser vil forsette sin drift alene. Dette vil si at den vil forsøke å utføre alle oppdrag som finnes på kortet, og ta på seg oppdrag som gis fra trykk på dens eget etasjepanel. Med gjevne mellomrom vil den forsøke å resette seg for å få kontakt med nettverket igjen. 
+ 
+ * En heis klarer å koble seg på nettverket igjen?
+  * Hvis en heis har vært koblet fra nettverket og klarer å koble seg på igjen vil de andre heisene på nettverket få en melding om at heisne er i live. De vil sende acknowledge til den gjenoppståtte heisen, slik at den vet at den er tilbake i drift. Den vil motta kartet fra de andre heisene og legge til sin egen informasjon. Vi er da tilbake i normal operasjon.
+  
+  

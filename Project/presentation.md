@@ -53,8 +53,18 @@ Setter hastighet og retning for heisen. Åpner dørene.
 
 Ved oppstart vil alle heisene dele hele sitt kart med de andre heisene.
 
-Hva skjer om en upd pakke ikke kommer frem?
+* Hva skjer om en upd pakke ikke kommer frem?
 
-Hva skjer om en heis mister nettverksforbinelsen?
+En mottatt udp packet vil verifiseres med en ACK sendt i retur. Om ACK ikke kommer frem vil den originale pakken sendes på nytt frem til ACK blir mottatt. Etter ett gitt antall mislykkede ACK vil en heis markeres som død.
 
-Hva skjer om noen drar ut stikk kontakten? 
+* Hva skjer om en heis mister nettverksforbinelsen?
+
+Om en heis mister nettverksforbinelsen vil den ikke motta meldinger fra de andre heisene. Den vil da markere de andre heisene som døde og vice versa. En død heis vil ha uendelig kost og vil derfor være uegnet til å utføre oppgaver sett i de andre heisene sine øyne. Dette betyr at nettverket opererer videre med n-1 heiser og den døde heisen vil fungere som en solo-heis.
+
+* Hva skjer om noen drar ut stikkontakten? 
+
+Alle heiser vil ha lokale kopier av oppgavekartet sitt lagret på hdd'en. Ved oppstart av en heis vil den dele dette kartet med de andre heisene på nettverket og de andre heisene vil sende sitt kart i retur. Dette er en rutine som alltid utføres ved oppstart av en heis. På denne måten vil en ny-oppstartet heis få kartet sitt fylt ut med oppgaver fra de andre heisene.
+
+* Hvordan håndterer vi et "flipped bit"?
+
+Ved å bruke checksum kan vi verifisere om den mottatte pakken er lik den sendte. Om checksum ikke stemmer sendes ikke ACK.

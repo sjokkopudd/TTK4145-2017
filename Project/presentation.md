@@ -15,25 +15,28 @@ Vi ønsker å dele systemet opp i så uavhengige moduler som mulig. Hver modul s
 Oppgaven til denne modulen er å håndtere kommunikasjon med de andre heisene. Vi ønsker at dette skal skje i en egen rutine som leser en channel som kan fylles av elevatorMap.go. Når en ny datapakke blir tatt imot fra andre heiser legger denne modulen pakken inn i en channel som elevatorMap.go kan lese. Til dette vil følgende interface funksjoner være nødvendige:
 
 * `void startNetworkComunication()` 
-Starter kommunikasjonen over nettverket. Dette er "hjernen" i denne modulen. Både sending og reciving vil skje her. 
+  Starter kommunikasjonen over nettverket. Dette er "hjernen" i denne modulen. Både sending og reciving vil skje her. 
+* channel: recieveMap
+  Når en ny datapakke har blitt mottatt legges den inn i denne kanalen slik at elevatorMap.go kan lese den.
 
 
 ### Kartmodul - elevatorMap.go
 
 Denne modulen har som oppgave å holde oversikt over alle heisene sin posisjon og retning, og samtidig vite hvilke knapper som er trykket inn. Ved en endring i kartet legger den det nye kartet inn i en channel som udpNetwork.go kan lese. Den skal også sørge for en backup-log til eventuell re-start.
 
-* `void newEvent(event)` 
-Legger en ny hendelse inn i kartet.
+* channel: recieveMap
+  Når det har skjedd en endring i kartet pakkes det sammen til en datapakke og legges i denne kanalen slik at udpNetwork.go kan lese og sende den.
 
-* `map getMap()`
-Returnerer en kopi av det nåværende kartet.
+* channel: mapUpdated
+  Når det har skjedd en endring i kartet legges det inn i denne channelen slik at localIO.go og taskHandler.go kan lese det.
 
 
 ### Knapper, lys og sensorer - localIO.go
 
 localIO.go har ansvar for å sjekke om noen nye knapper har blitt trykket på, og i så fall si ifra til elevtorMap.go at det har kommet en ny hendelse. Det samme gjelder for heisens posisjon. Når en ny hendelse blir lagt inn i kartet slås de riktige lysene på. 
 
-* `void startSensorPolling()`
+* channel: newEvent
+  Ved et nytt knappetrykk eller endring i heisens posisjon legges dette inn i denne channelen slik at elevatorMap.go kan lese enringen og oppdatere kartet. 
 
 ### Oppgavebehandler - taskHandler.go
 
@@ -41,11 +44,12 @@ Denne modulen beregner kostfunksjonen basert på kartets nåværende tilstand. B
 
 * `void startElevator()`
 
+* channel: changeDirection
+  Når taskHandler.go oppdager at heisen skal endre retning for å utføre et oppdrag legger den inn retningen heisen skal gå i slik at motor.go kan lese den og endre retningen. 
+
 ### Heisdriver - motor.go
 
 Setter hastighet og retning for heisen. Åpner dørene.
-
-* `void setDirection(direction)`
 
 
 

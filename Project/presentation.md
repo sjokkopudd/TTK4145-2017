@@ -12,7 +12,7 @@ Vi ønsker å dele systemet opp i så uavhengige moduler som mulig. Hver modul s
 
 ### Nettverksmodul - udpNettwork.go
 
-Oppgaven til denne modulen er å håndtere kommunikasjon med de andre heisene. Vi ønsker at dette skal skje i en egen rutine som leser en buffer som kan fylles av de andre modulene. Til dette vil følgende interface funksjoner være nødvendig.
+Oppgaven til denne modulen er å håndtere kommunikasjon med de andre heisene. Vi ønsker at dette skal skje i en egen rutine som leser en buffer som kan fylles av elevatorMap.go. Til dette vil følgende interface funksjoner være nødvendige:
 
 * `void startNetworkComunication()` 
 Starter kommunikasjonen over nettverket. Dette er "hjernen" i denne modulen. Både sending og reciving vil skje her. 

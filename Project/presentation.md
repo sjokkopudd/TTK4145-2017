@@ -1,14 +1,14 @@
 # Presentasjon
 
 ## Nettverkstopologi
-Vi ønsker å implementere et peer to peer nettverk der alle heisene oppfører seg deterministisk på felles delt informasjon. Vi ønsker å gjøre dette ved hjelp av et UDP nettverk. UDP er en lettere protokoll sammenlignet med TCP og vi føler ikke at vi har behov for alt TCP kan tilby. Da UDP ikke har en innebygd beskjedanerkjennelsesfunksjon er dette noe vi vil implementere på applikasjonsnivå.
+Vi ønsker å implementere et peer to peer nettverk der alle heisene oppfører seg deterministisk på felles delt informasjon. Vi ønsker å gjøre dette ved hjelp av et UDP nettverk. UDP er en lettere protokoll sammenlignet med TCP og vi har kommet frem til at vi ikke har behov for alt TCP kan tilby. Siden UDP ikke har en innebygget beskjedanerkjennelsesfunksjon er dette noe vi vil implementere på applikasjonsnivå.
 
-Alle heisene transmitter en datapakker ved en "event" som inneholder hva som har skjedd og en melding-id.
+Hver heis har et lokalt kart som inneholder informasjon om alle heisenes posisjon, samt hvilke ordrer som ligger i de forskjellige etasjene. Når et "event" inntreffer (knappetrykk, posisjonsendring) lokalt vil en heis oppdatere sitt kart som den så sender til de andre heisene. De andre heisene sammenligner det tilsendte kartet med sitt egent, og legger til informasjon som den selv ikke har. 
 
-Når en heis mottar en datapakke oppdaterer den et lokalt kart med som inneholder all informasjon om de andre heisene og knappene. Ved å iterere seg gjennom kartet kan hver heis regne seg ut til hva den burde gjøre.
+Heisene skal som sagt oppføre seg deterministisk. Ved å iterere seg gjennom det lokale kartet kan hver heis regne seg frem til hva den burde gjøre.
 
 ## Moduldesign
-Vi ønsker å dele systemet opp i så uavhengige moduler som mulig. HVer modul skal kunne utføre sin oppgave med minst mulig avhengighet fra de andre modulene.
+Vi ønsker å dele systemet opp i så uavhengige moduler som mulig. Hver modul skal kunne utføre sin oppgave med minst mulig avhengighet av de andre modulene.
 
 ### Nettverksmodul - udpNettwork.go
 

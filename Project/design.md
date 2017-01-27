@@ -2,15 +2,11 @@
 
 ## Nettverkdesign 
 
-Vi ønsker å implementere et peer to peer nettverk der alle heisene oppfører seg deterministisk på felles delt informasjon.
+Vi ønsker å implementere et peer to peer nettverk der alle heisene oppfører seg deterministisk på felles delt informasjon. Vi ønsker å gjøre dette ved hjelp av et UDP nettverk. UDP er en lettere protokoll sammenlignet med TCP og vi føler ikke at vi har behov for alt TCP kan tilby. Da UDP ikke har en innebygd beskjedanerkjennelsesfunksjon er dette noe vi vil implementere på applikasjonsnivå.
 
-Alle heisene transmitter datapakker ved en endring (knappetrykk, mangel på acknowledge, status) med følgende innhold:
+Alle heisene transmitter en datapakker ved en "event" som inneholder hva som har skjedd og en melding-id.
 
-* Oppgavetabell 
-* Heisens posisjon, retning og om den lever
-* Meldings-ID
-
-Når en heis mottar en datapakke oppdaterer den et "kart" som ligger lokalt. Kartet oppdateres kontinuerlig med de andre heisenes posisjon og retning. Gjennom å sammenligne kartet og oppgavetabellen kan hver heis regne ut hvem som burde ta hvilket oppdrag. 
+Når en heis mottar en datapakke oppdaterer den et lokalt kart med som inneholder all informasjon om de andre heisene og knappene. Ved å iterere seg gjennom kartet kan hver heis regne seg ut til hva den burde gjøre.
 
 ## Kostfunksjon og tilstandskart.
 

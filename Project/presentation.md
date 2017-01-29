@@ -10,6 +10,8 @@ Heisene skal som sagt oppføre seg deterministisk. Ved å iterere seg gjennom de
 ## Moduldesign
 Vi ønsker å dele systemet opp i så uavhengige moduler som mulig. Hver modul skal kunne utføre sin oppgave med minst mulig avhengighet av de andre modulene.
 
+
+
 ### Nettverksmodul - udpNettwork.go
 
 Oppgaven til denne modulen er å håndtere kommunikasjon med de andre heisene. Vi ønsker at dette skal skje i en egen rutine som leser en channel som kan fylles av elevatorMap.go. Når en ny datapakke blir tatt imot fra andre heiser legger denne modulen pakken inn i en channel som elevatorMap.go kan lese. Til dette vil følgende interface funksjoner være nødvendige:
@@ -51,6 +53,7 @@ Denne modulen beregner kostfunksjonen basert på kartets nåværende tilstand. B
 
 Setter hastighet og retning for heisen. Åpner dørene.
 
+![alt text](https://github.com/bendike/TTK4145/blob/master/Project/TTK4145_design.png "Logo Title Text 1")
 
 
 ## Feilhåndtering 

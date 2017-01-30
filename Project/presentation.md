@@ -18,6 +18,7 @@ Oppgaven til denne modulen er å håndtere kommunikasjon med de andre heisene. V
 
 * `void startNetworkComunication()` 
   Starter kommunikasjonen over nettverket. Dette er "hjernen" i denne modulen. Både sending og reciving vil skje her. 
+  
 * `channel: recieveMap`
   Når en ny datapakke har blitt mottatt legges den inn i denne kanalen slik at elevatorMap.go kan lese den.
 
@@ -26,7 +27,7 @@ Oppgaven til denne modulen er å håndtere kommunikasjon med de andre heisene. V
 
 Denne modulen har som oppgave å holde oversikt over alle heisene sin posisjon og retning, og samtidig vite hvilke knapper som er trykket inn. Ved en endring i kartet legger den det nye kartet inn i en channel som udpNetwork.go kan lese. Den skal også sørge for en backup-log til eventuell re-start.
 
-* `channel: recieveMap`
+* `channel:  sendMap`
   Når det har skjedd en endring i kartet pakkes det sammen til en datapakke og legges i denne kanalen slik at udpNetwork.go kan lese og   sende den.
 
 * `channel: mapUpdated`

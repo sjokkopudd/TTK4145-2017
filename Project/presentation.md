@@ -71,7 +71,7 @@ En mottatt udp packet vil verifiseres med en ACK sendt i retur. Om ACK ikke komm
 * Hva skjer om en heis mister nettverksforbinelsen?
 
 Om en heis mister nettverksforbinelsen vil den ikke motta meldinger fra de andre heisene. Den vil da markere de andre heisene som døde og vice versa. En død heis vil ha uendelig kost og vil derfor være uegnet til å utføre oppgaver sett i de andre heisene sine øyne. Dette betyr at nettverket opererer videre med n-1 heiser og den døde heisen vil fungere som en solo-heis.
-En heis som er solo vil med gjevne mellomrom forsøke å koble seg p ånettverket igjen. Om den lykkes vil omstartsprosedyren kjøres. 
+En heis som er solo vil med gjevne mellomrom forsøke å koble seg på nettverket igjen. Om den lykkes vil omstartsprosedyren kjøres. 
 
 * Hva skjer om noen drar ut stikkontakten? 
 

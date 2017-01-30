@@ -60,9 +60,9 @@ Innholder funksjoner for å kontrollere heisen.
 
 ## Feilhåndtering 
 
-* Oppstart/oppstart
+* Oppstart/omstart
 
-Om en heis oppdager at noe er galt kan det hende at den trenger en omstart. Når en heis startes vil den gi bedskjed til de andre heisene at den er ny. Når en ny heis komme på nettveket vil den sammenligne sitt kart med de andre heisene på nettverket. Under denne prosedyren vil oppgaver kun kunne legges til i kartet for å unngå at en oppave mistet.
+Om en heis oppdager at noe er galt kan det hende at den trenger en omstart. Når en heis startes vil den gi bedskjed til de andre heisene at den er ny. Når en ny heis kommer på nettveket vil den sammenligne sitt kart med de andre heisene på nettverket. Under denne prosedyren vil det kun være mulig å legge til oppgaver i kartet, for å unngå at en oppave mistes.
 
 * Hva skjer om en upd pakke ikke kommer frem?
 
@@ -71,6 +71,7 @@ En mottatt udp packet vil verifiseres med en ACK sendt i retur. Om ACK ikke komm
 * Hva skjer om en heis mister nettverksforbinelsen?
 
 Om en heis mister nettverksforbinelsen vil den ikke motta meldinger fra de andre heisene. Den vil da markere de andre heisene som døde og vice versa. En død heis vil ha uendelig kost og vil derfor være uegnet til å utføre oppgaver sett i de andre heisene sine øyne. Dette betyr at nettverket opererer videre med n-1 heiser og den døde heisen vil fungere som en solo-heis.
+En heis som er solo vil med gjevne mellomrom forsøke å koble seg p ånettverket igjen. Om den lykkes vil omstartsprosedyren kjøres. 
 
 * Hva skjer om noen drar ut stikkontakten? 
 

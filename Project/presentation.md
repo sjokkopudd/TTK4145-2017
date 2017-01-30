@@ -1,7 +1,7 @@
 # Presentasjon
 
 ## Nettverkstopologi
-Vi ønsker å implementere et peer to peer nettverk der alle heisene oppfører seg deterministisk på felles delt informasjon. Vi ønsker å gjøre dette ved hjelp av et UDP nettverk. UDP er en lettere protokoll sammenlignet med TCP og vi har kommet frem til at vi ikke har behov for alt TCP kan tilby. Siden UDP ikke har en innebygget beskjedanerkjennelsesfunksjon er dette noe vi vil implementere på applikasjonsnivå.
+Vi ønsker å implementere et peer to peer nettverk der alle heisene oppfører seg deterministisk basert på felles delt informasjon. Vi ønsker å gjøre dette ved hjelp av et UDP nettverk. UDP er en lettere protokoll enn TCP og vi har kommet frem til at vi ikke har behov for alt TCP kan tilby. Siden UDP ikke har en innebygget beskjedanerkjennelsesfunksjon er dette noe vi vil implementere på applikasjonsnivå.
 
 Hver heis har et lokalt kart som inneholder informasjon om alle heisenes posisjon, samt hvilke ordrer som ligger i de forskjellige etasjene. Når et "event" inntreffer (knappetrykk, posisjonsendring) lokalt vil en heis oppdatere sitt kart som den så sender til de andre heisene. De andre heisene sammenligner det tilsendte kartet med sitt eget, og legger til informasjon som den ikke har selv. 
 

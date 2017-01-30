@@ -56,7 +56,7 @@ Innholder funksjoner for å kontrollere heisen.
 
 ### Figur
 
-![alt text](https://github.com/bendike/TTK4145/blob/master/Project/TTK4145_design.png "Logo Title Text 1")
+![alt text](TTK4145_design.png "")
 
 
 ## Feilhåndtering 

@@ -35,7 +35,7 @@ Denne modulen har som oppgave å holde oversikt over alle heisene sin posisjon o
 
 ### Knapper, lys og sensorer - localIO.go
 
-localIO.go har ansvar for å sjekke om noen nye knapper har blitt trykket på, og i så fall si ifra til elevtorMap.go at det har kommet en ny hendelse. Det samme gjelder for heisens posisjon. Når en ny hendelse blir lagt inn i kartet slås de riktige lysene på. 
+localIO.go har ansvar for å sjekke om noen nye knapper har blitt trykket på, og i så fall si ifra til elevtorMap.go at det har kommet en ny hendelse. Det samme gjelder for heisens posisjon. Modulen leser også kartet for å sette riktige lys. 
 
 * channel: newEvent
   Ved et nytt knappetrykk eller endring i heisens posisjon legges dette inn i denne channelen slik at elevatorMap.go kan lese enringen og oppdatere kartet. 
@@ -51,14 +51,18 @@ Denne modulen beregner kostfunksjonen basert på kartets nåværende tilstand. B
 
 ### Heisdriver - motor.go
 
-Setter hastighet og retning for heisen. Åpner dørene.
+Innholder funksjoner for å kontrollere heisen. 
+
+### Figur
 
 ![alt text](https://github.com/bendike/TTK4145/blob/master/Project/TTK4145_design.png "Logo Title Text 1")
 
 
 ## Feilhåndtering 
 
-Ved oppstart vil alle heisene dele hele sitt kart med de andre heisene.
+* Oppstart/oppstart
+
+Om en heis oppdager at noe er galt kan det hende at den trenger en omstart. Når en heis startes vil den gi bedskjed til de andre heisene at den er ny. Når en ny heis komme på nettveket vil den sammenligne sitt kart med de andre heisene på nettverket. Under denne prosedyren vil oppgaver kun kunne legges til i kartet for å unngå at en oppave mistet.
 
 * Hva skjer om en upd pakke ikke kommer frem?
 

@@ -1,0 +1,35 @@
+BUILDPATH = $(CURDIR)
+GO = $(shell which go)
+GOINSTALL=$(GO) install
+GOCLEAN = $(GO) clean
+GOBUILD = $(GO) build
+
+export GOPATH =$(CURDIR)
+
+myname:
+	@echo "HI! I´M MR. MAKEFILE LOOK AT MEEE"
+
+install:
+	@$(GOINSTALL) main
+
+execute:
+	@echo "Running program..."
+	@./bin/main
+
+makedir:
+	@if [ ! -d $(BUILDPATH)/bin ] ; then mkdir -p $(BUILDPATH)/bin ; fi
+	@if [ ! -d $(BUILDPATH)/pkg ] ; then mkdir -p $(BUILDPATH)/pkg ; fi
+
+clean: 
+	@echo "Cleaned: /bin and /pkg deleted"
+	@rm -rf $(BUILDPATH)/bin
+	@rm -rf $(BUILDPATH)/pkg
+
+run: myname makedir install execute
+
+
+
+
+
+
+

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"network"
+	"os"
 )
 
 func main() {
@@ -14,10 +16,9 @@ func main() {
 	go network.StartNetworkCommunication(r, s)
 
 	for {
+		reader := bufio.NewReader(os.Stdin)
 
-		fmt.Println("Send a message:")
-		s_msg := "This is a message"
-		fmt.Println(s_msg)
+		s_msg, _ := reader.ReadString('\n')
 		s <- s_msg
 
 		msg := <-r

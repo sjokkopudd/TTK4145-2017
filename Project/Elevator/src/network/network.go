@@ -17,7 +17,7 @@ func StartNetworkCommunication(r chan string, s chan string) {
 
 func transmit(s chan string) {
 
-	destination_addr, err := net.ResolveUDPAddr("udp", "129.241.187.143:20005")
+	destination_addr, err := net.ResolveUDPAddr("udp", "129.241.187.141:20005")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,6 +34,7 @@ func transmit(s chan string) {
 
 		if len(s_buffer) > 0 {
 			send_conn.Write([]byte(s_buffer))
+			fmt.Println("Message send: ", s_buffer)
 		}
 
 		time.Sleep(200 * time.Millisecond)

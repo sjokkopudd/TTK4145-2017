@@ -13,7 +13,7 @@ install:
 	@$(GOINSTALL) main
 
 execute:
-	@echo "Running program..."
+	@echo "Run program - Ooo! Caan dooo!"
 	@./bin/main
 
 makedir:
@@ -26,10 +26,6 @@ clean:
 	@rm -rf $(BUILDPATH)/pkg
 
 run: myname makedir install execute
-
-
-
-
 
 
 

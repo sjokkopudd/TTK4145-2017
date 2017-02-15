@@ -1,19 +1,21 @@
 package elevatorMap
 
-import{
-	"fmt"
+import ()
+
+type elevatorInfo struct {
+	firstFloorUp    int
+	secondFloorUp   int
+	secondFloorDown int
+	thirdFloorUp    int
+	thirdFloorDown  int
+	fourthFloorDown int
+	elevatorPos     [3]int
+	elevatorDir     [3]int
 }
 
-mapArray := [][]int{}
+var mapArray = [3]elevatorInfo{}
 
-N := 3
-
-func calculateCost() {
-	
+func InitMap(newEventCh chan) {
+	readBackup()
 }
 
-newEvent := make(chan [][]int{})
-
-func initMap() {
-	mapArray := readBackup()
-}

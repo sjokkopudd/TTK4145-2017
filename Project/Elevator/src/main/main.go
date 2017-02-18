@@ -2,13 +2,22 @@ package main
 
 import (
 	//"bufio"
-	//"fmt"
 	"elevatorMap"
-	//"network"
+	"fmt"
+	"network"
 	//"os"
 )
 
 func main() {
-	newEventCh := make(chan int)
-	elevatorMap.InitMap(newEventCh)
+
+	transmitMap := make(chan elevatorMap.ElevMap)
+	receiveMap := make(chan elevatorMap.ElevMap)
+	go elevatorMap.InitMap(transmitMap)
+
+	go network.StartNetworkCommunication(transmitMap, receiveMap)
+
+	for {
+		fmt.Println(<-receiveMap)
+	}
+
 }

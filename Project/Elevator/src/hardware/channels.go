@@ -66,6 +66,12 @@ const (
 	LIGHT_DOWN1  = -1
 	LIGHT_UP4    = -1
 )
+
+const (
+	UP = 0
+	DOWN = 1
+	PANEL = 2
+)
 /*
 var lampChannelMatrix = [def.NumFloors][def.NumButtons]int{
 	{LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},

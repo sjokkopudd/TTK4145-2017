@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func ReadBackup() [elevators]ElevatorInfo {
+func ReadBackup() [Elevators]ElevatorInfo {
 	backup, err := ioutil.ReadFile("src/elevatorMap/memory.txt")
 
 	if err != nil {
@@ -37,22 +37,22 @@ func ReadBackup() [elevators]ElevatorInfo {
 
 	mapArray := NewMap()
 
-	for i := 0; i < elevators; i++ {
-		mapArray[i].ID, _ = strconv.Atoi(stringMatrix[i*(3+floors)][0])
-		for j := 0; j < floors; j++ {
-			mapArray[i].Buttons[j].ButtonUp, _ = strconv.Atoi(stringMatrix[i*(3+floors)+1+j][0])
-			mapArray[i].Buttons[j].ButtonUp, _ = strconv.Atoi(stringMatrix[i*(3+floors)+1+j][1])
-			mapArray[i].Buttons[j].ButtonUp, _ = strconv.Atoi(stringMatrix[i*(3+floors)+1+j][2])
+	for i := 0; i < Elevators; i++ {
+		mapArray[i].ID, _ = strconv.Atoi(stringMatrix[i*(3+Floors)][0])
+		for j := 0; j < Floors; j++ {
+			for k := 0; k < 3; k++ {
+				mapArray[i].Buttons[j][k], _ = strconv.Atoi(stringMatrix[i*(3+Floors)+1+j][k])
+			}
 		}
-		mapArray[i].Dir, _ = strconv.Atoi(stringMatrix[i*(3+floors)+floors+2][0])
-		mapArray[i].Pos, _ = strconv.Atoi(stringMatrix[i*(3+floors)+floors+1][0])
+		mapArray[i].Dir, _ = strconv.Atoi(stringMatrix[i*(3+Floors)+Floors+2][0])
+		mapArray[i].Pos, _ = strconv.Atoi(stringMatrix[i*(3+Floors)+Floors+1][0])
 	}
 
 	return mapArray
 
 }
 
-func WriteBackup(mapArray [elevators]ElevatorInfo) {
+func WriteBackup(mapArray [Elevators]ElevatorInfo) {
 	backupFile, err := os.Create("src/elevatorMap/memory.txt")
 
 	if err != nil {
@@ -63,13 +63,13 @@ func WriteBackup(mapArray [elevators]ElevatorInfo) {
 
 	stringMatrix := [][]string{}
 
-	for i := 0; i < elevators; i++ {
+	for i := 0; i < Elevators; i++ {
 		stringMatrix = append(stringMatrix, []string{strconv.Itoa(mapArray[i].ID)})
-		for j := 0; j < floors; j++ {
+		for j := 0; j < Floors; j++ {
 			stringArray := []string{}
-			stringArray = append(stringArray, strconv.Itoa(mapArray[i].Buttons[j].ButtonUp))
-			stringArray = append(stringArray, strconv.Itoa(mapArray[i].Buttons[j].ButtonDown))
-			stringArray = append(stringArray, strconv.Itoa(mapArray[i].Buttons[j].ButtonPanel))
+			for k := 0; k < 3; k++ {
+				stringArray = append(stringArray, strconv.Itoa(mapArray[i].Buttons[j][k]))
+			}
 			stringMatrix = append(stringMatrix, stringArray)
 		}
 		stringMatrix = append(stringMatrix, []string{strconv.Itoa(mapArray[i].Dir)})

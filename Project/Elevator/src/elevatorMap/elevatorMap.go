@@ -51,8 +51,6 @@ func updateMap(transmitChan chan def.ElevMap, eventChan chan def.NewHardwareEven
 				mapArray[def.MyIP].Buttons[event.Floor][event.Button] = 1
 				WriteBackup(mapArray)
 				transmitChan <- mapArray
-
-				//PrintMap(mapArray)
 			}
 		}
 		time.Sleep(200 * time.Millisecond)
@@ -70,9 +68,9 @@ func receivedMap(receiveChan chan def.ElevMap) {
 			for i := 0; i < def.Elevators; i++ {
 				for j := 0; j < def.Floors; j++ {
 					for k := 0; k < 3; k++ {
-						if (receivedMap[def.IPs[i]].Buttons[j][k] != 0) || (oldMap[def.IPs[i]].Buttons[j][k] != 0) {
-							newMap[def.MyIP].Buttons[j][k] = 1
-							newMap[def.IPs[i]].Buttons[j][k] = 1
+						if receivedMap[def.IPs[i]].Buttons[j][k] != oldMap[def.IPs[i]].Buttons[j][k] {
+							newMap[def.MyIP].Buttons[j][k] = receivedMap[def.IPs[i]].Buttons[j][k]
+							newMap[def.IPs[i]].Buttons[j][k] = receivedMap[def.IPs[i]].Buttons[j][k]
 						} else {
 							newMap[def.MyIP].Buttons[j][k] = 0
 							newMap[def.IPs[i]].Buttons[j][k] = 0

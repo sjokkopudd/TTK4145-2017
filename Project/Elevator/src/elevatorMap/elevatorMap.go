@@ -1,67 +1,74 @@
 package elevatorMap
 
 import (
-	"hardware"
+	"def"
+	"fmt"
 	"time"
 )
 
-const Elevators = 1
-const Floors = 4
+func NewMap() def.ElevMap {
 
-type ElevatorInfo struct {
-	ID      int
-	Buttons [Floors][3]int
-	Dir     int
-	Pos     int
-}
+	mapArray := make(def.ElevMap)
 
-type ElevMap [Elevators]ElevatorInfo
-
-func NewMap() [Elevators]ElevatorInfo {
-
-	var mapArray [Elevators]ElevatorInfo
-
-	for i := 0; i < Elevators; i++ {
-		mapArray[i].ID = i
-		for j := 0; j < Floors; j++ {
+	for i := 0; i < def.Elevators; i++ {
+		var temp def.ElevatorInfo
+		temp.ID = i
+		for j := 0; j < def.Floors; j++ {
 			for k := 0; k < 3; k++ {
-				mapArray[i].Buttons[j][k] = 0
+				temp.Buttons[j][k] = 0
 			}
 		}
-		mapArray[i].Dir = 0
-		mapArray[i].Pos = 0
+		temp.Dir = 0
+		temp.Pos = 0
+		mapArray[def.IPs[i]] = &temp
 	}
 
 	return mapArray
 }
 
-func InitMap(passMap chan ElevMap) {
+func InitMap( /*passMap chan def.ElevMap, */ eventChan chan def.NewHardwareEvent) {
 
 	mapArray := NewMap()
 
-	mapArray = ReadBackup()
+	WriteBackup(mapArray)
 
-	passMap <- mapArray
-
+	/*passMap <- mapArray
+	<-passMap
+	*/
 	time.Sleep(200 * time.Millisecond)
 
 	for {
+		go updateMap(eventChan)
 
+		time.Sleep(200 * time.Millisecond)
 	}
 
 }
 
-func updateMap(eventChan chan hardware.NewHardwareEvent) {
+func updateMap(eventChan chan def.NewHardwareEvent) {
 
 	for {
+
 		select {
 		case event := <-eventChan:
 			mapArray := ReadBackup()
-			if event.Pos {
+			if event.Pos != -1 {
+				mapArray[def.MyIP].Pos = event.Pos
+			} else if mapArray[def.MyIP].Buttons[event.Floor][event.Button] == 0 {
+				mapArray[def.MyIP].Buttons[event.Floor][event.Button] = 1
+				WriteBackup(mapArray)
 
-			} else {
-				mapArray[0].Buttons[event.Floor][event.Button]
+				PrintMap(mapArray)
 			}
 		}
+	}
+}
+
+func PrintMap(mapArray def.ElevMap) {
+	for i := 0; i < def.Elevators; i++ {
+		fmt.Println("IP: " + def.IPs[i])
+		fmt.Println(*mapArray[def.IPs[i]])
+		fmt.Println()
+
 	}
 }

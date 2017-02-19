@@ -1,23 +1,27 @@
 package main
 
 import (
-	//"bufio"
+	"def"
 	"elevatorMap"
-	"fmt"
-	"network"
-	//"os"
+
+	"hardware"
+	//"network"
 )
 
 func main() {
 
-	transmitMap := make(chan elevatorMap.ElevMap)
-	receiveMap := make(chan elevatorMap.ElevMap)
-	go elevatorMap.InitMap(transmitMap)
+	//transmitMap := make(chan def.ElevMap)
+	//receiveMap := make(chan elevatorMap.ElevMap)
+	eventChan := make(chan def.NewHardwareEvent)
 
-	go network.StartNetworkCommunication(transmitMap, receiveMap)
+	go elevatorMap.InitMap( /*transmitMap, */ eventChan)
+
+	//go network.StartNetworkCommunication(transmitMap, receiveMap)
+
+	go hardware.InitHardware(eventChan)
 
 	for {
-		fmt.Println(<-receiveMap)
+		//fmt.Println(<-receiveMap)
 	}
 
 }

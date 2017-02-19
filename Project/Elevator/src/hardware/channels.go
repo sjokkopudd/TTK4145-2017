@@ -1,5 +1,9 @@
 package hardware
 
+import (
+	"def"
+)
+
 //Stole this file from Morten Fyhn (www.github.com/mortenfyhn)
 
 // In port 4
@@ -68,17 +72,21 @@ const (
 )
 
 const (
-	UP = 0
-	DOWN = 1
+	UP    = 0
+	DOWN  = 1
 	PANEL = 2
 )
-/*
-var lampChannelMatrix = [def.NumFloors][def.NumButtons]int{
+
+var lightChannelMatrix = [def.Floors][3]int{
 	{LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},
 	{LIGHT_UP2, LIGHT_DOWN2, LIGHT_COMMAND2},
 	{LIGHT_UP3, LIGHT_DOWN3, LIGHT_COMMAND3},
 	{LIGHT_UP4, LIGHT_DOWN4, LIGHT_COMMAND4},
-}*/
-var buttonChannelArray = []int{
-	{BUTTON_UP1, BUTTON_UP2, BUTTON_DOWN2, BUTTON_UP3, BUTTON_DOWN3, BUTTON_DOWN4}
+}
+
+var buttonChannelMatrix = [def.Floors][3]int{
+	{BUTTON_UP1, BUTTON_DOWN1, BUTTON_COMMAND1},
+	{BUTTON_UP2, BUTTON_DOWN2, BUTTON_COMMAND2},
+	{BUTTON_UP3, BUTTON_DOWN3, BUTTON_COMMAND3},
+	{BUTTON_UP4, BUTTON_DOWN4, BUTTON_COMMAND4},
 }

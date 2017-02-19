@@ -47,6 +47,7 @@ func InitHardware(eventChan chan def.NewHardwareEvent) {
 
 	for {
 		go pollAllButtons(eventChan)
+		time.Sleep(100 * time.Millisecond)
 		go setLights()
 		time.Sleep(100 * time.Millisecond)
 	}

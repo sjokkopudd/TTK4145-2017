@@ -18,6 +18,7 @@ func StartNetworkCommunication(transmitChan chan def.ElevMap, receiveChan chan d
 		case mapArray := <-transmitChan:
 			go transmitMap(mapArray)
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 
 }

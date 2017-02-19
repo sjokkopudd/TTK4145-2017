@@ -5,7 +5,7 @@ import (
 	"elevatorMap"
 
 	"hardware"
-	//"network"
+	"network"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 	receiveChan := make(chan def.ElevMap)
 	eventChan := make(chan def.NewHardwareEvent)
 
-	go elevatorMap.InitMap(transmitChan, eventChan)
+	go elevatorMap.InitMap(transmitChan, receiveChan, eventChan)
 
 	go network.StartNetworkCommunication(transmitChan, receiveChan)
 

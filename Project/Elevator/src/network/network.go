@@ -104,12 +104,12 @@ func reciveMap(receiveChan chan def.ElevMap) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	reciveConnection, err := net.ListenUDP("udp", localAddress)
+	receiveConnection, err := net.ListenUDP("udp", localAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer reciveConnection.Close()
+	defer receiveConnection.Close()
 
 	receiveBuffer := make([]byte, 1024)
 
@@ -117,11 +117,7 @@ func reciveMap(receiveChan chan def.ElevMap) {
 
 	for {
 		receiveConnection.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
-		n, senderIP, err := reciveConnection.ReadFromUDP(receiveBuffer)
-
-		if err != nil {
-			log.Fatal(err)
-		}
+		n, senderIP, err := receiveConnection.ReadFromUDP(receiveBuffer)
 
 		if n > 0 {
 
@@ -151,7 +147,7 @@ func sendAcknowledge(ip string) {
 	time.Sleep(50 * time.Millisecond)
 
 	ackMsg := def.Ack{"Ack"}
-	transmitBuffer, _ := json.Marshal(mapArray)
+	transmitBuffer, _ := json.Marshal(ackMsg)
 
 	if len(transmitBuffer) > 0 {
 		transmitConnection.Write([]byte(transmitBuffer))

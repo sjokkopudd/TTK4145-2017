@@ -39,7 +39,7 @@ func ReadBackup() def.ElevMap {
 	mapArray := NewMap()
 
 	for i := 0; i < def.Elevators; i++ {
-		mapArray[def.IPs[i]].ID, _ = strconv.Atoi(stringMatrix[i*(3+def.Floors)][0])
+		mapArray[def.IPs[i]].IP = stringMatrix[i*(3+def.Floors)][0]
 		for j := 0; j < def.Floors; j++ {
 			for k := 0; k < 3; k++ {
 				mapArray[def.IPs[i]].Buttons[j][k], _ = strconv.Atoi(stringMatrix[i*(3+def.Floors)+1+j][k])
@@ -65,7 +65,7 @@ func WriteBackup(mapArray def.ElevMap) {
 	stringMatrix := [][]string{}
 
 	for i := 0; i < def.Elevators; i++ {
-		stringMatrix = append(stringMatrix, []string{strconv.Itoa(mapArray[def.IPs[i]].ID)})
+		stringMatrix = append(stringMatrix, []string{mapArray[def.IPs[i]].IP})
 		for j := 0; j < def.Floors; j++ {
 			stringArray := []string{}
 			for k := 0; k < 3; k++ {

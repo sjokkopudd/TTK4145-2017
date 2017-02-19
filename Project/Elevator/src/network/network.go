@@ -118,7 +118,7 @@ func reciveMap(receiveChan chan def.ElevMap) {
 
 	for {
 		receiveConnection.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
-		n, _, err := receiveConnection.ReadFromUDP(receiveBuffer)
+		n, senderIP, err := receiveConnection.ReadFromUDP(receiveBuffer)
 
 		if n > 0 {
 
@@ -127,8 +127,8 @@ func reciveMap(receiveChan chan def.ElevMap) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			sendAcknowledge(def.IPs[1])
 			receiveChan <- receivedMap
+			sendAcknowledge(senderIP.IP.String())
 
 		}
 	}

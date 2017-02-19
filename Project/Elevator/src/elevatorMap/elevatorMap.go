@@ -12,7 +12,7 @@ func NewMap() def.ElevMap {
 
 	for i := 0; i < def.Elevators; i++ {
 		var temp def.ElevatorInfo
-		temp.ID = i
+		temp.IP = def.IPs[i]
 		for j := 0; j < def.Floors; j++ {
 			for k := 0; k < 3; k++ {
 				temp.Buttons[j][k] = 0

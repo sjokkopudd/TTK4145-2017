@@ -15,7 +15,7 @@ type NewHardwareEvent struct {
 }
 
 type ElevatorInfo struct {
-	ID      int
+	IP      string
 	Buttons [Floors][3]int
 	Dir     int
 	Pos     int

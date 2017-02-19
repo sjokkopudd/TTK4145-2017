@@ -84,14 +84,16 @@ func receiveAcknowledge(senderIP string) bool {
 	reciveConnection.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
 	n, receivedIP, err := reciveConnection.ReadFromUDP(receiveBuffer)
 
-	if n > 0 && string(receivedIP.IP) == senderIP {
+	fmt.Println(receivedIP)
+
+	if n > 0 {
 		var ackMsg def.Ack
 		err = json.Unmarshal(receiveBuffer[0:n], &ackMsg)
 		if err != nil {
 			log.Fatal(err)
 		}
-		if ackMsg.Msg == "Ack" {
-			fmt.Println("Acknowledge received from " + string(receivedIP.IP))
+		if ackMsg.Msg == "Ack" && ackMsg.IP == senderIP {
+			fmt.Println("Acknowledge received from " + ackMsg.IP)
 			return true
 		}
 	}
@@ -146,11 +148,12 @@ func sendAcknowledge(ip string) {
 
 	time.Sleep(50 * time.Millisecond)
 
-	ackMsg := def.Ack{"Ack"}
+	ackMsg := def.Ack{"Ack", def.MyIP}
 	transmitBuffer, _ := json.Marshal(ackMsg)
 
 	if len(transmitBuffer) > 0 {
 		transmitConnection.Write([]byte(transmitBuffer))
+		fmt.Println("Sending ack")
 	}
 
 }

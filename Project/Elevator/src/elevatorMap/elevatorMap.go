@@ -52,7 +52,7 @@ func updateMap(transmitChan chan def.ElevMap, eventChan chan def.NewHardwareEven
 				WriteBackup(mapArray)
 				transmitChan <- mapArray
 
-				PrintMap(mapArray)
+				//PrintMap(mapArray)
 			}
 		}
 		time.Sleep(200 * time.Millisecond)

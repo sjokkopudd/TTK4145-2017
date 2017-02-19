@@ -23,6 +23,7 @@ type ElevatorInfo struct {
 
 type Ack struct {
 	Msg string
+	IP  string
 }
 
 type ElevMap map[string]*ElevatorInfo

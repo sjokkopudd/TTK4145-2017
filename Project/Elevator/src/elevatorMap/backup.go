@@ -36,7 +36,7 @@ func ReadBackup() def.ElevMap {
 		stringMatrix = append(stringMatrix, csvLine)
 	}
 
-	mapArray := NewMap()
+	mapArray := NewCleanMap()
 
 	for i := 0; i < def.Elevators; i++ {
 		mapArray[def.IPs[i]].IP = stringMatrix[i*(3+def.Floors)][0]

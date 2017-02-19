@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func NewMap() def.ElevMap {
+func NewCleanMap() def.ElevMap {
 
 	mapArray := make(def.ElevMap)
 
@@ -28,14 +28,14 @@ func NewMap() def.ElevMap {
 
 func InitMap(transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
 
-	mapArray := NewMap()
+	mapArray := NewCleanMap()
 
 	WriteBackup(mapArray)
 
 	time.Sleep(200 * time.Millisecond)
 
 	go updateMap(transmitChan, eventChan)
-	go foo(receiveChan)
+	go receivedMap(receiveChan)
 
 }
 
@@ -59,18 +59,44 @@ func updateMap(transmitChan chan def.ElevMap, eventChan chan def.NewHardwareEven
 	}
 }
 
-func foo(receiveChan chan def.ElevMap) {
+func receivedMap(receiveChan chan def.ElevMap) {
 	for {
 		select {
 		case receivedMap := <-receiveChan:
-			fmt.Println("Received new map")
-			PrintMap(receivedMap)
+
+			oldMap := ReadBackup()
+			newMap := NewCleanMap()
+
+			for i := 0; i < def.Elevators; i++ {
+				for j := 0; j < def.Floors; j++ {
+					for k := 0; k < 3; k++ {
+						if (receivedMap[def.IPs[i]].Buttons[j][k] != 0) || (oldMap[def.IPs[i]].Buttons[j][k] != 0) {
+							newMap[def.IPs[i]].Buttons[j][k] = 1
+						} else {
+							newMap[def.IPs[i]].Buttons[j][k] = 0
+						}
+					}
+				}
+				if (receivedMap[def.IPs[i]].Dir != 0) || (oldMap[def.IPs[i]].Dir != 0) {
+					newMap[def.IPs[i]].Dir = 1
+				} else {
+					newMap[def.IPs[i]].Dir = 0
+				}
+				if (receivedMap[def.IPs[i]].Pos != 0) || (oldMap[def.IPs[i]].Pos != 0) {
+					newMap[def.IPs[i]].Pos = 1
+				} else {
+					newMap[def.IPs[i]].Pos = 0
+				}
+			}
+
+			WriteBackup(newMap)
+
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
 }
 
-func PrintMap(mapArray def.ElevMap) {
+func printMap(mapArray def.ElevMap) {
 	for i := 0; i < def.Elevators; i++ {
 		fmt.Println("IP: " + def.IPs[i])
 		fmt.Println(*mapArray[def.IPs[i]])

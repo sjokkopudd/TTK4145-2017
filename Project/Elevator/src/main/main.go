@@ -10,13 +10,13 @@ import (
 
 func main() {
 
-	//transmitMap := make(chan def.ElevMap)
-	//receiveMap := make(chan elevatorMap.ElevMap)
+	transmitChan := make(chan def.ElevMap)
+	receiveChan := make(chan def.ElevMap)
 	eventChan := make(chan def.NewHardwareEvent)
 
-	go elevatorMap.InitMap( /*transmitMap, */ eventChan)
+	go elevatorMap.InitMap(transmitChan, eventChan)
 
-	//go network.StartNetworkCommunication(transmitMap, receiveMap)
+	go network.StartNetworkCommunication(transmitChan, receiveChan)
 
 	go hardware.InitHardware(eventChan)
 

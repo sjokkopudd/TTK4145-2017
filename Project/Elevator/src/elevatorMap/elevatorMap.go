@@ -26,29 +26,22 @@ func NewMap() def.ElevMap {
 	return mapArray
 }
 
-func InitMap( /*passMap chan def.ElevMap, */ eventChan chan def.NewHardwareEvent) {
+func InitMap(transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
 
 	mapArray := NewMap()
 
 	WriteBackup(mapArray)
 
-	/*passMap <- mapArray
-	<-passMap
-	*/
 	time.Sleep(200 * time.Millisecond)
 
-	for {
-		go updateMap(eventChan)
-
-		time.Sleep(200 * time.Millisecond)
-	}
+	go updateMap(transmitChan, eventChan)
+	go foo(receiveChan)
 
 }
 
-func updateMap(eventChan chan def.NewHardwareEvent) {
+func updateMap(transmitChan chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
 
 	for {
-
 		select {
 		case event := <-eventChan:
 			mapArray := ReadBackup()
@@ -57,10 +50,23 @@ func updateMap(eventChan chan def.NewHardwareEvent) {
 			} else if mapArray[def.MyIP].Buttons[event.Floor][event.Button] == 0 {
 				mapArray[def.MyIP].Buttons[event.Floor][event.Button] = 1
 				WriteBackup(mapArray)
+				transmitChan <- mapArray
 
 				PrintMap(mapArray)
 			}
 		}
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+func foo(receiveChan chan def.ElevMap) {
+	for {
+		select {
+		case receivedMap := <-receiveChan:
+			fmt.Println("Received new map")
+			PrintMap(receivedMap)
+		}
+		time.Sleep(200 * time.Millisecond)
 	}
 }
 

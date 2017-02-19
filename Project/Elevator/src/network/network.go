@@ -12,7 +12,7 @@ import (
 func StartNetworkCommunication(transmitChan chan def.ElevMap, receiveChan chan def.ElevMap) {
 
 	fmt.Println("Trying to setup nettwork connection")
-	go reciveMap(r)
+	go reciveMap(receiveChan)
 	for {
 		select {
 		case mapArray := <-transmitChan:
@@ -91,6 +91,7 @@ func receiveAcknowledge(senderIP string) bool {
 			log.Fatal(err)
 		}
 		if ackMsg.Msg == "Ack" {
+			fmt.Println("Acknowledge received from " + string(receivedIP.IP))
 			return true
 		}
 	}

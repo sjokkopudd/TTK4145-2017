@@ -1,12 +1,12 @@
 package def
 
-const Elevators = 1
+const Elevators = 2
 const Floors = 4
 const MyIP = "129.241.187.150"
 const MapPort = ":20005"
 const AcknowledegePort = ":30005"
 
-var IPs = [Elevators]string{MyIP}
+var IPs = [Elevators]string{MyIP, "129.241.187.149"}
 
 type NewHardwareEvent struct {
 	Pos    int

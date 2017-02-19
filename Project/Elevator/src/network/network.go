@@ -81,14 +81,13 @@ func receiveAcknowledge(senderIP string) bool {
 
 	time.Sleep(50 * time.Millisecond)
 
-	reciveConnection.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
-	n, receivedIP, err := reciveConnection.ReadFromUDP(receiveBuffer)
-
-	fmt.Println(receivedIP)
-
+	reciveConnection.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+	n, _, err := reciveConnection.ReadFromUDP(receiveBuffer)
+	fmt.Println("here")
 	if n > 0 {
 		var ackMsg def.Ack
 		err = json.Unmarshal(receiveBuffer[0:n], &ackMsg)
+		fmt.Println(ackMsg.IP)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -119,7 +118,7 @@ func reciveMap(receiveChan chan def.ElevMap) {
 
 	for {
 		receiveConnection.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
-		n, senderIP, err := receiveConnection.ReadFromUDP(receiveBuffer)
+		n, _, err := receiveConnection.ReadFromUDP(receiveBuffer)
 
 		if n > 0 {
 
@@ -128,7 +127,7 @@ func reciveMap(receiveChan chan def.ElevMap) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			sendAcknowledge(string(senderIP.IP))
+			sendAcknowledge(def.IPs[1])
 			receiveChan <- receivedMap
 
 		}
@@ -136,7 +135,7 @@ func reciveMap(receiveChan chan def.ElevMap) {
 }
 
 func sendAcknowledge(ip string) {
-	destinationAddress, err := net.ResolveUDPAddr("udp", def.MyIP+def.AcknowledegePort)
+	destinationAddress, err := net.ResolveUDPAddr("udp", ip+def.AcknowledegePort)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -71,21 +71,19 @@ func receivedMap(receiveChan chan def.ElevMap) {
 				for j := 0; j < def.Floors; j++ {
 					for k := 0; k < 3; k++ {
 						if (receivedMap[def.IPs[i]].Buttons[j][k] != 0) || (oldMap[def.IPs[i]].Buttons[j][k] != 0) {
+							newMap[def.MyIP].Buttons[j][k] = 1
 							newMap[def.IPs[i]].Buttons[j][k] = 1
 						} else {
+							newMap[def.MyIP].Buttons[j][k] = 0
 							newMap[def.IPs[i]].Buttons[j][k] = 0
 						}
 					}
 				}
-				if (receivedMap[def.IPs[i]].Dir != 0) || (oldMap[def.IPs[i]].Dir != 0) {
-					newMap[def.IPs[i]].Dir = 1
-				} else {
-					newMap[def.IPs[i]].Dir = 0
+				if receivedMap[def.IPs[i]].Dir != oldMap[def.IPs[i]].Dir {
+					newMap[def.IPs[i]].Dir = receivedMap[def.IPs[i]].Dir
 				}
-				if (receivedMap[def.IPs[i]].Pos != 0) || (oldMap[def.IPs[i]].Pos != 0) {
-					newMap[def.IPs[i]].Pos = 1
-				} else {
-					newMap[def.IPs[i]].Pos = 0
+				if receivedMap[def.IPs[i]].Pos != oldMap[def.IPs[i]].Pos {
+					newMap[def.IPs[i]].Pos = receivedMap[def.IPs[i]].Pos
 				}
 			}
 

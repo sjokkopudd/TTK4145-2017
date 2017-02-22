@@ -13,12 +13,13 @@ func main() {
 	transmitChan := make(chan def.ElevMap)
 	receiveChan := make(chan def.ElevMap)
 	eventChan := make(chan def.NewHardwareEvent)
+	mapChan := make(chan def.ElevMap)
 
-	go elevatorMap.InitMap(transmitChan, receiveChan, eventChan)
+	go elevatorMap.InitMap(mapChan, transmitChan, receiveChan, eventChan)
 
 	go network.StartNetworkCommunication(transmitChan, receiveChan)
 
-	go hardware.InitHardware(eventChan)
+	go hardware.InitHardware(mapChan, eventChan)
 
 	for {
 		//fmt.Println(<-receiveMap)

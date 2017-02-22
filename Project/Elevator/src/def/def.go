@@ -1,12 +1,18 @@
 package def
 
-const Elevators = 2
-const Floors = 4
-const MyIP = "129.241.187.150"
-const MapPort = ":20005"
-const AcknowledegePort = ":30005"
+const (
+	ELEVATORS = 1
+	FLOORS    = 4
+	UP        = 0
+	DOWN      = 1
+	PANEL     = 2
+	BUTTONS   = 3
+	MY_IP     = "129.241.187.143"
+	MAP_PORT  = ":20005"
+	ACK_PORT  = ":30005"
+)
 
-var IPs = [Elevators]string{MyIP, "129.241.187.149"}
+var IPs = [ELEVATORS]string{MY_IP}
 
 type NewHardwareEvent struct {
 	Pos    int
@@ -16,7 +22,7 @@ type NewHardwareEvent struct {
 
 type ElevatorInfo struct {
 	IP      string
-	Buttons [Floors][3]int
+	Buttons [FLOORS][3]int
 	Dir     int
 	Pos     int
 }

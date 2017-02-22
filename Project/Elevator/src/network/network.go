@@ -25,11 +25,11 @@ func StartNetworkCommunication(transmitChan chan def.ElevMap, receiveChan chan d
 
 func transmitMap(mapArray def.ElevMap) {
 
-	for i := 0; i < def.Elevators; i++ {
+	for i := 0; i < def.ELEVATORS; i++ {
 
-		if def.IPs[i] != def.MyIP {
+		if def.IPs[i] != def.MY_IP {
 
-			destination_addr, err := net.ResolveUDPAddr("udp", def.IPs[i]+def.MapPort)
+			destination_addr, err := net.ResolveUDPAddr("udp", def.IPs[i]+def.MAP_PORT)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -67,7 +67,7 @@ func transmitMap(mapArray def.ElevMap) {
 }
 
 func receiveAcknowledge(senderIP string) bool {
-	localAddress, err := net.ResolveUDPAddr("udp", def.AcknowledegePort)
+	localAddress, err := net.ResolveUDPAddr("udp", def.ACK_PORT)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,7 +102,7 @@ func receiveAcknowledge(senderIP string) bool {
 
 func reciveMap(receiveChan chan def.ElevMap) {
 
-	localAddress, err := net.ResolveUDPAddr("udp", def.MapPort)
+	localAddress, err := net.ResolveUDPAddr("udp", def.MAP_PORT)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func reciveMap(receiveChan chan def.ElevMap) {
 }
 
 func sendAcknowledge(ip string) {
-	destinationAddress, err := net.ResolveUDPAddr("udp", ip+def.AcknowledegePort)
+	destinationAddress, err := net.ResolveUDPAddr("udp", ip+def.ACK_PORT)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -148,7 +148,7 @@ func sendAcknowledge(ip string) {
 
 	time.Sleep(50 * time.Millisecond)
 
-	ackMsg := def.Ack{"Ack", def.MyIP}
+	ackMsg := def.Ack{"Ack", def.MY_IP}
 	transmitBuffer, _ := json.Marshal(ackMsg)
 
 	if len(transmitBuffer) > 0 {

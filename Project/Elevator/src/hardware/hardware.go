@@ -2,11 +2,30 @@ package hardware
 
 import (
 	"def"
-	"elevatorMap"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 )
+
+func InitHardware(mapChan chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
+	if IoInit() != true {
+		log.Fatal(errors.New("Unsucsessful init of IO"))
+
+	}
+	/*SetMotorDir(-1)
+	for readFloor() != 1 {
+
+	}*/
+	SetMotorDir(0)
+
+	for {
+		go pollNewEvents(eventChan)
+		time.Sleep(50 * time.Millisecond)
+		go setLights(mapChan)
+		time.Sleep(50 * time.Millisecond)
+	}
+}
 
 func SetMotorDir(dir int) {
 	if dir == 0 {
@@ -34,28 +53,9 @@ func readFloor() int {
 	}
 }
 
-func InitHardware(eventChan chan def.NewHardwareEvent) {
-	if IoInit() != true {
-		log.Fatal(errors.New("Unsucsessful init of IO"))
-
-	}
-	/*SetMotorDir(-1)
-	for readFloor() != 1 {
-
-	}*/
-	SetMotorDir(0)
-
-	for {
-		go pollAllButtons(eventChan)
-		time.Sleep(100 * time.Millisecond)
-		go setLights()
-		time.Sleep(100 * time.Millisecond)
-	}
-}
-
 func readButton(floor int, button int) bool {
 
-	if floor < 0 || floor >= def.Floors {
+	if floor < 0 || floor >= def.FLOORS {
 		log.Printf("Error: Floor %d out of range!\n", floor)
 		return false
 	}
@@ -63,11 +63,11 @@ func readButton(floor int, button int) bool {
 		log.Printf("Error: Button %d out of range!\n", button)
 		return false
 	}
-	if button == UP && floor == def.Floors-1 {
+	if button == def.UP && floor == def.FLOORS-1 {
 		log.Println("Button up from top floor does not exist!")
 		return false
 	}
-	if button == DOWN && floor == 0 {
+	if button == def.DOWN && floor == 0 {
 		log.Println("Button down from ground floor does not exist!")
 		return false
 	}
@@ -79,13 +79,19 @@ func readButton(floor int, button int) bool {
 	}
 }
 
-func pollAllButtons(eventChan chan def.NewHardwareEvent) {
+func pollNewEvents(eventChan chan def.NewHardwareEvent) {
 
-	for i := 0; i < def.Floors; i++ {
-		for j := 0; j < 3; j++ {
-			if !((i == 0) && (j == 1)) && !((i == def.Floors-1) && (j == 0)) {
-				if readButton(i, j) {
-					e := def.NewHardwareEvent{-1, i, j}
+	newPos := readFloor()
+	fmt.Println("newPos: ", newPos)
+
+	for f := 0; f < def.FLOORS; f++ {
+		for b := 0; b < def.BUTTONS; b++ {
+			if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
+				if readButton(f, b) {
+					e := def.NewHardwareEvent{newPos, f, b}
+					eventChan <- e
+				} else if newPos != -1 {
+					e := def.NewHardwareEvent{newPos, -1, -1}
 					eventChan <- e
 				}
 			}
@@ -93,21 +99,45 @@ func pollAllButtons(eventChan chan def.NewHardwareEvent) {
 	}
 }
 
-func setLights() {
-	mapArray := elevatorMap.ReadBackup()
-	for i := 0; i < 3; i++ {
-		for j := 0; j < def.Floors; j++ {
-			setLight := true
-			for k := 0; k < def.Elevators; k++ {
-				if mapArray[def.IPs[k]].Buttons[j][i] != 1 {
-					setLight = false
+func setFloorIndicator(floor int) {
+	fmt.Println("Floor: ", floor)
+
+	if floor < 0 || floor > 3 {
+		IoClearBit(LIGHT_FLOOR_IND1)
+		IoClearBit(LIGHT_FLOOR_IND2)
+	} else if floor == 0 {
+		IoClearBit(LIGHT_FLOOR_IND1)
+		IoClearBit(LIGHT_FLOOR_IND2)
+	} else if floor == 1 {
+		IoSetBit(LIGHT_FLOOR_IND1)
+		IoClearBit(LIGHT_FLOOR_IND2)
+	} else if floor == 2 {
+		IoClearBit(LIGHT_FLOOR_IND1)
+		IoSetBit(LIGHT_FLOOR_IND2)
+	} else {
+		IoSetBit(LIGHT_FLOOR_IND1)
+		IoSetBit(LIGHT_FLOOR_IND2)
+	}
+}
+
+func setLights(mapChan chan def.ElevMap) {
+	select {
+	case localMap := <-mapChan:
+		for b := 0; b < def.BUTTONS; b++ {
+			for f := 0; f < def.FLOORS; f++ {
+				setLight := true
+				for e := 0; e < def.ELEVATORS; e++ {
+					if localMap[def.IPs[e]].Buttons[f][b] != 1 {
+						setLight = false
+					}
+				}
+				if setLight {
+					IoSetBit(lightChannelMatrix[f][b])
+				} else {
+					IoClearBit(lightChannelMatrix[f][b])
 				}
 			}
-			if setLight {
-				IoSetBit(lightChannelMatrix[j][i])
-			} else {
-				IoClearBit(lightChannelMatrix[j][i])
-			}
 		}
+		setFloorIndicator(localMap[def.MY_IP].Pos)
 	}
 }

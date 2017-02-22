@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -15,7 +16,7 @@ func primary(num int) {
 		log.Fatal(err)
 	}
 
-	destination_addr, err := net.ResolveUDPAddr("udp", "129.241.187.255:20005")
+	destination_addr, err := net.ResolveUDPAddr("udp", "129.241.187.143:20005")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,12 +26,9 @@ func primary(num int) {
 		log.Fatal(err)
 	}
 
-	msg := make([]byte, 16)
-
 	for i := num + 1; ; i++ {
-		msg[0] = byte(i)
-		msg[1] = 0
-		send_conn.Write(msg)
+		jsonBuf, _ := json.Marshal(i)
+		send_conn.Write(jsonBuf)
 		fmt.Println(i)
 		time.Sleep(1000 * time.Millisecond)
 	}
@@ -58,10 +56,8 @@ func backup() int {
 	for {
 		listenCon.SetReadDeadline(time.Now().Add(1500 * time.Millisecond))
 		length, _, err := listenCon.ReadFromUDP(buffer[:])
-
 		if length > 0 {
-			num = int(buffer[0])
-			fmt.Println(num)
+			json.Unmarshal(buffer[0:length], &num)
 			if err != nil {
 				fmt.Println("error: ")
 				log.Fatal(err)

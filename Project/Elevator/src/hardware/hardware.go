@@ -6,36 +6,78 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"sync"
+)
+
+var usingSimulator bool = true
+var conn net.TCPConn
+
+var mutex = &sync.Mutex{}
+
+const(
+	simServAddr := "localhost:15657"
 )
 
 func InitHardware(mapChan chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
-	if IoInit() != true {
-		log.Fatal(errors.New("Unsucsessful init of IO"))
+	select{
+	case usingSimulator != true:
+		if IoInit() != true {
+			log.Fatal(errors.New("Unsucsessful init of IO"))
+		}
 
-	}
-	/*SetMotorDir(-1)
-	for readFloor() != 1 {
+		SetMotorDir(0)
 
-	}*/
-	SetMotorDir(0)
+		for {
+			go pollNewEvents(eventChan)
+			time.Sleep(50 * time.Millisecond)
+			go setLights(mapChan)
+			time.Sleep(50 * time.Millisecond)
+		}
+	case usingSimulator==true:
 
-	for {
-		go pollNewEvents(eventChan)
-		time.Sleep(50 * time.Millisecond)
-		go setLights(mapChan)
-		time.Sleep(50 * time.Millisecond)
+	    tcpAddr, err := net.ResolveTCPAddr("tcp", simServAddr)
+	    if err != nil {
+	        println("ResolveTCPAddr failed:", err.Error())
+	        log.Fatal(err)
+	    }
+
+	    tempConn, err := net.DialTCP("tcp", nil, tcpAddr)
+		if err != nil {
+		    println("Dial failed:", err.Error())
+		    log.Fatal(err)
+		}
+
+		conn = tempConn
+
+		SetMotorDir(0)
+
+		for {
+			go setLights(mapChan)
+			time.Sleep(50 * time.Millisecond)
+		}
 	}
 }
 
 func SetMotorDir(dir int) {
-	if dir == 0 {
-		IoWriteAnalog(MOTOR, 0)
-	} else if dir < 0 {
-		IoSetBit(MOTORDIR)
-		IoWriteAnalog(MOTOR, 2800)
-	} else if dir > 0 {
-		IoClearBit(MOTORDIR)
-		IoWriteAnalog(MOTOR, 2800)
+	select{
+	case usingSimulator != true:
+		if dir == 0 {
+			IoWriteAnalog(MOTOR, 0)
+		} else if dir < 0 {
+			IoSetBit(MOTORDIR)
+			IoWriteAnalog(MOTOR, 2800)
+		} else if dir > 0 {
+			IoClearBit(MOTORDIR)
+			IoWriteAnalog(MOTOR, 2800)
+		}
+	case usingSimulator == true:
+		mutex.Lock()
+		_, err = conn.Write([4]byte(1,dir))
+		mutex.Unlock()
+		if err != nil {
+		    println("Write to server failed:", err.Error())
+		    log.Fatal(err)
+		}
 	}
 }
 
@@ -132,12 +174,40 @@ func setLights(mapChan chan def.ElevMap) {
 					}
 				}
 				if setLight {
-					IoSetBit(lightChannelMatrix[f][b])
-				} else {
-					IoClearBit(lightChannelMatrix[f][b])
+					select{
+					case usingSimulator != true:
+						IoSetBit(lightChannelMatrix[f][b])
+
+					case usingSimulator == true:
+						mutex.Lock()
+						_, err = conn.Write([4]byte(2, f, b, 1))
+						mutex.Unlock()
+						if err != nil {
+						    println("Write to server failed:", err.Error())
+						    log.Fatal(err)
+						}
+					}
+				} else {					
+					select{
+					case usingSimulator != true:
+						IoClearBit(lightChannelMatrix[f][b])
+
+					case usingSimulator == true:
+						mutex.Lock()
+						_, err = conn.Write([4]byte(2, f, b, 0))
+						mutex.Unlock()
+						if err != nil {
+						    println("Write to server failed:", err.Error())
+						    log.Fatal(err)
+						}
+						
+					}
 				}
 			}
 		}
-		setFloorIndicator(localMap[def.MY_IP].Pos)
+		select{
+		case usingSimulator != true:
+			setFloorIndicator(localMap[def.MY_IP].Pos)
+		}
 	}
 }

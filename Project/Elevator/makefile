@@ -7,13 +7,14 @@ GOBUILD = $(GO) build
 export GOPATH =$(CURDIR)
 
 myname:
-	@echo "HI! I´M MR. MAKEFILE LOOK AT MEEE"
+	@echo "Call to makefile"
 
 install:
 	@$(GOINSTALL) main
 
 execute:
-	@echo "Run program - Ooo! Caan dooo!"
+	@echo "Execute"
+	@echo "---------------"
 	@./bin/main
 
 makedir:

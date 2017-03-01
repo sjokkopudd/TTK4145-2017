@@ -26,19 +26,19 @@ func NewCleanMap() def.ElevMap {
 	return newMap
 }
 
-func InitMap(mapChan chan def.ElevMap, transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
+func InitMap(mapChan chan def.ElevMap, /*transmitChan chan def.ElevMap, receiveChan chan def.ElevMap,*/ eventChan chan def.NewHardwareEvent) {
 
 	newMap := NewCleanMap()
 
 	WriteBackup(newMap)
 
-	time.Sleep(200 * time.Millisecond)
+	mapChan <- newMap
 
-	go updateMap(mapChan, transmitChan, receiveChan, eventChan)
+	go updateMap(mapChan, /*transmitChan, receiveChan,*/ eventChan)
 
 }
 
-func updateMap(mapChan chan def.ElevMap, transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
+func updateMap(mapChan chan def.ElevMap,/* transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, */eventChan chan def.NewHardwareEvent) {
 
 	for {
 		select {
@@ -58,10 +58,10 @@ func updateMap(mapChan chan def.ElevMap, transmitChan chan def.ElevMap, receiveC
 
 			if changeMade {
 				WriteBackup(localMap)
-				transmitChan <- localMap
+				//transmitChan <- localMap
 				mapChan <- localMap
 			}
-		case receivedMap := <-receiveChan:
+	/*	case receivedMap := <-receiveChan:
 			changeMade := false
 			localMap := ReadBackup()
 			for e := 0; e < def.ELEVATORS; e++ {
@@ -90,9 +90,13 @@ func updateMap(mapChan chan def.ElevMap, transmitChan chan def.ElevMap, receiveC
 				WriteBackup(localMap)
 				transmitChan <- localMap
 				mapChan <- localMap
+<<<<<<< HEAD:Elevator/src/elevatorMap/elevatorMap.go
+			}*/
+=======
 			}
 		default:
 			time.Sleep(50 * time.Millisecond)
+>>>>>>> master:Project/Elevator/src/elevatorMap/elevatorMap.go
 
 		}
 

@@ -23,10 +23,11 @@ procedure exercise7 is
             ------------------------------------------
             Should_Commit := not Aborted;
 
-            if Finished'Count = N then
+            if Finished'Count = N-1 then
             	Finished_Gate_Open := True;
             elsif Finished'Count = 0 then
             	Finished_Gate_Open := False;
+                Aborted := False;
         	end if;
 
         end Finished;
@@ -47,7 +48,7 @@ procedure exercise7 is
 
     
     function Unreliable_Slow_Add (x : Integer) return Integer is
-    Error_Rate : Constant := 0.10;  -- (between 0 and 1)
+    Error_Rate : Constant := 0.15;  -- (between 0 and 1)
     Random_Number : Float;
     begin
         -------------------------------------------

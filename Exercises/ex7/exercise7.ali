@@ -3,7 +3,7 @@ M P W=b
 P SS ZX
 R vnnnnnnnnvvnnnnnnnvnnvnvvvvvvnnvnvvnvnnvnnnnvnnnnvnvnnnnnnvnnnnnnnnv1nnnnnv1+nnnv1+nn
 
-U exercise7%b		exercise7.adb		ff8c2134 NE OO SU IL
+U exercise7%b		exercise7.adb		75b9920d NE OO SU IL
 W ada%s			ada.ads			ada.ali
 W ada.calendar.delays%s	a-caldel.adb		a-caldel.ali
 W ada.exceptions%s	a-except.adb		a-except.ali
@@ -47,7 +47,7 @@ D a-tags.ads		20101021101406 c7695348
 D a-textio.ads		20091028140912 386df5d4
 D a-tiinio.ads		20090409150019 aa04e5d6
 D a-unccon.ads		20070406091342 f9eb8f06
-D exercise7.adb		20170222084522 786f534f
+D exercise7.adb		20170222093122 f25ae076
 D interfac.ads		20090409150019 f77d8799
 D i-c.ads		20101007125900 809c38c4
 D i-cstrea.ads		20100622165701 1bd72c32
@@ -96,34 +96,34 @@ X 10 a-nuflra.ads
 41K22*Float_Random 72e30 17|1w53 2r53
 45R9*Generator 17|7r23
 47F12*Uniformly_Distributed{float}
-49V13*Random{47F12}<36|62p13> 17|56s26
-51U14*Reset<36|91p14> 17|119s5
+49V13*Random{47F12}<36|62p13> 17|57s26
+51U14*Reset<36|91p14> 17|120s5
 X 14 a-textio.ads
 49K13*Text_IO 472e16 17|1w10 2r10
-264U14*Put_Line 17|74s9 77s13 95s17 97s17
+264U14*Put_Line 17|75s9 78s13 96s17 98s17
 X 17 exercise7.adb
-4U11*exercise7 4b11 120l5 120t14
-6X5 Count_Failed 58r23 87r22
-7r5 Gen{10|45R9} 56r33 119r11
-9W20 Transaction_Manager 9d41 17l9 17e28 18b20 44l9 44t28 68r71 112r23
+4U11*exercise7 4b11 121l5 121t14
+6X5 Count_Failed 59r23 88r22
+7r5 Gen{10|45R9} 57r33 120r11
+9W20 Transaction_Manager 9d41 17l9 17e28 18b20 45l9 45t28 69r71 113r23
 9i41 N{positive} 19r68 26r33
-10Y15 Finished 19b15 19r51 26r16 28r19 32l13 32t21 91s21
-11V18 Commit{boolean} 39b18 42l13 42t19 94s24
-12U19 Signal_Abort 34b19 37l13 37t25 88s33
+10Y15 Finished 19b15 19r51 26r16 28r19 33l13 33t21 92s21
+11V18 Commit{boolean} 40b18 43l13 43t19 95s24
+12U19 Signal_Abort 35b19 38l13 38t25 89s33
 14b9 Finished_Gate_Open{boolean} 19r29 27r17 29r17
-15b9 Aborted{boolean} 24r34 36r13
-16b9 Should_Commit{boolean} 24r13 41r20
-49V14 Unreliable_Slow_Add{integer} 49b14 49>35 63l9 63t28 84s24
-49i35 x{integer} 61r24
-50N5 Error_Rate 57r28
-51f5 Random_Number{float} 56m9 57r12
-68T15 Transaction_Worker 68d35 68d54 69b15 110l9 110t27 114r16 115r16 116r16
-68i35 Initial{integer} 70r36 74r44 77r48 95r54 97r54
-70i9 Num{integer} 71r36 84m17 95r94 98r64 103m17 106r21
-71i9 Prev{integer} 84r44 99r52 103r24 106m13
-72i9 Round_Num{integer} 77r92 78m13 78r26
-112w5 Manager{9W20} 114m39 115m39 116m39
-114t5 Worker_1{68T15}
-115t5 Worker_2{68T15}
-116t5 Worker_3{68T15}
+15b9 Aborted{boolean} 24r34 30r17 37r13
+16b9 Should_Commit{boolean} 24r13 42r20
+50V14 Unreliable_Slow_Add{integer} 50b14 50>35 64l9 64t28 85s24
+50i35 x{integer} 62r24
+51N5 Error_Rate 58r28
+52f5 Random_Number{float} 57m9 58r12
+69T15 Transaction_Worker 69d35 69d54 70b15 111l9 111t27 115r16 116r16 117r16
+69i35 Initial{integer} 71r36 75r44 78r48 96r54 98r54
+71i9 Num{integer} 72r36 85m17 96r94 99r64 104m17 107r21
+72i9 Prev{integer} 85r44 100r52 104r24 107m13
+73i9 Round_Num{integer} 78r92 79m13 79r26
+113w5 Manager{9W20} 115m39 116m39 117m39
+115t5 Worker_1{69T15}
+116t5 Worker_2{69T15}
+117t5 Worker_3{69T15}
 

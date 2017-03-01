@@ -3,10 +3,9 @@ package hardware
 import (
 	"def"
 	"fmt"
-	"time"
 	"log"
+	"time"
 )
-
 
 // ----------------------------------------------------------
 // -------------------- Inputs ------------------------------
@@ -18,8 +17,8 @@ func readFloor() int {
 		_, err := conn.Write([]byte{7, byte(0), byte(0), byte(0)})
 		mutex.Unlock()
 		if err != nil {
-		    fmt.Println("Write to server failed:", err.Error())
-		    log.Fatal(err)
+			fmt.Println("Write to server failed:", err.Error())
+			log.Fatal(err)
 		}
 
 		buffer := make([]byte, 4)
@@ -56,8 +55,8 @@ func readButton(floor int, button int) bool {
 		_, err := conn.Write([]byte{6, byte(button), byte(floor), byte(0)})
 		mutex.Unlock()
 		if err != nil {
-		    fmt.Println("Write to server failed:", err.Error())
-		    log.Fatal(err)
+			fmt.Println("Write to server failed:", err.Error())
+			log.Fatal(err)
 		}
 
 		buffer := make([]byte, 4)
@@ -103,7 +102,6 @@ func readButton(floor int, button int) bool {
 // -------------------- Outputs -----------------------------
 // ----------------------------------------------------------
 
-
 func SetMotorDir(dir int) {
 
 	if USING_SIMULATOR {
@@ -112,12 +110,12 @@ func SetMotorDir(dir int) {
 		mutex.Unlock()
 		time.Sleep(5 * time.Millisecond)
 		if err != nil {
-		    fmt.Println("Write to server failed:", err.Error())
-		    log.Fatal(err)
+			fmt.Println("Write to server failed:", err.Error())
+			log.Fatal(err)
 		}
 	}
-	
-	if !USING_SIMULATOR{
+
+	if !USING_SIMULATOR {
 		if dir == 0 {
 			IoWriteAnalog(MOTOR, 0)
 		} else if dir < 0 {
@@ -138,8 +136,8 @@ func setFloorIndicator(floor int) {
 		mutex.Unlock()
 		time.Sleep(5 * time.Millisecond)
 		if err != nil {
-		    fmt.Println("Write to server failed:", err.Error())
-		    log.Fatal(err)
+			fmt.Println("Write to server failed:", err.Error())
+			log.Fatal(err)
 		}
 	}
 
@@ -150,20 +148,20 @@ func setFloorIndicator(floor int) {
 		} else if floor == 0 {
 			IoClearBit(LIGHT_FLOOR_IND1)
 			IoClearBit(LIGHT_FLOOR_IND2)
-		} else if floor == 1 {
+		} else if floor == 2 {
 			IoSetBit(LIGHT_FLOOR_IND1)
 			IoClearBit(LIGHT_FLOOR_IND2)
-		} else if floor == 2 {
+		} else if floor == 1 {
 			IoClearBit(LIGHT_FLOOR_IND1)
 			IoSetBit(LIGHT_FLOOR_IND2)
 		} else {
 			IoSetBit(LIGHT_FLOOR_IND1)
 			IoSetBit(LIGHT_FLOOR_IND2)
-		}	
+		}
 	}
 }
 
-func setOrderLigth(f byte,b byte,val byte) {
+func setOrderLight(f byte, b byte, val byte) {
 
 	if USING_SIMULATOR {
 		mutex.Lock()
@@ -171,15 +169,36 @@ func setOrderLigth(f byte,b byte,val byte) {
 		mutex.Unlock()
 		time.Sleep(5 * time.Millisecond)
 		if err != nil {
-		    fmt.Println("Write to server failed:", err.Error())
-		    log.Fatal(err)
+			fmt.Println("Write to server failed:", err.Error())
+			log.Fatal(err)
 		}
-	} 
-	if !USING_SIMULATOR{
+	}
+	if !USING_SIMULATOR {
 		if val == 1 {
-			IoSetBit(lightChannelMatrix[f][b])	
+			IoSetBit(lightChannelMatrix[f][b])
 		} else {
 			IoClearBit(lightChannelMatrix[f][b])
 		}
 	}
+}
+
+func setDoorLight(val int) {
+	if USING_SIMULATOR {
+		mutex.Lock()
+		_, err := conn.Write([]byte{4, byte(val), byte(0), byte(0)})
+		mutex.Unlock()
+		time.Sleep(5 * time.Millisecond)
+		if err != nil {
+			fmt.Println("Write to server failed:", err.Error())
+			log.Fatal(err)
+		}
+	}
+	if !USING_SIMULATOR {
+		if val == 1 {
+			IoSetBit(LIGHT_DOOR_OPEN)
+		} else {
+			IoClearBit(LIGHT_DOOR_OPEN)
+		}
+	}
+
 }

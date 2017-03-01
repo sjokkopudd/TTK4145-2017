@@ -25,6 +25,7 @@ type ElevatorInfo struct {
 	Buttons [FLOORS][3]int
 	Dir     int
 	Pos     int
+	Door    int
 }
 
 type Ack struct {

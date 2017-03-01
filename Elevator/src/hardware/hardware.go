@@ -2,15 +2,17 @@ package hardware
 
 import (
 	"def"
+	"errors"
 	"fmt"
 	"log"
 	"net"
 	"sync"
+	"time"
 )
 
-var USING_SIMULATOR bool = true
+var USING_SIMULATOR bool = false
 
-const(
+const (
 	simServAddr = "127.0.0.1:15657"
 )
 
@@ -21,22 +23,22 @@ var mutex = &sync.Mutex{}
 // ----------------------- Interface -------------------------------
 // -----------------------------------------------------------------
 
-func InitHardware(mapChan chan def.ElevMap , eventChan chan def.NewHardwareEvent) {
+func InitHardware(mapChan chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
 	if USING_SIMULATOR {
 
 		fmt.Println("Mode: USING_SIMULATOR")
 
 		tcpAddr, err := net.ResolveTCPAddr("tcp", simServAddr)
-	    if err != nil {
+		if err != nil {
 			fmt.Println("ResolveTCPAddr failed:", err.Error())
 			log.Fatal(err)
-	    }
+		}
 		fmt.Println("ResolveTCPAddr success")
 
-	    conn, err = net.DialTCP("tcp", nil, tcpAddr)
+		conn, err = net.DialTCP("tcp", nil, tcpAddr)
 		if err != nil {
-		    fmt.Println("Dial failed:", err.Error())
-		    log.Fatal(err)
+			fmt.Println("Dial failed:", err.Error())
+			log.Fatal(err)
 		}
 		fmt.Println("Dial success")
 
@@ -46,11 +48,19 @@ func InitHardware(mapChan chan def.ElevMap , eventChan chan def.NewHardwareEvent
 
 		go goUpAndDown()
 
-
 	}
 
 	if !USING_SIMULATOR {
+		if IoInit() != true {
+			log.Fatal(errors.New("Unsucsessful init of IO"))
 
+		}
+
+		go setLights(mapChan)
+
+		go pollNewEvents(eventChan)
+
+		go goUpAndDown()
 	}
 }
 
@@ -70,18 +80,21 @@ func setLights(mapChan chan def.ElevMap) {
 							ligthVal = 0
 						}
 					}
-					if ligthVal == 1{
-						setOrderLigth(byte(f),byte(b),byte(ligthVal))
-					}
+
+					setOrderLight(byte(f), byte(b), byte(ligthVal))
+
 				}
 			}
 			setFloorIndicator(localMap[def.MY_IP].Pos)
 		}
+		time.Sleep(10 * time.Millisecond)
 	}
+
 }
 
 func pollNewEvents(eventChan chan def.NewHardwareEvent) {
-	for{		newPos := readFloor()
+	for {
+		newPos := readFloor()
 		for f := 0; f < def.FLOORS; f++ {
 			for b := 0; b < def.BUTTONS; b++ {
 				if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
@@ -102,8 +115,8 @@ func goUpAndDown() {
 	SetMotorDir(-1)
 	dir := -1
 
-	for{
-		if readFloor() == 0 && dir == -1{
+	for {
+		if readFloor() == 0 && dir == -1 {
 			SetMotorDir(1)
 			dir = 1
 		}

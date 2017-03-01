@@ -3,8 +3,9 @@ package elevatorMap
 import (
 	"def"
 	"fmt"
-	"time"
 )
+
+var localMap def.ElevMap
 
 func NewCleanMap() def.ElevMap {
 
@@ -20,35 +21,37 @@ func NewCleanMap() def.ElevMap {
 		}
 		temp.Dir = 0
 		temp.Pos = 0
+		temp.Door = 0
 		newMap[def.IPs[i]] = &temp
 	}
 
 	return newMap
 }
 
-func InitMap(mapChan chan def.ElevMap, /*transmitChan chan def.ElevMap, receiveChan chan def.ElevMap,*/ eventChan chan def.NewHardwareEvent) {
+func InitMap(mapChan chan def.ElevMap /*transmitChan chan def.ElevMap, receiveChan chan def.ElevMap,*/, eventChan chan def.NewHardwareEvent) {
 
-	newMap := NewCleanMap()
+	localMap = NewCleanMap()
 
-	WriteBackup(newMap)
+	WriteBackup(localMap)
 
-	mapChan <- newMap
+	localMap = ReadBackup()
 
-	go updateMap(mapChan, /*transmitChan, receiveChan,*/ eventChan)
+	mapChan <- localMap
+
+	go updateMap(mapChan /*transmitChan, receiveChan,*/, eventChan)
 
 }
 
-func updateMap(mapChan chan def.ElevMap,/* transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, */eventChan chan def.NewHardwareEvent) {
+func updateMap(mapChan chan def.ElevMap /* transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, */, eventChan chan def.NewHardwareEvent) {
 
 	for {
 		select {
 		case event := <-eventChan:
 			changeMade := false
-			localMap := ReadBackup()
 			if (event.Pos != -1) && (localMap[def.MY_IP].Pos != event.Pos) {
 				localMap[def.MY_IP].Pos = event.Pos
 				changeMade = true
-				fmt.Println("EventPOS: ", event.Pos)
+
 			}
 
 			if (event.Floor != -1) && (localMap[def.MY_IP].Buttons[event.Floor][event.Button] == 0) {
@@ -61,47 +64,40 @@ func updateMap(mapChan chan def.ElevMap,/* transmitChan chan def.ElevMap, receiv
 				//transmitChan <- localMap
 				mapChan <- localMap
 			}
-	/*	case receivedMap := <-receiveChan:
-			changeMade := false
-			localMap := ReadBackup()
-			for e := 0; e < def.ELEVATORS; e++ {
-				for f := 0; f < def.FLOORS; f++ {
-					for b := 0; b < def.BUTTONS; b++ {
-						if receivedMap[def.IPs[e]].Buttons[f][b] == 1 && localMap[def.IPs[e]].Buttons[f][b] != 1 {
-							localMap[def.IPs[e]].Buttons[f][b] = 1
-							if b != def.PANEL {
-								localMap[def.MY_IP].Buttons[f][b] = 1
+			/*	case receivedMap := <-receiveChan:
+				changeMade := false
+				localMap := ReadBackup()
+				for e := 0; e < def.ELEVATORS; e++ {
+					for f := 0; f < def.FLOORS; f++ {
+						for b := 0; b < def.BUTTONS; b++ {
+							if receivedMap[def.IPs[e]].Buttons[f][b] == 1 && localMap[def.IPs[e]].Buttons[f][b] != 1 {
+								localMap[def.IPs[e]].Buttons[f][b] = 1
+								if b != def.PANEL {
+									localMap[def.MY_IP].Buttons[f][b] = 1
+								}
+								changeMade = true
 							}
-							changeMade = true
 						}
 					}
+					if receivedMap[def.IPs[e]].Dir != localMap[def.IPs[e]].Dir {
+						localMap[def.IPs[e]].Dir = receivedMap[def.IPs[e]].Dir
+						changeMade = true
+					}
+					if receivedMap[def.IPs[e]].Pos != localMap[def.IPs[e]].Pos {
+						localMap[def.IPs[e]].Pos = receivedMap[def.IPs[e]].Pos
+						changeMade = true
+					}
 				}
-				if receivedMap[def.IPs[e]].Dir != localMap[def.IPs[e]].Dir {
-					localMap[def.IPs[e]].Dir = receivedMap[def.IPs[e]].Dir
-					changeMade = true
-				}
-				if receivedMap[def.IPs[e]].Pos != localMap[def.IPs[e]].Pos {
-					localMap[def.IPs[e]].Pos = receivedMap[def.IPs[e]].Pos
-					changeMade = true
-				}
-			}
 
-			if changeMade {
-				WriteBackup(localMap)
-				transmitChan <- localMap
-				mapChan <- localMap
-<<<<<<< HEAD:Elevator/src/elevatorMap/elevatorMap.go
-			}*/
-=======
-			}
-		default:
-			time.Sleep(50 * time.Millisecond)
->>>>>>> master:Project/Elevator/src/elevatorMap/elevatorMap.go
+				if changeMade {
+					WriteBackup(localMap)
+					transmitChan <- localMap
+					mapChan <- localMap
+				}*/
 
 		}
-
-		time.Sleep(200 * time.Millisecond)
 	}
+
 }
 
 func printMap(localMap def.ElevMap) {
@@ -111,4 +107,8 @@ func printMap(localMap def.ElevMap) {
 		fmt.Println()
 
 	}
+}
+
+func GetMap() def.ElevMap {
+	return localMap
 }

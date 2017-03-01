@@ -47,8 +47,8 @@ func updateMap(mapChan chan def.ElevMap, transmitChan chan def.ElevMap, receiveC
 			localMap := ReadBackup()
 			if (event.Pos != -1) && (localMap[def.MY_IP].Pos != event.Pos) {
 				localMap[def.MY_IP].Pos = event.Pos
-				fmt.Println("EventPOS: ", event.Pos)
 				changeMade = true
+				fmt.Println("EventPOS: ", event.Pos)
 			}
 
 			if (event.Floor != -1) && (localMap[def.MY_IP].Buttons[event.Floor][event.Button] == 0) {
@@ -91,9 +91,12 @@ func updateMap(mapChan chan def.ElevMap, transmitChan chan def.ElevMap, receiveC
 				transmitChan <- localMap
 				mapChan <- localMap
 			}
+		default:
+			time.Sleep(50 * time.Millisecond)
 
 		}
-		time.Sleep(50 * time.Millisecond)
+
+		time.Sleep(200 * time.Millisecond)
 	}
 }
 

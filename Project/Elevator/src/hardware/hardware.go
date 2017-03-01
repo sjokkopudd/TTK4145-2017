@@ -19,12 +19,10 @@ func InitHardware(mapChan chan def.ElevMap, eventChan chan def.NewHardwareEvent)
 	}*/
 	SetMotorDir(0)
 
-	for {
-		go pollNewEvents(eventChan)
-		time.Sleep(50 * time.Millisecond)
-		go setLights(mapChan)
-		time.Sleep(50 * time.Millisecond)
-	}
+	go pollNewEvents(eventChan)
+
+	go setLights(mapChan)
+
 }
 
 func SetMotorDir(dir int) {
@@ -80,22 +78,24 @@ func readButton(floor int, button int) bool {
 }
 
 func pollNewEvents(eventChan chan def.NewHardwareEvent) {
+	for {
+		newPos := readFloor()
+		fmt.Println("newPos: ", newPos)
 
-	newPos := readFloor()
-	fmt.Println("newPos: ", newPos)
-
-	for f := 0; f < def.FLOORS; f++ {
-		for b := 0; b < def.BUTTONS; b++ {
-			if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
-				if readButton(f, b) {
-					e := def.NewHardwareEvent{newPos, f, b}
-					eventChan <- e
-				} else if newPos != -1 {
-					e := def.NewHardwareEvent{newPos, -1, -1}
-					eventChan <- e
+		for f := 0; f < def.FLOORS; f++ {
+			for b := 0; b < def.BUTTONS; b++ {
+				if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
+					if readButton(f, b) {
+						e := def.NewHardwareEvent{newPos, f, b}
+						eventChan <- e
+					} else if newPos != -1 {
+						e := def.NewHardwareEvent{newPos, -1, -1}
+						eventChan <- e
+					}
 				}
 			}
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -121,23 +121,28 @@ func setFloorIndicator(floor int) {
 }
 
 func setLights(mapChan chan def.ElevMap) {
-	select {
-	case localMap := <-mapChan:
-		for b := 0; b < def.BUTTONS; b++ {
-			for f := 0; f < def.FLOORS; f++ {
-				setLight := true
-				for e := 0; e < def.ELEVATORS; e++ {
-					if localMap[def.IPs[e]].Buttons[f][b] != 1 {
-						setLight = false
+	for {
+		select {
+		case localMap := <-mapChan:
+			for b := 0; b < def.BUTTONS; b++ {
+				for f := 0; f < def.FLOORS; f++ {
+					setLight := true
+					for e := 0; e < def.ELEVATORS; e++ {
+						if localMap[def.IPs[e]].Buttons[f][b] != 1 {
+							setLight = false
+						}
+					}
+					if setLight {
+						IoSetBit(lightChannelMatrix[f][b])
+					} else {
+						IoClearBit(lightChannelMatrix[f][b])
 					}
 				}
-				if setLight {
-					IoSetBit(lightChannelMatrix[f][b])
-				} else {
-					IoClearBit(lightChannelMatrix[f][b])
-				}
 			}
+			setFloorIndicator(localMap[def.MY_IP].Pos)
+		default:
+			fmt.Println("Nothing new")
 		}
-		setFloorIndicator(localMap[def.MY_IP].Pos)
+		time.Sleep(100 * time.Millisecond)
 	}
 }

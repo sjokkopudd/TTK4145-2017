@@ -2,8 +2,8 @@ package hardware
 
 import (
 	"def"
-	"fmt"
 	"log"
+	"fmt"
 	"time"
 )
 
@@ -103,7 +103,6 @@ func readButton(floor int, button int) bool {
 // ----------------------------------------------------------
 
 func SetMotorDir(dir int) {
-
 	if USING_SIMULATOR {
 		mutex.Lock()
 		_, err := conn.Write([]byte{1, byte(dir), byte(0), byte(0)})
@@ -126,10 +125,10 @@ func SetMotorDir(dir int) {
 			IoWriteAnalog(MOTOR, 2800)
 		}
 	}
+
 }
 
 func setFloorIndicator(floor int) {
-
 	if USING_SIMULATOR {
 		mutex.Lock()
 		_, err := conn.Write([]byte{3, byte(floor), byte(0), byte(0)})
@@ -159,6 +158,7 @@ func setFloorIndicator(floor int) {
 			IoSetBit(LIGHT_FLOOR_IND2)
 		}
 	}
+
 }
 
 func setOrderLight(f byte, b byte, val byte) {
@@ -180,9 +180,11 @@ func setOrderLight(f byte, b byte, val byte) {
 			IoClearBit(lightChannelMatrix[f][b])
 		}
 	}
+
 }
 
 func setDoorLight(val int) {
+
 	if USING_SIMULATOR {
 		mutex.Lock()
 		_, err := conn.Write([]byte{4, byte(val), byte(0), byte(0)})
@@ -200,5 +202,6 @@ func setDoorLight(val int) {
 			IoClearBit(LIGHT_DOOR_OPEN)
 		}
 	}
+
 
 }

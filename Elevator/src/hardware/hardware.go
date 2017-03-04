@@ -10,10 +10,9 @@ import (
 	"time"
 )
 
-var USING_SIMULATOR bool = false
-
 const (
 	simServAddr = "127.0.0.1:15657"
+	USING_SIMULATOR = false
 )
 
 var conn net.Conn
@@ -23,7 +22,7 @@ var mutex = &sync.Mutex{}
 // ----------------------- Interface -------------------------------
 // -----------------------------------------------------------------
 
-func InitHardware(mapChan chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
+func InitHardware(mapChan_toHw chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
 	if USING_SIMULATOR {
 
 		fmt.Println("Mode: USING_SIMULATOR")
@@ -42,7 +41,7 @@ func InitHardware(mapChan chan def.ElevMap, eventChan chan def.NewHardwareEvent)
 		}
 		fmt.Println("Dial success")
 
-		go setLights(mapChan)
+		go setLights(mapChan_toHw)
 
 		go pollNewEvents(eventChan)
 
@@ -51,16 +50,19 @@ func InitHardware(mapChan chan def.ElevMap, eventChan chan def.NewHardwareEvent)
 	}
 
 	if !USING_SIMULATOR {
-		if IoInit() != true {
-			log.Fatal(errors.New("Unsucsessful init of IO"))
 
-		}
+	if IoInit() != true {
+		log.Fatal(errors.New("Unsucsessful init of IO"))
 
-		go setLights(mapChan)
+	}
 
-		go pollNewEvents(eventChan)
+	SetMotorDir(0)
 
-		go goUpAndDown()
+	go setLights(mapChan_toHw)
+
+	go pollNewEvents(eventChan)
+
+	//go goUpAndDown()
 	}
 }
 
@@ -68,46 +70,54 @@ func InitHardware(mapChan chan def.ElevMap, eventChan chan def.NewHardwareEvent)
 // ----------------------------- LOOPS -------------------------------------
 // -------------------------------------------------------------------------
 
-func setLights(mapChan chan def.ElevMap) {
+func setLights(mapChan_toHw chan def.ElevMap) {
 	for {
 		select {
-		case localMap := <-mapChan:
+		case currentMap := <-mapChan_toHw:
+			fmt.Println("setting a light")
 			for b := 0; b < def.BUTTONS; b++ {
 				for f := 0; f < def.FLOORS; f++ {
 					ligthVal := 1
 					for e := 0; e < def.ELEVATORS; e++ {
-						if localMap[def.IPs[e]].Buttons[f][b] != 1 {
+						if currentMap[def.IPs[e]].Buttons[f][b] != 1 {
 							ligthVal = 0
 						}
+						
 					}
 
 					setOrderLight(byte(f), byte(b), byte(ligthVal))
 
 				}
 			}
-			setFloorIndicator(localMap[def.MY_IP].Pos)
+			setFloorIndicator(currentMap[def.MY_IP].Pos)
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(50*time.Millisecond)
+		
 	}
 
 }
 
 func pollNewEvents(eventChan chan def.NewHardwareEvent) {
+	lastPos := -1
 	for {
 		newPos := readFloor()
 		for f := 0; f < def.FLOORS; f++ {
 			for b := 0; b < def.BUTTONS; b++ {
 				if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
 					if readButton(f, b) {
+						fmt.Println("Read button")
 						e := def.NewHardwareEvent{newPos, f, b}
 						eventChan <- e
-					} else if newPos != -1 {
+					} else if (newPos != -1) && (newPos != lastPos) {
+						fmt.Println("newPos: ", newPos)
 						e := def.NewHardwareEvent{newPos, -1, -1}
 						eventChan <- e
 					}
 				}
+				lastPos = newPos
 			}
 		}
+		time.Sleep(100*time.Millisecond)
 	}
 }
 

@@ -3,6 +3,7 @@ package elevatorMap
 import (
 	"def"
 	"fmt"
+	"time"
 )
 
 var localMap def.ElevMap
@@ -28,25 +29,24 @@ func NewCleanMap() def.ElevMap {
 	return newMap
 }
 
-func InitMap(mapChan chan def.ElevMap /*transmitChan chan def.ElevMap, receiveChan chan def.ElevMap,*/, eventChan chan def.NewHardwareEvent) {
+func InitMap(mapChan chan def.ElevMap /*transmitChan chan def.ElevMap, receiveChan chan def.ElevMap,*/, eventChan_toMap chan def.NewHardwareEvent) {
 
 	localMap = NewCleanMap()
 
 	WriteBackup(localMap)
 
-	localMap = ReadBackup()
-
 	mapChan <- localMap
 
-	go updateMap(mapChan /*transmitChan, receiveChan,*/, eventChan)
+	time.Sleep(100*time.Millisecond)
+
+	go updateMap(mapChan /*transmitChan, receiveChan,*/, eventChan_toMap)
 
 }
 
-func updateMap(mapChan chan def.ElevMap /* transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, */, eventChan chan def.NewHardwareEvent) {
-
+func updateMap(mapChan chan def.ElevMap /*transmitChan chan def.ElevMap, receiveChan chan def.ElevMap ,*/, eventChan_toMap chan def.NewHardwareEvent) {
 	for {
 		select {
-		case event := <-eventChan:
+		case event := <-eventChan_toMap:
 			changeMade := false
 			if (event.Pos != -1) && (localMap[def.MY_IP].Pos != event.Pos) {
 				localMap[def.MY_IP].Pos = event.Pos
@@ -62,6 +62,7 @@ func updateMap(mapChan chan def.ElevMap /* transmitChan chan def.ElevMap, receiv
 			if changeMade {
 				WriteBackup(localMap)
 				//transmitChan <- localMap
+				fmt.Println("Passing map")
 				mapChan <- localMap
 			}
 			/*	case receivedMap := <-receiveChan:
@@ -96,14 +97,15 @@ func updateMap(mapChan chan def.ElevMap /* transmitChan chan def.ElevMap, receiv
 				}*/
 
 		}
+		time.Sleep(50*time.Millisecond)
 	}
 
 }
 
-func printMap(localMap def.ElevMap) {
+func PrintMap(elevatorMap def.ElevMap) {
 	for e := 0; e < def.ELEVATORS; e++ {
 		fmt.Println("IP: " + def.IPs[e])
-		fmt.Println(*localMap[def.IPs[e]])
+		fmt.Println(*elevatorMap[def.IPs[e]])
 		fmt.Println()
 
 	}

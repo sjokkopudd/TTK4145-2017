@@ -45,8 +45,9 @@ func ReadBackup() def.ElevMap {
 				newMap[def.IPs[i]].Buttons[j][k], _ = strconv.Atoi(stringMatrix[i*(3+def.FLOORS)+1+j][k])
 			}
 		}
-		newMap[def.IPs[i]].Dir, _ = strconv.Atoi(stringMatrix[i*(3+def.FLOORS)+def.FLOORS+2][0])
-		newMap[def.IPs[i]].Pos, _ = strconv.Atoi(stringMatrix[i*(3+def.FLOORS)+def.FLOORS+1][0])
+		newMap[def.IPs[i]].Dir, _ = strconv.Atoi(stringMatrix[i*(3+def.FLOORS)+def.FLOORS+1][0])
+		newMap[def.IPs[i]].Pos, _ = strconv.Atoi(stringMatrix[i*(3+def.FLOORS)+def.FLOORS+2][0])
+		newMap[def.IPs[i]].Door, _ = strconv.Atoi(stringMatrix[i*(3+def.FLOORS)+def.FLOORS+3][0])
 	}
 
 	return newMap
@@ -75,6 +76,7 @@ func WriteBackup(localMap def.ElevMap) {
 		}
 		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[def.IPs[i]].Dir)})
 		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[def.IPs[i]].Pos)})
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[def.IPs[i]].Door)})
 	}
 	backupWriter := csv.NewWriter(backupFile)
 	err = backupWriter.WriteAll(stringMatrix)

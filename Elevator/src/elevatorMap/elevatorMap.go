@@ -3,6 +3,7 @@ package elevatorMap
 import (
 	"def"
 	"fmt"
+	"time"
 )
 
 var localMap def.ElevMap
@@ -38,11 +39,13 @@ func InitMap(mapChan chan def.ElevMap /*transmitChan chan def.ElevMap, receiveCh
 
 	mapChan <- localMap
 
+	time.Sleep(100 * time.Millisecond)
+
 	go updateMap(mapChan /*transmitChan, receiveChan,*/, eventChan)
 
 }
 
-func updateMap(mapChan chan def.ElevMap /* transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, */, eventChan chan def.NewHardwareEvent) {
+func updateMap(mapChan chan def.ElevMap /*transmitChan chan def.ElevMap, receiveChan chan def.ElevMap ,*/, eventChan chan def.NewHardwareEvent) {
 
 	for {
 		select {
@@ -96,6 +99,7 @@ func updateMap(mapChan chan def.ElevMap /* transmitChan chan def.ElevMap, receiv
 				}*/
 
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 
 }

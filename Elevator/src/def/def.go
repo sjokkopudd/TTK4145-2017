@@ -7,7 +7,7 @@ const (
 	DOWN      = 1
 	PANEL     = 2
 	BUTTONS   = 3
-	MY_IP     = "129.241.187.143"
+	MY_IP     = "129.241.187.148"
 	MAP_PORT  = ":20005"
 	ACK_PORT  = ":30005"
 )

@@ -5,63 +5,26 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net"
-	"sync"
 	"time"
 )
-
-var USING_SIMULATOR bool = false
-
-const (
-	simServAddr = "127.0.0.1:15657"
-)
-
-var conn net.Conn
-var mutex = &sync.Mutex{}
 
 // -----------------------------------------------------------------
 // ----------------------- Interface -------------------------------
 // -----------------------------------------------------------------
 
 func InitHardware(mapChan chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
-	if USING_SIMULATOR {
-
-		fmt.Println("Mode: USING_SIMULATOR")
-
-		tcpAddr, err := net.ResolveTCPAddr("tcp", simServAddr)
-		if err != nil {
-			fmt.Println("ResolveTCPAddr failed:", err.Error())
-			log.Fatal(err)
-		}
-		fmt.Println("ResolveTCPAddr success")
-
-		conn, err = net.DialTCP("tcp", nil, tcpAddr)
-		if err != nil {
-			fmt.Println("Dial failed:", err.Error())
-			log.Fatal(err)
-		}
-		fmt.Println("Dial success")
-
-		go setLights(mapChan)
-
-		go pollNewEvents(eventChan)
-
-		go goUpAndDown()
+	if IoInit() != true {
+		log.Fatal(errors.New("Unsucsessful init of IO"))
 
 	}
 
-	if !USING_SIMULATOR {
-		if IoInit() != true {
-			log.Fatal(errors.New("Unsucsessful init of IO"))
+	SetMotorDir(0)
 
-		}
+	go setLights(mapChan)
 
-		go setLights(mapChan)
+	go pollNewEvents(eventChan)
 
-		go pollNewEvents(eventChan)
-
-		go goUpAndDown()
-	}
+	//go goUpAndDown()
 }
 
 // -------------------------------------------------------------------------
@@ -87,7 +50,7 @@ func setLights(mapChan chan def.ElevMap) {
 			}
 			setFloorIndicator(localMap[def.MY_IP].Pos)
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 }
@@ -95,6 +58,7 @@ func setLights(mapChan chan def.ElevMap) {
 func pollNewEvents(eventChan chan def.NewHardwareEvent) {
 	for {
 		newPos := readFloor()
+		fmt.Println("newPos ", newPos)
 		for f := 0; f < def.FLOORS; f++ {
 			for b := 0; b < def.BUTTONS; b++ {
 				if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
@@ -108,6 +72,8 @@ func pollNewEvents(eventChan chan def.NewHardwareEvent) {
 				}
 			}
 		}
+		time.Sleep(100 * time.Millisecond)
+
 	}
 }
 
@@ -124,5 +90,6 @@ func goUpAndDown() {
 			SetMotorDir(-1)
 			dir = -1
 		}
+		time.Sleep(50 * time.Millisecond)
 	}
 }

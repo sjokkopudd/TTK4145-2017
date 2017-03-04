@@ -5,14 +5,52 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
+	"sync"
 	"time"
 )
+
+const (
+	simServAddr = "127.0.0.1:15657"
+	USING_SIMULATOR = false
+)
+
+var conn net.Conn
+var mutex = &sync.Mutex{}
 
 // -----------------------------------------------------------------
 // ----------------------- Interface -------------------------------
 // -----------------------------------------------------------------
 
 func InitHardware(mapChan_toHw chan def.ElevMap, eventChan chan def.NewHardwareEvent) {
+	if USING_SIMULATOR {
+
+		fmt.Println("Mode: USING_SIMULATOR")
+
+		tcpAddr, err := net.ResolveTCPAddr("tcp", simServAddr)
+		if err != nil {
+			fmt.Println("ResolveTCPAddr failed:", err.Error())
+			log.Fatal(err)
+		}
+		fmt.Println("ResolveTCPAddr success")
+
+		conn, err = net.DialTCP("tcp", nil, tcpAddr)
+		if err != nil {
+			fmt.Println("Dial failed:", err.Error())
+			log.Fatal(err)
+		}
+		fmt.Println("Dial success")
+
+		go setLights(mapChan_toHw)
+
+		go pollNewEvents(eventChan)
+
+		go goUpAndDown()
+
+	}
+
+	if !USING_SIMULATOR {
+
 	if IoInit() != true {
 		log.Fatal(errors.New("Unsucsessful init of IO"))
 
@@ -25,6 +63,7 @@ func InitHardware(mapChan_toHw chan def.ElevMap, eventChan chan def.NewHardwareE
 	go pollNewEvents(eventChan)
 
 	//go goUpAndDown()
+	}
 }
 
 // -------------------------------------------------------------------------

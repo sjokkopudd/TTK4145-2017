@@ -62,6 +62,8 @@ func WriteBackup(writeMap def.ElevMap) {
 		log.Fatal(err)
 	}
 
+	defer backupFile.Close()
+
 	stringMatrix := [][]string{}
 
 	for i := 0; i < def.ELEVATORS; i++ {
@@ -80,14 +82,6 @@ func WriteBackup(writeMap def.ElevMap) {
 	backupWriter := csv.NewWriter(backupFile)
 	err = backupWriter.WriteAll(stringMatrix)
 	if err != nil {
-		fmt.Println("Stuck")
-		log.Fatal(err)
-	}
-
-	err = backupFile.Close()
-
-	if err != nil {
-		fmt.Println("Could not close file")
 		log.Fatal(err)
 	}
 

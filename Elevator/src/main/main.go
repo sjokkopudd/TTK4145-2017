@@ -6,6 +6,7 @@ import (
 	"hardware"
 	//"network"
 	"time"
+	//"taskHandler"
 )
 
 func main() {
@@ -19,9 +20,13 @@ func main() {
 	eventChan_toMap := make(chan def.NewHardwareEvent)
 	//eventChan_toTH := make(chan def.NewHardwareEvent)
 
-	go elevatorMap.InitMap(mapChan /* transmitChan, receiveChan,*/, eventChan_toMap)
+	go elevatorMap.InitMap(mapChan,  /*transmitChan, receiveChan,*/ eventChan_toMap)
 
 	go hardware.InitHardware(mapChan_toHw, eventChan)
+
+	//go taskHandler.taskHandler(eventChan_toTH)
+
+	//go network.StartNetworkCommunication(transmitChan,receiveChan)
 
 	for {
 

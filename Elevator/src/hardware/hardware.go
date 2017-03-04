@@ -51,18 +51,18 @@ func InitHardware(mapChan_toHw chan def.ElevMap, eventChan chan def.NewHardwareE
 
 	if !USING_SIMULATOR {
 
-	if IoInit() != true {
-		log.Fatal(errors.New("Unsucsessful init of IO"))
+		if IoInit() != true {
+			log.Fatal(errors.New("Unsucsessful init of IO"))
 
-	}
+		}
 
-	SetMotorDir(0)
+		SetMotorDir(0)
 
-	go setLights(mapChan_toHw)
+		go setLights(mapChan_toHw)
 
-	go pollNewEvents(eventChan)
+		go pollNewEvents(eventChan)
 
-	//go goUpAndDown()
+		//go goUpAndDown()
 	}
 }
 
@@ -104,13 +104,12 @@ func pollNewEvents(eventChan chan def.NewHardwareEvent) {
 		for f := 0; f < def.FLOORS; f++ {
 			for b := 0; b < def.BUTTONS; b++ {
 				if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
+					fmt.Println("f: ", f, "b: ", b)
 					if readButton(f, b) {
-						fmt.Println("Read button")
-						e := def.NewHardwareEvent{newPos, f, b}
+						e := def.NewHardwareEvent{def.BUTTONPUSH, newPos, f, b, -1}
 						eventChan <- e
 					} else if (newPos != -1) && (newPos != lastPos) {
-						fmt.Println("newPos: ", newPos)
-						e := def.NewHardwareEvent{newPos, -1, -1}
+						e := def.NewHardwareEvent{def.NEWFLOOR, newPos, -1, -1, -1}
 						eventChan <- e
 					}
 				}

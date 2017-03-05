@@ -12,7 +12,7 @@ import (
 
 const (
 	simServAddr     = "127.0.0.1:15657"
-	USING_SIMULATOR = false
+	USING_SIMULATOR = true
 )
 
 var conn net.Conn
@@ -45,7 +45,7 @@ func InitHardware(mapChan_toHW chan def.ElevMap, eventChan_fromHW chan def.NewEv
 
 		go pollNewEvents(eventChan_fromHW)
 
-		go goUpAndDown()
+		//go goUpAndDown()
 
 	}
 

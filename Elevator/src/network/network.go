@@ -9,161 +9,73 @@ import (
 	"time"
 )
 
-func StartNetworkCommunication(transmitChan chan def.ElevMap, receiveChan chan def.ElevMap) {
+//---------------------------------------------------------------
+//------------------------- INTERFACE ---------------------------
+//---------------------------------------------------------------
 
+func StartNetworkCommunication(transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, deadElev chan def.NewEvent) {
+
+	fmt.Println("My IP: ", def.IPs[def.MY_ID])
 	fmt.Println("Trying to setup nettwork connection")
-	go reciveMap(receiveChan)
-	for {
-		select {
-		case mapArray := <-transmitChan:
-			fmt.Println("Got map from channel")
-			go transmitMap(mapArray)
+
+	ackChan := make(chan ackInfo)
+
+	go reciveUdpPacket(receiveChan, ackChan)
+	go transmitUdpPacket(transmitChan, ackChan, deadElev)
+}
+
+//-------------------------------------------------------------
+//------------------------- MODULE ----------------------------
+//-------------------------------------------------------------
+
+const (
+	MAP = 1
+	ACK = 2
+)
+
+type ackInfo struct {
+	IP    string
+	Value bool
+}
+
+type udpPacket struct {
+	Type int
+	IP   string
+	Data interface{}
+}
+
+func constructUdpPacket(t int, m interface{}) udpPacket {
+
+	switch t {
+	case MAP:
+		newPacket := udpPacket{
+			Type: t,
+			IP:   def.IPs[def.MY_ID],
+			Data: m,
 		}
-		time.Sleep(100 * time.Millisecond)
-	}
-
-}
-
-func transmitMap(mapArray def.ElevMap) {
-
-	for i := 0; i < def.ELEVATORS; i++ {
-
-		//if def.IPs[i] != def.MY_IP {
-
-			destination_addr, err := net.ResolveUDPAddr("udp", def.IPs[i]+def.MAP_PORT)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			send_conn, err := net.DialUDP("udp", nil, destination_addr)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			time.Sleep(500 * time.Millisecond)
-			fmt.Println("Before json: \n", mapArray)
-
-			for j := 0; j < 5; j++ {
-
-				json_buffer, _ := json.Marshal(mapArray)
-				fmt.Println("After json: \n", json_buffer)
-
-				if len(json_buffer) > 0 {
-					send_conn.Write(json_buffer)
-					var m def.ElevMap
-					err = json.Unmarshal(json_buffer, &m)
-					fmt.Println("After unjson: \n", json_buffer)
-					if err != nil {
-						log.Fatal(err)
-					}
-
-				}
-
-				if receiveAcknowledge(def.IPs[i]) {
-					break
-				}
-			}
-			//elevator i is dead
-		//}
-
-	}
-
-}
-
-func receiveAcknowledge(senderIP string) bool {
-	localAddress, err := net.ResolveUDPAddr("udp", def.ACK_PORT)
-	if err != nil {
-		log.Fatal(err)
-	}
-	reciveConnection, err := net.ListenUDP("udp", localAddress)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer reciveConnection.Close()
-
-	receiveBuffer := make([]byte, 1024)
-
-	time.Sleep(50 * time.Millisecond)
-
-	reciveConnection.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
-	n, _, err := reciveConnection.ReadFromUDP(receiveBuffer)
-	if n > 0 {
-		var ackMsg def.Ack
-		err = json.Unmarshal(receiveBuffer[0:n], &ackMsg)
-		fmt.Println(ackMsg.IP)
-		if err != nil {
-			log.Fatal(err)
+		return newPacket
+	case ACK:
+		newPacket := udpPacket{
+			Type: t,
+			IP:   def.IPs[def.MY_ID],
+			Data: true,
 		}
-		if ackMsg.Msg == "Ack" && ackMsg.IP == senderIP {
-			fmt.Println("Acknowledge received from " + ackMsg.IP)
-			return true
+		return newPacket
+	default:
+		newPacket := udpPacket{
+			Type: t,
+			IP:   def.IPs[def.MY_ID],
+			Data: false,
 		}
-	}
-	return false
-}
-
-func reciveMap(receiveChan chan def.ElevMap) {
-
-	localAddress, err := net.ResolveUDPAddr("udp", def.MAP_PORT)
-	if err != nil {
-		log.Fatal(err)
-	}
-	receiveConnection, err := net.ListenUDP("udp", localAddress)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer receiveConnection.Close()
-
-	receiveBuffer := make([]byte, 1024)
-
-	time.Sleep(500 * time.Millisecond)
-
-	for {
-		receiveConnection.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
-		n, senderIP, err := receiveConnection.ReadFromUDP(receiveBuffer)
-
-		if n > 0 {
-
-			var receivedMap def.ElevMap
-			err = json.Unmarshal(receiveBuffer[0:n], &receivedMap)
-			if err != nil {
-				log.Fatal(err)
-			}
-			receiveChan <- receivedMap
-			sendAcknowledge(senderIP.IP.String())
-
-		}
+		return newPacket
 	}
 }
 
-func sendAcknowledge(ip string) {
-	destinationAddress, err := net.ResolveUDPAddr("udp", ip+def.ACK_PORT)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (p udpPacket) sendAsJSON(r string) {
 
-	transmitConnection, err := net.DialUDP("udp", nil, destinationAddress)
-	if err != nil {
-		log.Fatal(err)
-	}
+	json_buffer, _ := json.Marshal(p)
 
-	time.Sleep(50 * time.Millisecond)
-
-	ackMsg := def.Ack{"Ack", def.MY_IP}
-	transmitBuffer, _ := json.Marshal(ackMsg)
-
-	if len(transmitBuffer) > 0 {
-		transmitConnection.Write([]byte(transmitBuffer))
-		fmt.Println("Sending ack")
-	}
-
-}
-
-func transmit(s chan string) {
-
-	destination_addr, err := net.ResolveUDPAddr("udp", "129.241.187.141:20005")
+	destination_addr, err := net.ResolveUDPAddr("udp", r)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -173,47 +85,132 @@ func transmit(s chan string) {
 		log.Fatal(err)
 	}
 
-	time.Sleep(500 * time.Millisecond)
+	defer send_conn.Close()
 
-	for {
-		s_buffer := <-s
+	send_conn.Write(json_buffer)
 
-		if len(s_buffer) > 0 {
-			send_conn.Write([]byte(s_buffer))
-			fmt.Println("Message send: ", s_buffer)
-		}
+	switch p.Type {
+	case MAP:
+		fmt.Println("Map sent \n")
 
-		time.Sleep(200 * time.Millisecond)
+	case ACK:
+		fmt.Println("Ack sent \n")
 	}
 }
 
-func recive(r chan string) {
+func transmitUdpPacket(transmitChan chan def.ElevMap, ackChan chan ackInfo, deadElev chan def.NewEvent) {
+	for {
+		select {
+		case mapArray := <-transmitChan:
+			for e := 0; e < def.ELEVATORS; e++ {
+				if e != def.MY_ID {
 
-	local_addr, err := net.ResolveUDPAddr("udp", ":20005")
+					packet := constructUdpPacket(MAP, mapArray)
+
+					var ackRecived ackInfo
+
+				WAIT_FOR_ACK:
+					for a := 0; a < 5; a++ {
+
+						packet.sendAsJSON(def.IPs[e])
+
+						time.Sleep(100 * time.Millisecond)
+
+						select {
+						case ackRecived = <-ackChan:
+							if ackRecived.IP == def.IPs[e] {
+								break WAIT_FOR_ACK
+							}
+						default:
+
+						}
+					}
+
+					if !ackRecived.Value {
+
+						fmt.Println("elev dead")
+
+						//elevatorIsDead := def.NewEvent{def.ELEVATOR_DEAD, e}
+						//deadElev <- elevatorIsDead
+					}
+				}
+			}
+		}
+	}
+}
+
+func reciveUdpPacket(receiveChan chan def.ElevMap, ackChan chan ackInfo) {
+
+	localAddress, err := net.ResolveUDPAddr("udp", def.PORT)
 	if err != nil {
 		log.Fatal(err)
 	}
-	recive_conn, err := net.ListenUDP("udp", local_addr)
+	receiveConnection, err := net.ListenUDP("udp", localAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer recive_conn.Close()
-
-	r_buffer := make([]byte, 1024)
-
-	time.Sleep(500 * time.Millisecond)
+	receiveBuffer := make([]byte, 1024)
 
 	for {
-		recive_conn.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
-		n, _, err := recive_conn.ReadFromUDP(r_buffer)
+
+		receiveConnection.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+
+		n, _, err := receiveConnection.ReadFromUDP(receiveBuffer)
 
 		if n > 0 {
-			r <- (string(r_buffer[0:n]))
+
+			var data json.RawMessage
+			receivedPacket := udpPacket{
+				Data: &data,
+			}
+
+			err = json.Unmarshal(receiveBuffer[0:n], &receivedPacket)
 			if err != nil {
 				log.Fatal(err)
 			}
 
+			switch receivedPacket.Type {
+			case MAP:
+
+				var m def.ElevMap
+
+				err = json.Unmarshal(data, &m)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fmt.Println("Recived map:\n", m, "\n")
+
+				//receiveChan <- m
+
+				sendAcknowledge(receivedPacket.IP)
+
+			case ACK:
+
+				var v bool
+
+				err = json.Unmarshal(data, &v)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				a := ackInfo{
+					IP:    receivedPacket.IP,
+					Value: v,
+				}
+
+				fmt.Println("Recived ack:\n", a, "\n")
+
+				ackChan <- a
+
+			}
 		}
 	}
+}
+
+func sendAcknowledge(ip string) {
+	packet := constructUdpPacket(ACK, nil)
+	packet.sendAsJSON(ip)
+
 }

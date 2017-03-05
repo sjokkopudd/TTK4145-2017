@@ -36,26 +36,26 @@ func ReadBackup() def.ElevMap {
 		stringMatrix = append(stringMatrix, csvLine)
 	}
 
-	newMap := NewCleanMap()
+	newMap := def.NewCleanElevMap()
 
-	for i := 0; i < def.ELEVATORS; i++ {
-		newMap[def.IPs[i]].IP = stringMatrix[i*(3+def.FLOORS)][0]
-		for j := 0; j < def.FLOORS; j++ {
-			for k := 0; k < 3; k++ {
-				newMap[def.IPs[i]].Buttons[j][k], _ = strconv.Atoi(stringMatrix[i*(3+def.FLOORS)+1+j][k])
+	for e := 0; e < def.ELEVATORS; e++ {
+		newMap[e].ID, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)][0])
+		for f := 0; f < def.FLOORS; f++ {
+			for b := 0; b < def.BUTTONS; b++ {
+				newMap[e].Buttons[f][b], _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+1+f][b])
 			}
 		}
-		newMap[def.IPs[i]].Dir, _ = strconv.Atoi(stringMatrix[i*(3+def.FLOORS)+def.FLOORS+1][0])
-		newMap[def.IPs[i]].Pos, _ = strconv.Atoi(stringMatrix[i*(3+def.FLOORS)+def.FLOORS+2][0])
-		newMap[def.IPs[i]].Door, _ = strconv.Atoi(stringMatrix[i*(3+def.FLOORS)+def.FLOORS+3][0])
+		newMap[e].Dir, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+1][0])
+		newMap[e].Pos, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+2][0])
+		newMap[e].Door, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+3][0])
+		newMap[e].IsAlive, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+4][0])
 	}
 
 	return newMap
 
 }
 
-func WriteBackup(writeMap def.ElevMap) {
-	
+func WriteBackup(localMap def.ElevMap) {
 	backupFile, err := os.Create("src/elevatorMap/memory.txt")
 
 	if err != nil {
@@ -66,23 +66,23 @@ func WriteBackup(writeMap def.ElevMap) {
 
 	stringMatrix := [][]string{}
 
-	for i := 0; i < def.ELEVATORS; i++ {
-		stringMatrix = append(stringMatrix, []string{writeMap[def.IPs[i]].IP})
-		for j := 0; j < def.FLOORS; j++ {
+	for e := 0; e < def.ELEVATORS; e++ {
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].ID)})
+		for f := 0; f < def.FLOORS; f++ {
 			stringArray := []string{}
-			for k := 0; k < 3; k++ {
-				stringArray = append(stringArray, strconv.Itoa(writeMap[def.IPs[i]].Buttons[j][k]))
+			for b := 0; b < def.BUTTONS; b++ {
+				stringArray = append(stringArray, strconv.Itoa(localMap[e].Buttons[f][b]))
 			}
 			stringMatrix = append(stringMatrix, stringArray)
 		}
-		stringMatrix = append(stringMatrix, []string{strconv.Itoa(writeMap[def.IPs[i]].Dir)})
-		stringMatrix = append(stringMatrix, []string{strconv.Itoa(writeMap[def.IPs[i]].Pos)})
-		stringMatrix = append(stringMatrix, []string{strconv.Itoa(writeMap[def.IPs[i]].Door)})
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Dir)})
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Pos)})
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Door)})
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].IsAlive)})
 	}
 	backupWriter := csv.NewWriter(backupFile)
 	err = backupWriter.WriteAll(stringMatrix)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }

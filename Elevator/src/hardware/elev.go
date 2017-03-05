@@ -80,11 +80,11 @@ func readButton(floor int, button int) bool {
 			log.Printf("Error: Button %d out of range!\n", button)
 			return false
 		}
-		if button == def.UP && floor == def.FLOORS-1 {
+		if button == def.UP_BUTTON && floor == def.FLOORS-1 {
 			log.Println("Button up from top floor does not exist!")
 			return false
 		}
-		if button == def.DOWN && floor == 0 {
+		if button == def.DOWN_BUTTON && floor == 0 {
 			log.Println("Button down from ground floor does not exist!")
 			return false
 		}
@@ -183,7 +183,7 @@ func setOrderLight(f byte, b byte, val byte) {
 
 }
 
-func setDoorLight(val int) {
+func SetDoorLight(val int) {
 
 	if USING_SIMULATOR {
 		mutex.Lock()

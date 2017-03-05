@@ -5,33 +5,56 @@ import (
 	"elevatorMap"
 	"hardware"
 	//"network"
+	"taskHandler"
 	"time"
 )
 
 func main() {
 
-	//transmitChan := make(chan def.ElevMap)
-	//receiveChan := make(chan def.ElevMap)
+	//transmitChan := make(chan def.ElevMap, 4)
+	//receiveChan := make(chan def.ElevMap, 4)
 
-	eventChan := make(chan def.NewHardwareEvent)
-	mapChan := make(chan def.ElevMap)
-	mapChan_toHw := make(chan def.ElevMap)
-	eventChan_toMap := make(chan def.NewHardwareEvent)
-	//eventChan_toTH := make(chan def.NewHardwareEvent)
+	eventChan_fromHW := make(chan def.NewEvent)
+	eventChan_fromTH := make(chan def.NewEvent)
+	eventChan_toTH := make(chan def.NewEvent, 4)
+	mapChan_toHW := make(chan def.ElevMap)
 
-	go elevatorMap.InitMap(mapChan /* transmitChan, receiveChan,*/, eventChan_toMap)
+	elevatorMap.InitMap()
 
-	go hardware.InitHardware(mapChan_toHw, eventChan)
+	go hardware.InitHardware(mapChan_toHW, eventChan_fromHW)
+	go taskHandler.EventHandler(eventChan_toTH, eventChan_fromTH)
+
+	//go network.StartNetworkCommunication(transmitChan,receiveChan)
 
 	for {
-
 		select {
-		case updatedMap := <-mapChan:
-			mapChan_toHw <- updatedMap
-		case newEvent := <-eventChan:
-			eventChan_toMap <- newEvent
-			//eventChan_toTH <- newEvent
+		case newEvent := <-eventChan_fromHW:
+			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
+			if changeMade {
+				//transmitChan <- currentMap
+				mapChan_toHW <- currentMap
+				eventChan_toTH <- newEvent
+			}
+
+		/*case receivedMap := <-receiveChan:
+		newEvent := elevatorMap.ReceivedMapFromNetwork(receivedMap)
+		currentMap, changemade := elevatorMap.UpdateMap(newEvent)
+		if changemade {
+			//transmitChan <- currentMap
+		} else {
+			mapChan_toHW <- currentMap
+			eventChan_toTH <- newEvent
+
+		}*/
+		case newEvent := <-eventChan_fromTH:
+			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
+			if changeMade {
+				//transmitChan <- currentMap
+				mapChan_toHW <- currentMap
+				eventChan_toTH <- newEvent
+			}
 		}
-		time.Sleep(50*time.Millisecond)
+
+		time.Sleep(10 * time.Millisecond)
 	}
 }

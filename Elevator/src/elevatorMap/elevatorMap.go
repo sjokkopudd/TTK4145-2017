@@ -3,114 +3,144 @@ package elevatorMap
 import (
 	"def"
 	"fmt"
-	"time"
+	"sync"
 )
 
 var localMap def.ElevMap
+var mapMutex = &sync.Mutex{}
 
-func NewCleanMap() def.ElevMap {
+func InitMap() {
 
-	newMap := make(def.ElevMap)
-
-	for i := 0; i < def.ELEVATORS; i++ {
-		var temp def.ElevatorInfo
-		temp.IP = def.IPs[i]
-		for j := 0; j < def.FLOORS; j++ {
-			for k := 0; k < 3; k++ {
-				temp.Buttons[j][k] = 0
-			}
-		}
-		temp.Dir = 0
-		temp.Pos = 0
-		temp.Door = 0
-		newMap[def.IPs[i]] = &temp
-	}
-
-	return newMap
-}
-
-func InitMap(mapChan chan def.ElevMap /*transmitChan chan def.ElevMap, receiveChan chan def.ElevMap,*/, eventChan_toMap chan def.NewHardwareEvent) {
-
-	localMap = NewCleanMap()
+	localMap = def.NewCleanElevMap()
 
 	WriteBackup(localMap)
 
-	mapChan <- localMap
+}
 
-	time.Sleep(100*time.Millisecond)
+func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
+	newMap := GetMap()
+	for e := 0; e < def.ELEVATORS; e++ {
+		if e != def.MY_ID {
+			for f := 0; f < def.FLOORS; f++ {
+				for b := 0; b < def.BUTTONS; b++ {
+					if receivedMap[e].Buttons[f][b] != newMap[e].Buttons[f][b] {
+						if receivedMap[e].Buttons[f][b] == 1 && newMap[e].Buttons[f][b] != 1 {
+							if b != def.PANEL_BUTTON {
+								newMap[def.MY_ID].Buttons[f][b] = 1
+								changes := def.NewEvent{def.BUTTONPUSH, []int{f, b}}
+								setMap(newMap)
+								return changes
 
-	go updateMap(mapChan /*transmitChan, receiveChan,*/, eventChan_toMap)
+							} else {
+								newMap[e].Buttons[f][b] = 1
+								changes := def.NewEvent{def.OTHERELEVATOR, -1}
+								setMap(newMap)
+								return changes
+							}
+
+						}
+					} else {
+						if receivedMap[e].Door == 1 && receivedMap[e].Pos == f {
+							newMap[e].Door = 1
+							newMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
+							newMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
+							changes := def.NewEvent{def.OTHERELEVATOR, -1}
+							setMap(newMap)
+							return changes
+						}
+					}
+
+				}
+			}
+
+			if receivedMap[e].Dir != newMap[e].Dir {
+				newMap[e].Dir = receivedMap[e].Dir
+				changes := def.NewEvent{def.OTHERELEVATOR, -1}
+				setMap(newMap)
+				return changes
+			}
+			if receivedMap[e].Pos != newMap[e].Pos {
+				newMap[e].Pos = receivedMap[e].Pos
+				changes := def.NewEvent{def.OTHERELEVATOR, -1}
+				setMap(newMap)
+				return changes
+			}
+			if receivedMap[e].Door != newMap[e].Door {
+				newMap[e].Door = receivedMap[e].Door
+				changes := def.NewEvent{def.OTHERELEVATOR, -1}
+				setMap(newMap)
+				return changes
+			}
+		}
+	}
+
+	changes := def.NewEvent{def.NEWFLOOR, newMap[def.MY_ID].Pos}
+	return changes
 
 }
 
-func updateMap(mapChan chan def.ElevMap /*transmitChan chan def.ElevMap, receiveChan chan def.ElevMap ,*/, eventChan_toMap chan def.NewHardwareEvent) {
-	for {
-		select {
-		case event := <-eventChan_toMap:
-			changeMade := false
-			if (event.Pos != -1) && (localMap[def.MY_IP].Pos != event.Pos) {
-				localMap[def.MY_IP].Pos = event.Pos
-				changeMade = true
+func UpdateMap(newEvent def.NewEvent) (def.ElevMap, bool) {
+	changeMade := false
+	newMap := GetMap()
+	switch newEvent.EventType {
 
-			}
-
-			if (event.Floor != -1) && (localMap[def.MY_IP].Buttons[event.Floor][event.Button] == 0) {
-				localMap[def.MY_IP].Buttons[event.Floor][event.Button] = 1
-				changeMade = true
-			}
-
-			if changeMade {
-				WriteBackup(localMap)
-				//transmitChan <- localMap
-				fmt.Println("Passing map")
-				mapChan <- localMap
-			}
-			/*	case receivedMap := <-receiveChan:
-				changeMade := false
-				localMap := ReadBackup()
-				for e := 0; e < def.ELEVATORS; e++ {
-					for f := 0; f < def.FLOORS; f++ {
-						for b := 0; b < def.BUTTONS; b++ {
-							if receivedMap[def.IPs[e]].Buttons[f][b] == 1 && localMap[def.IPs[e]].Buttons[f][b] != 1 {
-								localMap[def.IPs[e]].Buttons[f][b] = 1
-								if b != def.PANEL {
-									localMap[def.MY_IP].Buttons[f][b] = 1
-								}
-								changeMade = true
-							}
-						}
-					}
-					if receivedMap[def.IPs[e]].Dir != localMap[def.IPs[e]].Dir {
-						localMap[def.IPs[e]].Dir = receivedMap[def.IPs[e]].Dir
-						changeMade = true
-					}
-					if receivedMap[def.IPs[e]].Pos != localMap[def.IPs[e]].Pos {
-						localMap[def.IPs[e]].Pos = receivedMap[def.IPs[e]].Pos
-						changeMade = true
-					}
-				}
-
-				if changeMade {
-					WriteBackup(localMap)
-					transmitChan <- localMap
-					mapChan <- localMap
-				}*/
-
+	case def.NEWFLOOR:
+		if newMap[def.MY_ID].Pos != newEvent.Data.(int) {
+			newMap[def.MY_ID].Pos = newEvent.Data.(int)
+			changeMade = true
 		}
-		time.Sleep(50*time.Millisecond)
+
+	case def.BUTTONPUSH:
+		data := newEvent.Data.([]int)
+		if newMap[def.MY_ID].Buttons[data[0]][data[1]] != 1 {
+			newMap[def.MY_ID].Buttons[data[0]][data[1]] = 1
+			changeMade = true
+		}
+
+	case def.DOOR:
+		newMap[def.MY_ID].Door = newEvent.Data.(int)
+		newMap[def.MY_ID].Dir = def.IDLE
+		for b := 0; b < def.BUTTONS; b++ {
+			newMap[def.MY_ID].Buttons[newMap[def.MY_ID].Pos][b] = 0
+		}
+		changeMade = true
+
+	case def.OTHERELEVATOR:
+		changeMade = true
+
+	case def.NEWDIR:
+		if newMap[def.MY_ID].Dir != newEvent.Data.(int) {
+			newMap[def.MY_ID].Dir = newEvent.Data.(int)
+			changeMade = true
+		}
 	}
+	if changeMade {
+		WriteBackup(newMap)
+		setMap(newMap)
+	}
+
+	return newMap, changeMade
 
 }
 
 func PrintMap(elevatorMap def.ElevMap) {
 	for e := 0; e < def.ELEVATORS; e++ {
-		fmt.Println("IP: " + def.IPs[e])
-		fmt.Println(*elevatorMap[def.IPs[e]])
+		fmt.Println("ID: ", e)
+		fmt.Println(elevatorMap[e])
 		fmt.Println()
 
 	}
 }
 
 func GetMap() def.ElevMap {
-	return localMap
+	mapMutex.Lock()
+	currentMap := localMap
+	mapMutex.Unlock()
+	return currentMap
+}
+
+func setMap(newMap def.ElevMap) {
+	mapMutex.Lock()
+	localMap = newMap
+	mapMutex.Unlock()
 }

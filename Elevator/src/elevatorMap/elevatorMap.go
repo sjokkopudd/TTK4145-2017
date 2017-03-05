@@ -29,18 +29,28 @@ func NewCleanMap() def.ElevMap {
 	return newMap
 }
 
-func InitMap(mapChan chan def.ElevMap, /*transmitChan chan def.ElevMap, receiveChan chan def.ElevMap, */eventChan_toMap chan def.NewHardwareEvent) {
+func InitMap(mapChan chan def.ElevMap, transmitChan chan def.ElevMap, receiveChan chan def.ElevMap){//eventChan_toMap chan def.NewHardwareEvent) {
 
 	localMap = NewCleanMap()
 
 	WriteBackup(localMap)
 
-	mapChan <- localMap
+	//mapChan <- localMap
+	go sendDummyMap(transmitChan)
 
 	time.Sleep(100*time.Millisecond)
 
-	go updateMap(mapChan, /*transmitChan, receiveChan, */eventChan_toMap)
+	//go updateMap(mapChan, /*transmitChan, receiveChan, */eventChan_toMap)
 
+}
+
+func sendDummyMap(transmitChan chan def.ElevMap){
+	for {
+		fmt.Println("Putting map on channel")
+		transmitChan <- localMap
+		time.Sleep(5*time.Second)
+
+	}
 }
 
 func updateMap(mapChan chan def.ElevMap,/* transmitChan chan def.ElevMap, receiveChan chan def.ElevMap , */eventChan_toMap chan def.NewHardwareEvent) {
@@ -48,15 +58,19 @@ func updateMap(mapChan chan def.ElevMap,/* transmitChan chan def.ElevMap, receiv
 		select {
 		case event := <-eventChan_toMap:
 			changeMade := false
-			if (event.Pos != -1) && (localMap[def.MY_IP].Pos != event.Pos) {
+
+			switch event.Type{
+
+			case def.NEWFLOOR:
 				localMap[def.MY_IP].Pos = event.Pos
 				changeMade = true
-
-			}
-
-			if (event.Floor != -1) && (localMap[def.MY_IP].Buttons[event.Floor][event.Button] == 0) {
+			case def.BUTTONPUSH:
 				localMap[def.MY_IP].Buttons[event.Floor][event.Button] = 1
 				changeMade = true
+			
+			case def.DOOR:
+				localMap[def.MY_IP].Door = event.Door
+
 			}
 
 			if changeMade {
@@ -73,7 +87,7 @@ func updateMap(mapChan chan def.ElevMap,/* transmitChan chan def.ElevMap, receiv
 						for b := 0; b < def.BUTTONS; b++ {
 							if receivedMap[def.IPs[e]].Buttons[f][b] == 1 && localMap[def.IPs[e]].Buttons[f][b] != 1 {
 								localMap[def.IPs[e]].Buttons[f][b] = 1
-								if b != def.PANEL {
+								if b != def.PANEL_BUTTON {
 									localMap[def.MY_IP].Buttons[f][b] = 1
 								}
 								changeMade = true

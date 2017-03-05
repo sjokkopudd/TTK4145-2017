@@ -3,16 +3,22 @@ package def
 const (
 	ELEVATORS = 1
 	FLOORS    = 4
-	UP        = 0
-	DOWN      = 1
-	PANEL     = 2
+	UP_BUTTON        = 0
+	DOWN_BUTTON      = 1
+	PANEL_BUTTON     = 2
 	BUTTONS   = 3
-	MY_IP     = "129.241.187.157"
+	MY_ID     = 1
+	MY_IP     = "129.241.187.161"
 	MAP_PORT  = ":20005"
 	ACK_PORT  = ":30005"
 	NEWFLOOR = 0
 	BUTTONPUSH = 1
-	CLOSEDOOR = 2
+	DOOR = 2
+	UP = 1
+	IDLE = 0
+	DOWN = -1
+	DOOR_OPEN = 1
+	DOOR_CLOSE = 0
 )
 
 var IPs = [ELEVATORS]string{MY_IP}
@@ -38,4 +44,4 @@ type Ack struct {
 	IP  string
 }
 
-type ElevMap map[string]*ElevatorInfo
+type ElevMap [ELEVATORS]ElevatorInfo

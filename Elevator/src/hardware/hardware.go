@@ -99,21 +99,27 @@ func setLights(mapChan_toHw chan def.ElevMap) {
 
 func pollNewEvents(eventChan chan def.NewHardwareEvent) {
 	lastPos := -1
+	var buttonState[def.FLOORS][def.BUTTONS] bool
 	for {
 		newPos := readFloor()
 		for f := 0; f < def.FLOORS; f++ {
 			for b := 0; b < def.BUTTONS; b++ {
 				if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
 					fmt.Println("f: ", f, "b: ", b)
-					if readButton(f, b) {
+					if readButton(f, b) && buttonState[f][b] == false{
 						e := def.NewHardwareEvent{def.BUTTONPUSH, newPos, f, b, -1}
 						eventChan <- e
-					} else if (newPos != -1) && (newPos != lastPos) {
+						buttonState[f][b] = true
+
+					} else if !readButton(f, b){
+						buttonState[f][b] = false 
+						
+					}else if (newPos != -1) && (newPos != lastPos) {
 						e := def.NewHardwareEvent{def.NEWFLOOR, newPos, -1, -1, -1}
 						eventChan <- e
+						lastPos = newPos
 					}
 				}
-				lastPos = newPos
 			}
 		}
 		time.Sleep(100*time.Millisecond)

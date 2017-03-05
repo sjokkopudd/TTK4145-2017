@@ -16,6 +16,7 @@ func StartNetworkCommunication(transmitChan chan def.ElevMap, receiveChan chan d
 	for {
 		select {
 		case mapArray := <-transmitChan:
+			fmt.Println("Got map from channel")
 			go transmitMap(mapArray)
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -27,7 +28,7 @@ func transmitMap(mapArray def.ElevMap) {
 
 	for i := 0; i < def.ELEVATORS; i++ {
 
-		if def.IPs[i] != def.MY_IP {
+		//if def.IPs[i] != def.MY_IP {
 
 			destination_addr, err := net.ResolveUDPAddr("udp", def.IPs[i]+def.MAP_PORT)
 			if err != nil {
@@ -40,15 +41,18 @@ func transmitMap(mapArray def.ElevMap) {
 			}
 
 			time.Sleep(500 * time.Millisecond)
+			fmt.Println("Before json: \n", mapArray)
 
 			for j := 0; j < 5; j++ {
 
 				json_buffer, _ := json.Marshal(mapArray)
+				fmt.Println("After json: \n", json_buffer)
 
 				if len(json_buffer) > 0 {
 					send_conn.Write(json_buffer)
 					var m def.ElevMap
 					err = json.Unmarshal(json_buffer, &m)
+					fmt.Println("After unjson: \n", json_buffer)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -60,7 +64,7 @@ func transmitMap(mapArray def.ElevMap) {
 				}
 			}
 			//elevator i is dead
-		}
+		//}
 
 	}
 
@@ -84,7 +88,6 @@ func receiveAcknowledge(senderIP string) bool {
 
 	reciveConnection.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 	n, _, err := reciveConnection.ReadFromUDP(receiveBuffer)
-	fmt.Println("here")
 	if n > 0 {
 		var ackMsg def.Ack
 		err = json.Unmarshal(receiveBuffer[0:n], &ackMsg)

@@ -7,32 +7,45 @@ import (
 	"time"
 )
 
-func TaskHandler(eventChan_toTH chan def.NewHardwareEvent, doorOpenChan chan int) {
+func EventHandler(eventChan_toTH chan def.NewEvent, evenChan_fromtTH chan def.NewEvent) {
 	for {
-		select{
-		case newEvent <- eventChan_toTH:
+		select {
+		case newEvent := <-eventChan_toTH:
 			currentMap := elevatorMap.GetMap()
-			switch newEvent.Type {
+			switch newEvent.EventType {
 			case def.NEWFLOOR:
-				if onFloorArrival(currentMap, eventChan_toTH){
-					doorOpenChan <- def.DOOR_OPEN
-				}
-			case def.DOOR:
-				if newEvent.Door == def.DOOR_OPEN{
-					hardware.SetDoorLight(1)
-					time.Sleep(1*time.Second)
-					doorOpenChan <- def.DOOR_CLOSE
+				if onFloorArrival(currentMap, newEvent) {
+					evenChan_fromtTH <- def.NewEvent{def.DOOR, def.DOOR_OPEN}
+				} /*else {
+					dir := chooseDirection(currentMap)
 
-				}else if newEvent.DOOR == def.DOOR_CLOSE{
-					hardware.SetDoorLight(0)
+					evenChan_fromtTH <- def.NewEvent{def.NEWDIR, dir}
+				}*/
+			case def.DOOR:
+				hardware.SetMotorDir(def.IDLE)
+				if newEvent.Data.(int) == def.DOOR_OPEN {
+					time.Sleep(1 * time.Second)
 					onDoorTimeout(currentMap)
-					//decide which way to go
-					//set direction
+					evenChan_fromtTH <- def.NewEvent{def.DOOR, def.DOOR_CLOSE}
+
+				} else if newEvent.Data == def.DOOR_CLOSE {
+					dir := chooseDirection(currentMap)
+					evenChan_fromtTH <- def.NewEvent{def.NEWDIR, dir}
 				}
 			case def.BUTTONPUSH:
+				if currentMap[def.MY_ID].Dir == def.IDLE {
+					dir := chooseDirection(currentMap)
+					evenChan_fromtTH <- def.NewEvent{def.NEWDIR, dir}
+				}
+			case def.NEWDIR:
+				hardware.SetMotorDir(newEvent.Data.(int))
+
+			case def.OTHERELEVATOR:
+
+			case def.ELEVATORDEAD:
 
 			}
-
 		}
 	}
+
 }

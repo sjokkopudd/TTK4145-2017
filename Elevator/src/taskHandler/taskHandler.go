@@ -16,11 +16,7 @@ func EventHandler(eventChan_toTH chan def.NewEvent, evenChan_fromtTH chan def.Ne
 			case def.NEWFLOOR:
 				if onFloorArrival(currentMap, newEvent) {
 					evenChan_fromtTH <- def.NewEvent{def.DOOR, def.DOOR_OPEN}
-				} /*else {
-					dir := chooseDirection(currentMap)
-
-					evenChan_fromtTH <- def.NewEvent{def.NEWDIR, dir}
-				}*/
+				}
 			case def.DOOR:
 				hardware.SetMotorDir(def.IDLE)
 				if newEvent.Data.(int) == def.DOOR_OPEN {
@@ -28,7 +24,7 @@ func EventHandler(eventChan_toTH chan def.NewEvent, evenChan_fromtTH chan def.Ne
 					onDoorTimeout(currentMap)
 					evenChan_fromtTH <- def.NewEvent{def.DOOR, def.DOOR_CLOSE}
 
-				} else if newEvent.Data == def.DOOR_CLOSE {
+				} else if newEvent.Data.(int) == def.DOOR_CLOSE {
 					dir := chooseDirection(currentMap)
 					evenChan_fromtTH <- def.NewEvent{def.NEWDIR, dir}
 				}

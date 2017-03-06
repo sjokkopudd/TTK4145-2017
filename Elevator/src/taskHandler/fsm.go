@@ -22,6 +22,16 @@ func onNewButtonEvent() {
 }
 
 func chooseDirection(currentMap def.ElevMap) int {
+	for e := 0; e < def.MY_IP; e++ {
+		if currentMap[e].Dir == def.IDLE {
+			for f := 0; f < def.FLOORS; f++ {
+				if currentMap[e].Buttons[f][def.PANEL_BUTTON] == 0 {
+					return def.IDLE
+				}
+			}
+		}
+	}
+
 	for f := 0; f < def.FLOORS; f++ {
 		if currentMap[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 {
 			return isAbove(currentMap, f)

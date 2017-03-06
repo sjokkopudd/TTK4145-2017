@@ -3,6 +3,7 @@ package main
 import (
 	"def"
 	"elevatorMap"
+	"fmt"
 	"hardware"
 	"network"
 	"taskHandler"
@@ -11,9 +12,9 @@ import (
 
 func main() {
 
-	transmitChan := make(chan def.ElevMap, 4)
-	receiveChan := make(chan def.ElevMap, 4)
-	deadElevatorChan := make(chan def.NewEvent, 5)
+	transmitChan := make(chan def.ElevMap, 10)
+	receiveChan := make(chan def.ElevMap, 10)
+	deadElevatorChan := make(chan def.NewEvent, 10)
 
 	eventChan_fromHW := make(chan def.NewEvent)
 	eventChan_fromTH := make(chan def.NewEvent)
@@ -30,6 +31,7 @@ func main() {
 	for {
 		select {
 		case newEvent := <-eventChan_fromHW:
+			fmt.Println("NEW HW EVENT: ", newEvent)
 			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
 			if changeMade {
 				transmitChan <- currentMap
@@ -38,6 +40,8 @@ func main() {
 			}
 
 		case receivedMap := <-receiveChan:
+
+			fmt.Println("RECIEVED MAP: ", receivedMap)
 			newEvent := elevatorMap.ReceivedMapFromNetwork(receivedMap)
 			currentMap, changemade := elevatorMap.UpdateMap(newEvent)
 			if changemade {
@@ -48,6 +52,7 @@ func main() {
 
 			}
 		case newEvent := <-eventChan_fromTH:
+			fmt.Println("NEW TH EVENT: ", newEvent)
 			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
 			if changeMade {
 				transmitChan <- currentMap

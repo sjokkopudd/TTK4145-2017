@@ -106,7 +106,7 @@ func transmitUdpPacket(transmitChan chan def.ElevMap, ackChan chan ackInfo, dead
 
 						packet.sendAsJSON(def.IPs[e])
 
-						time.Sleep(100 * time.Millisecond)
+						time.Sleep(200 * time.Millisecond)
 
 						select {
 						case ackRecived = <-ackChan:

@@ -2,8 +2,8 @@ package hardware
 
 import (
 	"def"
-	"log"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -125,7 +125,6 @@ func SetMotorDir(dir int) {
 			IoWriteAnalog(MOTOR, 2800)
 		}
 	}
-
 }
 
 func setFloorIndicator(floor int) {
@@ -202,6 +201,5 @@ func SetDoorLight(val int) {
 			IoClearBit(LIGHT_DOOR_OPEN)
 		}
 	}
-
 
 }

@@ -2,7 +2,7 @@ package def
 
 const (
 	//Physical constants
-	ELEVATORS    = 2
+	ELEVATORS    = 1
 	FLOORS       = 4
 	UP_BUTTON    = 0
 	DOWN_BUTTON  = 1
@@ -25,14 +25,14 @@ const (
 	NEWDIR        = 5
 
 	//Directions and door cases
-	UP         = -1
+	UP         = 1
 	IDLE       = 0
-	DOWN       = 1
+	DOWN       = -1
 	DOOR_OPEN  = 1
 	DOOR_CLOSE = 0
 )
 
-var IPs = [ELEVATORS]string{ELEV_1, ELEV_2}
+var IPs = [ELEVATORS]string{ELEV_1}
 
 type NewEvent struct {
 	EventType int

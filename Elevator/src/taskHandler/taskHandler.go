@@ -31,11 +31,14 @@ func EventHandler(eventChan_toTH chan def.NewEvent, evenChan_fromtTH chan def.Ne
 			case def.BUTTONPUSH:
 				if currentMap[def.MY_ID].Dir == def.IDLE {
 					dir := chooseDirection(currentMap)
+					if dir == def.IDLE {
+						evenChan_fromtTH <- def.NewEvent{def.DOOR, def.DOOR_OPEN}
+					}
+
 					evenChan_fromtTH <- def.NewEvent{def.NEWDIR, dir}
 				}
 			case def.NEWDIR:
 				hardware.SetMotorDir(newEvent.Data.(int))
-
 			case def.OTHERELEVATOR:
 
 			case def.ELEVATORDEAD:

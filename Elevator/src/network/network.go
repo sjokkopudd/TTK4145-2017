@@ -88,14 +88,6 @@ func (p udpPacket) sendAsJSON(r string) {
 	defer send_conn.Close()
 
 	send_conn.Write(json_buffer)
-
-	switch p.Type {
-	case MAP:
-		fmt.Println("Map sent \n")
-
-	case ACK:
-		fmt.Println("Ack sent \n")
-	}
 }
 
 func transmitUdpPacket(transmitChan chan def.ElevMap, ackChan chan ackInfo, deadElev chan def.NewEvent) {
@@ -119,6 +111,7 @@ func transmitUdpPacket(transmitChan chan def.ElevMap, ackChan chan ackInfo, dead
 						select {
 						case ackRecived = <-ackChan:
 							if ackRecived.IP == def.IPs[e] {
+								fmt.Println("Map transfer acknowleged")
 								break WAIT_FOR_ACK
 							}
 						default:
@@ -128,7 +121,7 @@ func transmitUdpPacket(transmitChan chan def.ElevMap, ackChan chan ackInfo, dead
 
 					if !ackRecived.Value {
 
-						fmt.Println("elev dead")
+						fmt.Println("No acknowledge recieved. ", def.IPs[e], " is dead.")
 
 						//elevatorIsDead := def.NewEvent{def.ELEVATOR_DEAD, e}
 						//deadElev <- elevatorIsDead
@@ -180,9 +173,7 @@ func reciveUdpPacket(receiveChan chan def.ElevMap, ackChan chan ackInfo) {
 					log.Fatal(err)
 				}
 
-				fmt.Println("Recived map:\n", m, "\n")
-
-				//receiveChan <- m
+				receiveChan <- m
 
 				sendAcknowledge(receivedPacket.IP)
 
@@ -199,8 +190,6 @@ func reciveUdpPacket(receiveChan chan def.ElevMap, ackChan chan ackInfo) {
 					IP:    receivedPacket.IP,
 					Value: v,
 				}
-
-				fmt.Println("Recived ack:\n", a, "\n")
 
 				ackChan <- a
 

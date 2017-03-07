@@ -7,7 +7,7 @@ import (
 	"hardware"
 	"network"
 	//"taskHandler"
-	"time"
+	//"time"
 )
 
 func main() {
@@ -34,9 +34,9 @@ func main() {
 			fmt.Println("FROM HW CHAN")
 			elevatorMap.PrintEvent(newEvent)
 			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
+			mapChan_toHW <- currentMap
 			if changeMade {
 				transmitChan <- currentMap
-				mapChan_toHW <- currentMap
 				//eventChan_toTH <- newEvent
 			}
 
@@ -45,6 +45,7 @@ func main() {
 			newEvent := elevatorMap.ReceivedMapFromNetwork(receivedMap)
 			elevatorMap.PrintEvent(newEvent)
 			currentMap, changemade := elevatorMap.UpdateMap(newEvent)
+			mapChan_toHW <- currentMap
 			elevatorMap.PrintMap(currentMap)
 			if changemade {
 				transmitChan <- currentMap
@@ -62,7 +63,5 @@ func main() {
 				//eventChan_toTH <- newEvent
 			}
 		}
-
-		time.Sleep(10 * time.Millisecond)
 	}
 }

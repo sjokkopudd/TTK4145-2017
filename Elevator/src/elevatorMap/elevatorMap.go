@@ -26,7 +26,6 @@ func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
 					if receivedMap[e].Buttons[f][b] != newMap[e].Buttons[f][b] {
 						if receivedMap[e].Buttons[f][b] == 1 && newMap[e].Buttons[f][b] != 1 {
 							if b != def.PANEL_BUTTON {
-								newMap[def.MY_ID].Buttons[f][b] = 1
 								newMap[e].Buttons[f][b] = 1
 								changes := def.NewEvent{def.BUTTONPUSH, []int{f, b}}
 								setMap(newMap)

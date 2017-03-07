@@ -104,6 +104,8 @@ func transmitUdpPacket(transmitChan chan def.ElevMap, ackChan chan ackInfo, dead
 				WAIT_FOR_ACK:
 					for a := 0; a < 5; a++ {
 
+						fmt.Println("\nNetwork sending map \n")
+
 						packet.sendAsJSON(def.IPs[e])
 
 						time.Sleep(200 * time.Millisecond)
@@ -165,6 +167,8 @@ func reciveUdpPacket(receiveChan chan def.ElevMap, ackChan chan ackInfo) {
 
 			switch receivedPacket.Type {
 			case MAP:
+
+				fmt.Println("\nNetwork has received a map\n")
 
 				var m def.ElevMap
 

@@ -24,7 +24,7 @@ func main() {
 	elevatorMap.InitMap()
 
 	go hardware.InitHardware(mapChan_toHW, eventChan_fromHW)
-	//go taskHandler.EventHandler(eventChan_toTH, eventChan_fromTH)
+	go taskHandler.EventHandler(eventChan_toTH, eventChan_fromTH)
 
 	go network.StartNetworkCommunication(transmitChan, receiveChan, deadElevatorChan)
 
@@ -37,7 +37,7 @@ func main() {
 			mapChan_toHW <- currentMap
 			if changeMade {
 				transmitChan <- currentMap
-				//eventChan_toTH <- newEvent
+				eventChan_toTH <- newEvent
 			}
 
 		case receivedMap := <-receiveChan:
@@ -51,7 +51,7 @@ func main() {
 				transmitChan <- currentMap
 			} else {
 				mapChan_toHW <- currentMap
-				//eventChan_toTH <- newEvent
+				eventChan_toTH <- newEvent
 
 			}
 		case newEvent := <-eventChan_fromTH:
@@ -60,7 +60,7 @@ func main() {
 			if changeMade {
 				transmitChan <- currentMap
 				mapChan_toHW <- currentMap
-				//eventChan_toTH <- newEvent
+				eventChan_toTH <- newEvent
 			}
 		}
 	}

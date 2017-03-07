@@ -193,6 +193,8 @@ func reciveUdpPacket(receiveChan chan def.ElevMap, ackChan chan ackInfo) {
 					receivedPackages[receivedPacket.PacketID] = true
 					receiveChan <- m
 
+				} else {
+					fmt.Println("RECEIVED AN OLD MAP - I THREW IT ON THE GROUND!!!")
 				}
 
 				receivedPacket.sendAck()

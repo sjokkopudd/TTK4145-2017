@@ -12,12 +12,12 @@ import (
 
 func main() {
 
-	transmitChan := make(chan def.ElevMap, 10)
-	receiveChan := make(chan def.ElevMap, 10)
-	deadElevatorChan := make(chan def.NewEvent, 10)
+	transmitChan := make(chan def.ElevMap, 100)
+	receiveChan := make(chan def.ElevMap, 100)
+	deadElevatorChan := make(chan def.NewEvent, 100)
 
-	eventChan_fromHW := make(chan def.NewEvent)
-	eventChan_fromTH := make(chan def.NewEvent)
+	eventChan_fromHW := make(chan def.NewEvent, 100)
+	eventChan_fromTH := make(chan def.NewEvent, 100)
 	//eventChan_toTH := make(chan def.NewEvent, 4)
 	mapChan_toHW := make(chan def.ElevMap)
 

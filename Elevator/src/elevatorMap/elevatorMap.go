@@ -27,6 +27,7 @@ func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
 						if receivedMap[e].Buttons[f][b] == 1 && newMap[e].Buttons[f][b] != 1 {
 							if b != def.PANEL_BUTTON {
 								newMap[def.MY_ID].Buttons[f][b] = 1
+								newMap[e].Buttons[f][b] = 1
 								changes := def.NewEvent{def.BUTTONPUSH, []int{f, b}}
 								setMap(newMap)
 								return changes
@@ -44,6 +45,12 @@ func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
 							newMap[e].Door = 1
 							newMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
 							newMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
+
+							newMap[e].Buttons[f][def.UP_BUTTON] = 0
+							newMap[e].Buttons[f][def.DOWN_BUTTON] = 0
+
+							newMap[e].Buttons[f][def.PANEL_BUTTON] = 0
+
 							changes := def.NewEvent{def.OTHERELEVATOR, -1}
 							setMap(newMap)
 							return changes

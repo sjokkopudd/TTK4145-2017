@@ -34,6 +34,15 @@ const (
 
 var IPs = [ELEVATORS]string{ELEV_1, ELEV_2}
 
+func FindID(ip string) int {
+	for i := 0; i < ELEVATORS; i++ {
+		if ip == IPs[i] {
+			return i
+		}
+	}
+	return -1
+}
+
 type NewEvent struct {
 	EventType int
 	Data      interface{}
@@ -41,7 +50,7 @@ type NewEvent struct {
 
 type ElevatorInfo struct {
 	ID      int
-	Buttons [FLOORS][3]int
+	Buttons [FLOORS][BUTTONS]int
 	Dir     int
 	Pos     int
 	Door    int

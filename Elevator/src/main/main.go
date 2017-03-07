@@ -36,7 +36,7 @@ func main() {
 			if changeMade {
 				transmitChan <- currentMap
 				mapChan_toHW <- currentMap
-				eventChan_toTH <- newEvent
+				//eventChan_toTH <- newEvent
 			}
 
 		case receivedMap := <-receiveChan:
@@ -48,7 +48,7 @@ func main() {
 				transmitChan <- currentMap
 			} else {
 				mapChan_toHW <- currentMap
-				eventChan_toTH <- newEvent
+				//eventChan_toTH <- newEvent
 
 			}
 		case newEvent := <-eventChan_fromTH:
@@ -57,7 +57,7 @@ func main() {
 			if changeMade {
 				transmitChan <- currentMap
 				mapChan_toHW <- currentMap
-				eventChan_toTH <- newEvent
+				//eventChan_toTH <- newEvent
 			}
 		}
 

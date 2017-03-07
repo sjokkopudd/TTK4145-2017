@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"hardware"
 	"network"
-	"taskHandler"
+	//"taskHandler"
 	"time"
 )
 
@@ -18,20 +18,21 @@ func main() {
 
 	eventChan_fromHW := make(chan def.NewEvent)
 	eventChan_fromTH := make(chan def.NewEvent)
-	eventChan_toTH := make(chan def.NewEvent, 4)
+	//eventChan_toTH := make(chan def.NewEvent, 4)
 	mapChan_toHW := make(chan def.ElevMap)
 
 	elevatorMap.InitMap()
 
 	go hardware.InitHardware(mapChan_toHW, eventChan_fromHW)
-	go taskHandler.EventHandler(eventChan_toTH, eventChan_fromTH)
+	//go taskHandler.EventHandler(eventChan_toTH, eventChan_fromTH)
 
 	go network.StartNetworkCommunication(transmitChan, receiveChan, deadElevatorChan)
 
 	for {
 		select {
 		case newEvent := <-eventChan_fromHW:
-			fmt.Println("NEW HW EVENT: ", newEvent)
+			fmt.Println("FROM HW CHAN")
+			elevatorMap.PrintEvent(newEvent)
 			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
 			if changeMade {
 				transmitChan <- currentMap
@@ -40,10 +41,11 @@ func main() {
 			}
 
 		case receivedMap := <-receiveChan:
-
-			fmt.Println("RECIEVED MAP: ", receivedMap)
+			fmt.Println("FROM RECEIVE CHAN")
 			newEvent := elevatorMap.ReceivedMapFromNetwork(receivedMap)
+			elevatorMap.PrintEvent(newEvent)
 			currentMap, changemade := elevatorMap.UpdateMap(newEvent)
+			elevatorMap.PrintMap(currentMap)
 			if changemade {
 				transmitChan <- currentMap
 			} else {

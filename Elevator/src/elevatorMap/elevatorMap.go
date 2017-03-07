@@ -125,11 +125,43 @@ func UpdateMap(newEvent def.NewEvent) (def.ElevMap, bool) {
 
 func PrintMap(elevatorMap def.ElevMap) {
 	for e := 0; e < def.ELEVATORS; e++ {
-		fmt.Println("ID: ", e)
-		fmt.Println(elevatorMap[e])
-		fmt.Println()
+		if e == def.MY_ID {
+			fmt.Println(elevatorMap[e].ID, " - My Map ")
+
+		} else {
+			fmt.Println(elevatorMap[e].ID)
+		}
+		for f := 0; f < def.FLOORS; f++ {
+			fmt.Println(elevatorMap[e].Buttons[f])
+		}
+		fmt.Println(elevatorMap[e].Dir)
+		fmt.Println(elevatorMap[e].Pos)
+		fmt.Println(elevatorMap[e].Door)
+		fmt.Println(elevatorMap[e].IsAlive)
 
 	}
+}
+
+func PrintEvent(event def.NewEvent) {
+	switch event.EventType {
+
+	case def.NEWFLOOR:
+		fmt.Println("Event: elevator arrival at floor: ", event.Data)
+
+	case def.BUTTONPUSH:
+		fmt.Println("Event: button pressed: ", event.Data)
+
+	case def.DOOR:
+		fmt.Println("Event: door open/close")
+
+	case def.OTHERELEVATOR:
+		fmt.Println("Event: another elevator did something")
+
+	case def.NEWDIR:
+		fmt.Println("Event: elevator changed direction")
+
+	}
+
 }
 
 func GetMap() def.ElevMap {

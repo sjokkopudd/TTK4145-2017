@@ -22,6 +22,8 @@ func main() {
 
 	elevatorMap.InitMap()
 
+	time.Sleep(50 * time.Millisecond)
+
 	go hardware.InitHardware(mapChan_toHW, eventChan_fromHW)
 	go taskHandler.EventHandler(eventChan_toTH, eventChan_fromTH)
 

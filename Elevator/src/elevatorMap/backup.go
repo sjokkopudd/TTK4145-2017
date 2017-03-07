@@ -36,7 +36,7 @@ func ReadBackup() def.ElevMap {
 		stringMatrix = append(stringMatrix, csvLine)
 	}
 
-	newMap := def.NewCleanElevMap()
+	newMap := *def.NewCleanElevMap()
 
 	for e := 0; e < def.ELEVATORS; e++ {
 		newMap[e].ID, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)][0])

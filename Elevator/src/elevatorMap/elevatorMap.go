@@ -6,14 +6,15 @@ import (
 	"sync"
 )
 
-var localMap def.ElevMap
 var mapMutex = &sync.Mutex{}
+var localMap *def.ElevMap
 
 func InitMap() {
 
+	localMap = new(def.ElevMap)
 	localMap = def.NewCleanElevMap()
 
-	WriteBackup(localMap)
+	WriteBackup(*localMap)
 
 }
 
@@ -27,6 +28,7 @@ func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
 						if receivedMap[e].Buttons[f][b] == 1 && newMap[e].Buttons[f][b] != 1 {
 							if b != def.PANEL_BUTTON {
 								newMap[def.MY_ID].Buttons[f][b] = 1
+								newMap[e].Buttons[f][b] = 1
 								changes := def.NewEvent{def.BUTTONPUSH, []int{f, b}}
 								setMap(newMap)
 								return changes
@@ -134,13 +136,18 @@ func PrintMap(elevatorMap def.ElevMap) {
 
 func GetMap() def.ElevMap {
 	mapMutex.Lock()
-	currentMap := localMap
+	currentMap := *localMap
 	mapMutex.Unlock()
+	fmt.Println("Copied localMap: ")
+	fmt.Println(currentMap)
 	return currentMap
 }
 
 func setMap(newMap def.ElevMap) {
 	mapMutex.Lock()
-	localMap = newMap
+	*localMap = newMap
+	fmt.Println("Overwrote localMap: ")
+	fmt.Println(*localMap)
 	mapMutex.Unlock()
+
 }

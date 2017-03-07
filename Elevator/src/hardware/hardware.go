@@ -73,11 +73,17 @@ func setLights(mapChan_toHW chan def.ElevMap) {
 			for b := 0; b < def.BUTTONS; b++ {
 				for f := 0; f < def.FLOORS; f++ {
 					ligthVal := 1
-					for e := 0; e < def.ELEVATORS; e++ {
-						if (currentMap[e].Buttons[f][b] != 1) && (currentMap[e].IsAlive == 1) {
+					if b != def.PANEL_BUTTON {
+						for e := 0; e < def.ELEVATORS; e++ {
+							if (currentMap[e].Buttons[f][b] != 1) && (currentMap[e].IsAlive == 1) {
+								ligthVal = 0
+							}
+
+						}
+					} else {
+						if (currentMap[def.MY_ID].Buttons[f][b] != 1) && (currentMap[def.MY_ID].IsAlive == 1) {
 							ligthVal = 0
 						}
-
 					}
 
 					setOrderLight(byte(f), byte(b), byte(ligthVal))

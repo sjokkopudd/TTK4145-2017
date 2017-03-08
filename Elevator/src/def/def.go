@@ -47,6 +47,7 @@ type ElevatorInfo struct {
 	State   int
 	Dir     int
 	Pos     int
+	Door    int
 	IsAlive int
 }
 
@@ -64,7 +65,9 @@ func NewCleanElevMap() *ElevMap {
 			}
 		}
 		newMap[e].State = IDLE
+		newMap[e].Dir = STILL
 		newMap[e].Pos = 0
+		newMap[e].Door = 0
 		newMap[e].IsAlive = 1
 	}
 	return newMap

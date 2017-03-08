@@ -4,9 +4,9 @@ import (
 	"def"
 	"elevatorMap"
 	"fmt"
+	"fsm"
 	"hardware"
 	"network"
-	"taskHandler"
 	"time"
 )
 
@@ -26,7 +26,7 @@ func main() {
 	time.Sleep(50 * time.Millisecond)
 
 	go hardware.InitHardware(mapChan_toHW, eventChan_fromHW)
-	go taskHandler.EventHandler(eventChan_toTH, eventChan_fromTH)
+	go fsm.Fsm(eventChan_toTH, eventChan_fromTH)
 
 	go network.StartNetworkCommunication(transmitChan, receiveChan, deadElevatorChan)
 

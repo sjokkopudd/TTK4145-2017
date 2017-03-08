@@ -122,7 +122,7 @@ func pollNewEvents(eventChan_fromHW chan def.NewEvent) {
 	for {
 		newPos := readFloor()
 		if (newPos != -1) && (newPos != lastPos) {
-			newEvent := def.NewEvent{def.NEWFLOOR, newPos}
+			newEvent := def.NewEvent{def.NEWFLOOR_EVENT, newPos}
 			eventChan_fromHW <- newEvent
 			lastPos = newPos
 		}
@@ -130,7 +130,7 @@ func pollNewEvents(eventChan_fromHW chan def.NewEvent) {
 			for b := 0; b < def.BUTTONS; b++ {
 				if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
 					if readButton(f, b) && buttonState[f][b] == false {
-						newEvent := def.NewEvent{def.BUTTONPUSH, []int{f, b}}
+						newEvent := def.NewEvent{def.BUTTONPUSH_EVENT, []int{f, b}}
 						eventChan_fromHW <- newEvent
 						buttonState[f][b] = true
 

@@ -28,13 +28,13 @@ func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
 						if receivedMap[e].Buttons[f][b] == 1 && newMap[e].Buttons[f][b] != 1 {
 							if b != def.PANEL_BUTTON {
 								newMap[e].Buttons[f][b] = 1
-								changes := def.NewEvent{def.BUTTONPUSH, []int{f, b}}
+								changes := def.NewEvent{def.BUTTONPUSH_EVENT, []int{f, b}}
 								setMap(newMap)
 								return changes
 
 							} else {
 								newMap[e].Buttons[f][b] = 1
-								changes := def.NewEvent{def.OTHERELEVATOR, -1}
+								changes := def.NewEvent{def.OTHERELEVATOR_EVENT, -1}
 								setMap(newMap)
 								return changes
 							}
@@ -51,7 +51,7 @@ func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
 
 							newMap[e].Buttons[f][def.PANEL_BUTTON] = 0
 
-							changes := def.NewEvent{def.OTHERELEVATOR, -1}
+							changes := def.NewEvent{def.OTHERELEVATOR_EVENT, -1}
 							setMap(newMap)
 							return changes
 						}
@@ -62,26 +62,26 @@ func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
 
 			if receivedMap[e].Dir != newMap[e].Dir {
 				newMap[e].Dir = receivedMap[e].Dir
-				changes := def.NewEvent{def.OTHERELEVATOR, -1}
+				changes := def.NewEvent{def.OTHERELEVATOR_EVENT, -1}
 				setMap(newMap)
 				return changes
 			}
 			if receivedMap[e].Pos != newMap[e].Pos {
 				newMap[e].Pos = receivedMap[e].Pos
-				changes := def.NewEvent{def.OTHERELEVATOR, -1}
+				changes := def.NewEvent{def.OTHERELEVATOR_EVENT, -1}
 				setMap(newMap)
 				return changes
 			}
 			if receivedMap[e].Door != newMap[e].Door {
 				newMap[e].Door = receivedMap[e].Door
-				changes := def.NewEvent{def.OTHERELEVATOR, -1}
+				changes := def.NewEvent{def.OTHERELEVATOR_EVENT, -1}
 				setMap(newMap)
 				return changes
 			}
 		}
 	}
 
-	changes := def.NewEvent{def.NEWFLOOR, newMap[def.MY_ID].Pos}
+	changes := def.NewEvent{def.NEWFLOOR_EVENT, newMap[def.MY_ID].Pos}
 	return changes
 
 }
@@ -91,20 +91,20 @@ func UpdateMap(newEvent def.NewEvent) (def.ElevMap, bool) {
 	newMap := GetMap()
 	switch newEvent.EventType {
 
-	case def.NEWFLOOR:
+	case def.NEWFLOOR_EVENT:
 		if newMap[def.MY_ID].Pos != newEvent.Data.(int) {
 			newMap[def.MY_ID].Pos = newEvent.Data.(int)
 			changeMade = true
 		}
 
-	case def.BUTTONPUSH:
+	case def.BUTTONPUSH_EVENT:
 		data := newEvent.Data.([]int)
 		if newMap[def.MY_ID].Buttons[data[0]][data[1]] != 1 {
 			newMap[def.MY_ID].Buttons[data[0]][data[1]] = 1
 			changeMade = true
 		}
 
-	case def.DOOR:
+	case def.DOOR_EVENT:
 		newMap[def.MY_ID].Door = newEvent.Data.(int)
 		newMap[def.MY_ID].Dir = def.IDLE
 		for b := 0; b < def.BUTTONS; b++ {
@@ -112,10 +112,10 @@ func UpdateMap(newEvent def.NewEvent) (def.ElevMap, bool) {
 		}
 		changeMade = true
 
-	case def.OTHERELEVATOR:
+	case def.OTHERELEVATOR_EVENT:
 		changeMade = true
 
-	case def.NEWDIR:
+	case def.NEWDIR_EVENT:
 		if newMap[def.MY_ID].Dir != newEvent.Data.(int) {
 			newMap[def.MY_ID].Dir = newEvent.Data.(int)
 			changeMade = true
@@ -152,19 +152,19 @@ func PrintMap(elevatorMap def.ElevMap) {
 func PrintEvent(event def.NewEvent) {
 	switch event.EventType {
 
-	case def.NEWFLOOR:
+	case def.NEWFLOOR_EVENT:
 		fmt.Println("Event: elevator arrival at floor: ", event.Data)
 
-	case def.BUTTONPUSH:
+	case def.BUTTONPUSH_EVENT:
 		fmt.Println("Event: button pressed: ", event.Data)
 
-	case def.DOOR:
+	case def.DOOR_EVENT:
 		fmt.Println("Event: door open/close")
 
-	case def.OTHERELEVATOR:
+	case def.OTHERELEVATOR_EVENT:
 		fmt.Println("Event: another elevator did something")
 
-	case def.NEWDIR:
+	case def.NEWDIR_EVENT:
 		fmt.Println("Event: elevator changed direction")
 
 	}

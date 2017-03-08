@@ -1,10 +1,7 @@
-package taskHandler
+package fsm
 
 import (
 	"def"
-	"elevatorMap"
-	"hardware"
-	"time"
 )
 
 const (
@@ -17,7 +14,7 @@ var state int
 var direction int
 
 func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage) {
-	for {
+	for {
 		select {
 		case data := <-inDataChan:
 
@@ -26,11 +23,11 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 			case IDLE:
 
 				switch data.Event.(def.NewEvent).EventType {
-				case def.BUTTONPUSH:
+				case def.BUTTONPUSH_EVENT:
 
 					var doorOpen bool
 
-					doorOpen, direction = stopAndOpenDoors(data.Map)
+					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap))
 
 					if doorOpen {
 
@@ -46,7 +43,7 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 
 					var startedMoving bool
 
-					startedMoving, direction = takeOrder(data.Map)
+					startedMoving, direction = takeOrder(data.Map.(def.ElevMap))
 
 					if startedMoving {
 
@@ -67,7 +64,7 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 
 					var doorOpen bool
 
-					doorOpen, direction = stopAndOpenDoors(data.Map)
+					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap))
 
 					if doorOpen {
 
@@ -89,7 +86,7 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 				case def.BUTTONPUSH_EVENT:
 
 					var doorOpen bool
-					doorOpen, direction = stopAndOpenDoors(data.Map)
+					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap))
 
 					if doorOpen {
 
@@ -98,7 +95,7 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 					}
 				}
 
-				closeDoors = doorTimeout()
+				closeDoors := doorTimeout()
 
 				if closeDoors {
 					msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, 0})
@@ -107,7 +104,7 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 
 					var startedMoving bool
 
-					startedMoving, direction = takeOrder(data.Map)
+					startedMoving, direction = takeOrder(data.Map.(def.ElevMap))
 					if startedMoving {
 						msg = def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, direction})
 

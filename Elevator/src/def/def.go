@@ -17,12 +17,12 @@ const (
 	PORT   = ":20005"
 
 	//Event types
-	NEWFLOOR      = 0
-	BUTTONPUSH    = 1
-	DOOR          = 2
-	OTHERELEVATOR = 3
-	ELEVATORDEAD  = 4
-	NEWDIR        = 5
+	NEWFLOOR_EVENT      = 0
+	BUTTONPUSH_EVENT    = 1
+	DOOR_EVENT          = 2
+	OTHERELEVATOR_EVENT = 3
+	ELEVATORDEAD_EVENT  = 4
+	NEWDIR_EVENT        = 5
 
 	//Directions and door cases
 	UP    = 1
@@ -50,11 +50,6 @@ type ElevatorInfo struct {
 	IsAlive int
 }
 
-type Ack struct {
-	Msg string
-	IP  string
-}
-
 type ElevMap [ELEVATORS]ElevatorInfo
 
 func NewCleanElevMap() *ElevMap {
@@ -73,4 +68,18 @@ func NewCleanElevMap() *ElevMap {
 		newMap[e].IsAlive = 1
 	}
 	return newMap
+}
+
+type ChannelMessage struct {
+	Map   interface{}
+	Event interface{}
+}
+
+func ConstructChannelMessage(m interface{}, e interface{}) ChannelMessage {
+	newChannelMessage := ChannelMessage{
+		Map:   m,
+		Event: e,
+	}
+
+	return newChannelMessage
 }

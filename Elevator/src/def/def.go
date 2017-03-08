@@ -34,15 +34,6 @@ const (
 
 var IPs = [ELEVATORS]string{ELEV_1, ELEV_2}
 
-func FindID(ip string) int {
-	for i := 0; i < ELEVATORS; i++ {
-		if ip == IPs[i] {
-			return i
-		}
-	}
-	return -1
-}
-
 type NewEvent struct {
 	EventType int
 	Data      interface{}
@@ -64,9 +55,9 @@ type Ack struct {
 
 type ElevMap [ELEVATORS]ElevatorInfo
 
-func NewCleanElevMap() ElevMap {
+func NewCleanElevMap() *ElevMap {
 
-	var newMap ElevMap
+	newMap := new(ElevMap)
 
 	for e := 0; e < ELEVATORS; e++ {
 		newMap[e].ID = e

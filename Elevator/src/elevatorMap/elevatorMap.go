@@ -6,14 +6,15 @@ import (
 	"sync"
 )
 
-var localMap def.ElevMap
 var mapMutex = &sync.Mutex{}
+var localMap *def.ElevMap
 
 func InitMap() {
 
+	localMap = new(def.ElevMap)
 	localMap = def.NewCleanElevMap()
 
-	WriteBackup(localMap)
+	WriteBackup(*localMap)
 
 }
 
@@ -172,13 +173,18 @@ func PrintEvent(event def.NewEvent) {
 
 func GetMap() def.ElevMap {
 	mapMutex.Lock()
-	currentMap := localMap
+	currentMap := *localMap
 	mapMutex.Unlock()
+	fmt.Println("Copied localMap: ")
+	fmt.Println(currentMap)
 	return currentMap
 }
 
 func setMap(newMap def.ElevMap) {
 	mapMutex.Lock()
-	localMap = newMap
+	*localMap = newMap
+	fmt.Println("Overwrote localMap: ")
+	fmt.Println(*localMap)
 	mapMutex.Unlock()
+
 }

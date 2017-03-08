@@ -75,29 +75,46 @@ func onNewButtonEvent() {
 
 }
 
-func chooseDirection(currentMap def.ElevMap) int {
-	for e := 0; e < def.MY_ID; e++ {
-		if currentMap[e].Dir == def.IDLE {
-			for f := 0; f < def.FLOORS; f++ {
-				if currentMap[e].Buttons[f][def.PANEL_BUTTON] == 0 {
-					return def.IDLE
-				}
-			}
-		}
-	}
+func chooseDirection(currentMap def.ElevMap, newEvent def.NewEvent) int {
 
 	for f := 0; f < def.FLOORS; f++ {
 		if currentMap[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 {
 			return isAbove(currentMap, f)
 		}
 	}
-	for f := 0; f < def.FLOORS; f++ {
-		for b := 0; b < def.BUTTONS-1; b++ {
-			if currentMap[def.MY_ID].Buttons[f][b] == 1 {
-				return isAbove(currentMap, f)
+	if newEvent.EventType == def.BUTTONPUSH {
+		data := newEvent.Data.([]int)
+		for e := 0; e < def.ELEVATORS; e++ {
+			if (data[0] == currentMap[e].Pos) && (currentMap[e].Dir == def.IDLE) {
+				return def.IDLE
 			}
 		}
 	}
+
+	panelPushed := true
+
+	for e := 0; e < def.MY_ID; e++ {
+		if currentMap[e].Dir == def.IDLE {
+			for f := 0; f < def.FLOORS; f++ {
+				if currentMap[e].Buttons[f][def.PANEL_BUTTON] == 0 {
+					panelPushed = false
+				} else {
+					panelPushed = true
+				}
+			}
+		}
+	}
+
+	if panelPushed {
+		for f := 0; f < def.FLOORS; f++ {
+			for b := 0; b < def.BUTTONS-1; b++ {
+				if currentMap[def.MY_ID].Buttons[f][b] == 1 {
+					return isAbove(currentMap, f)
+				}
+			}
+		}
+	}
+
 	return def.IDLE
 }
 

@@ -25,11 +25,13 @@ const (
 	NEWDIR        = 5
 
 	//Directions and door cases
-	UP         = 1
-	IDLE       = 0
-	DOWN       = -1
-	DOOR_OPEN  = 1
-	DOOR_CLOSE = 0
+	UP    = 1
+	STILL = 0
+	DOWN  = -1
+
+	IDLE      = 0
+	MOVING    = 1
+	DOOR_OPEN = 2
 )
 
 var IPs = [ELEVATORS]string{ELEV_1, ELEV_2}
@@ -42,9 +44,9 @@ type NewEvent struct {
 type ElevatorInfo struct {
 	ID      int
 	Buttons [FLOORS][BUTTONS]int
+	State   int
 	Dir     int
 	Pos     int
-	Door    int
 	IsAlive int
 }
 
@@ -66,9 +68,8 @@ func NewCleanElevMap() *ElevMap {
 				newMap[e].Buttons[f][b] = 0
 			}
 		}
-		newMap[e].Dir = 0
+		newMap[e].State = IDLE
 		newMap[e].Pos = 0
-		newMap[e].Door = 0
 		newMap[e].IsAlive = 1
 	}
 	return newMap

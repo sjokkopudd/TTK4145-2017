@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os/exec"
 	"time"
 )
 
@@ -18,7 +19,10 @@ func StartNetworkCommunication(transmitChan chan def.ElevMap, receiveChan chan d
 	fmt.Println("My IP: ", def.IPs[def.MY_ID])
 	fmt.Println("Trying to setup nettwork connection")
 
-	ackChan := make(chan ackInfo)
+	ackChan := make(chan ackInfo, 100)
+
+	receivedPackages = make(map[string]bool)
+	//transmitedPackages = make(map[string]int)
 
 	go reciveUdpPacket(receiveChan, ackChan)
 	go transmitUdpPacket(transmitChan, ackChan, deadElev)
@@ -27,6 +31,10 @@ func StartNetworkCommunication(transmitChan chan def.ElevMap, receiveChan chan d
 //-------------------------------------------------------------
 //------------------------- MODULE ----------------------------
 //-------------------------------------------------------------
+
+var receivedPackages map[string]bool
+
+//var transmitedPackages map[string]udpPacket
 
 const (
 	MAP = 1
@@ -39,36 +47,28 @@ type ackInfo struct {
 }
 
 type udpPacket struct {
-	Type int
-	IP   string
-	Data interface{}
+	Type        int
+	SenderIP    string
+	PacketID    string
+	Data        interface{}
+	AckReceived bool
 }
 
-func constructUdpPacket(t int, m interface{}) udpPacket {
+func constructUdpPacket(m interface{}) udpPacket {
 
-	switch t {
-	case MAP:
-		newPacket := udpPacket{
-			Type: t,
-			IP:   def.IPs[def.MY_ID],
-			Data: m,
-		}
-		return newPacket
-	case ACK:
-		newPacket := udpPacket{
-			Type: t,
-			IP:   def.IPs[def.MY_ID],
-			Data: true,
-		}
-		return newPacket
-	default:
-		newPacket := udpPacket{
-			Type: t,
-			IP:   def.IPs[def.MY_ID],
-			Data: false,
-		}
-		return newPacket
+	id, err := exec.Command("uuidgen").Output()
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	newPacket := udpPacket{
+		Type:     MAP,
+		SenderIP: def.IPs[def.MY_ID],
+		PacketID: string(id),
+		Data:     m,
+	}
+
+	return newPacket
 }
 
 func (p udpPacket) sendAsJSON(r string) {
@@ -88,14 +88,17 @@ func (p udpPacket) sendAsJSON(r string) {
 	defer send_conn.Close()
 
 	send_conn.Write(json_buffer)
+}
 
-	switch p.Type {
-	case MAP:
-		fmt.Println("Map sent \n")
-
-	case ACK:
-		fmt.Println("Ack sent \n")
+func (p udpPacket) sendAck() {
+	newPacket := udpPacket{
+		Type:     ACK,
+		SenderIP: def.IPs[def.MY_ID],
+		PacketID: p.PacketID,
+		Data:     true,
 	}
+
+	newPacket.sendAsJSON(p.SenderIP)
 }
 
 func transmitUdpPacket(transmitChan chan def.ElevMap, ackChan chan ackInfo, deadElev chan def.NewEvent) {
@@ -105,20 +108,23 @@ func transmitUdpPacket(transmitChan chan def.ElevMap, ackChan chan ackInfo, dead
 			for e := 0; e < def.ELEVATORS; e++ {
 				if e != def.MY_ID {
 
-					packet := constructUdpPacket(MAP, mapArray)
+					packet := constructUdpPacket(mapArray)
 
 					var ackRecived ackInfo
 
 				WAIT_FOR_ACK:
 					for a := 0; a < 5; a++ {
 
+						fmt.Println("\nNetwork sending map \n")
+
 						packet.sendAsJSON(def.IPs[e])
 
-						time.Sleep(100 * time.Millisecond)
+						time.Sleep(200 * time.Millisecond)
 
 						select {
 						case ackRecived = <-ackChan:
 							if ackRecived.IP == def.IPs[e] {
+								fmt.Println("Map transfer acknowleged")
 								break WAIT_FOR_ACK
 							}
 						default:
@@ -128,7 +134,7 @@ func transmitUdpPacket(transmitChan chan def.ElevMap, ackChan chan ackInfo, dead
 
 					if !ackRecived.Value {
 
-						fmt.Println("elev dead")
+						fmt.Println("No acknowledge recieved. ", def.IPs[e], " is dead.")
 
 						//elevatorIsDead := def.NewEvent{def.ELEVATOR_DEAD, e}
 						//deadElev <- elevatorIsDead
@@ -173,6 +179,8 @@ func reciveUdpPacket(receiveChan chan def.ElevMap, ackChan chan ackInfo) {
 			switch receivedPacket.Type {
 			case MAP:
 
+				fmt.Println("\nNetwork has received a map\n")
+
 				var m def.ElevMap
 
 				err = json.Unmarshal(data, &m)
@@ -180,11 +188,16 @@ func reciveUdpPacket(receiveChan chan def.ElevMap, ackChan chan ackInfo) {
 					log.Fatal(err)
 				}
 
-				fmt.Println("Recived map:\n", m, "\n")
+				if !receivedPackages[receivedPacket.PacketID] {
 
-				//receiveChan <- m
+					receivedPackages[receivedPacket.PacketID] = true
+					receiveChan <- m
 
-				sendAcknowledge(receivedPacket.IP)
+				} else {
+					fmt.Println("RECEIVED AN OLD MAP - I THREW IT ON THE GROUND!!!")
+				}
+
+				receivedPacket.sendAck()
 
 			case ACK:
 
@@ -196,21 +209,13 @@ func reciveUdpPacket(receiveChan chan def.ElevMap, ackChan chan ackInfo) {
 				}
 
 				a := ackInfo{
-					IP:    receivedPacket.IP,
+					IP:    receivedPacket.SenderIP,
 					Value: v,
 				}
-
-				fmt.Println("Recived ack:\n", a, "\n")
 
 				ackChan <- a
 
 			}
 		}
 	}
-}
-
-func sendAcknowledge(ip string) {
-	packet := constructUdpPacket(ACK, nil)
-	packet.sendAsJSON(ip)
-
 }

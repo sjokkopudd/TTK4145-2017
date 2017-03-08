@@ -41,7 +41,7 @@ type NewEvent struct {
 
 type ElevatorInfo struct {
 	ID      int
-	Buttons [FLOORS][3]int
+	Buttons [FLOORS][BUTTONS]int
 	Dir     int
 	Pos     int
 	Door    int

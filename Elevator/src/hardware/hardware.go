@@ -22,7 +22,7 @@ var mutex = &sync.Mutex{}
 // ----------------------- Interface -------------------------------
 // -----------------------------------------------------------------
 
-func InitHardware(mapChan_toHW chan def.ElevMap, eventChan_fromHW chan def.NewEvent) {
+func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.ChannelMessage) {
 	if USING_SIMULATOR {
 
 		fmt.Println("Mode: USING_SIMULATOR")
@@ -43,9 +43,9 @@ func InitHardware(mapChan_toHW chan def.ElevMap, eventChan_fromHW chan def.NewEv
 
 		goToNearestFloor()
 
-		go setLights(mapChan_toHW)
+		go setLights(msgChan_toHW)
 
-		go pollNewEvents(eventChan_fromHW)
+		go pollNewEvents(msgChan_fromHW)
 
 		//go goUpAndDown()
 
@@ -58,8 +58,8 @@ func InitHardware(mapChan_toHW chan def.ElevMap, eventChan_fromHW chan def.NewEv
 		}
 
 		goToNearestFloor()
-		go pollNewEvents(eventChan_fromHW)
-		go setLights(mapChan_toHW)
+		go pollNewEvents(msgChan_fromHW)
+		go setLights(msgChan_toHW)
 	}
 }
 
@@ -79,33 +79,33 @@ func goToNearestFloor() {
 // ----------------------------- LOOPS -------------------------------------
 // -------------------------------------------------------------------------
 
-func setLights(mapChan_toHW chan def.ElevMap) {
+func setLights(msgChan_toHW chan def.ChannelMessage) {
 	for {
 		select {
-		case currentMap := <-mapChan_toHW:
+		case currentMap := <-msgChan_toHW.Map.(def.ElevMap):
 			for b := 0; b < def.BUTTONS; b++ {
 				for f := 0; f < def.FLOORS; f++ {
-					ligthVal := 1
+					lightVal := 1
 					if b != def.PANEL_BUTTON {
 						for e := 0; e < def.ELEVATORS; e++ {
 							if (currentMap[e].Buttons[f][b] != 1) && (currentMap[e].IsAlive == 1) {
-								ligthVal = 0
+								lightVal = 0
 							}
 
 						}
 					} else {
-						if (currentMap[def.MY_ID].Buttons[f][b] != 1) && (currentMap[def.MY_ID].IsAlive == 1) {
-							ligthVal = 0
+						if currentMap[def.MY_ID].Buttons[f][b] != 1 {
+							lightVal = 0
 						}
 					}
 
-					setOrderLight(byte(f), byte(b), byte(ligthVal))
+					setOrderLight(byte(f), byte(b), byte(lightVal))
 
 				}
 			}
 			setFloorIndicator(currentMap[def.MY_ID].Pos)
 
-			if currentMap[def.MY_ID].Door == 1 {
+			if currentMap[def.MY_ID].State == def.DOOR_OPEN {
 				SetDoorLight(1)
 			} else {
 				SetDoorLight(0)
@@ -116,14 +116,15 @@ func setLights(mapChan_toHW chan def.ElevMap) {
 
 }
 
-func pollNewEvents(eventChan_fromHW chan def.NewEvent) {
+func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 	lastPos := -1
 	var buttonState [def.FLOORS][def.BUTTONS]bool
 	for {
 		newPos := readFloor()
 		if (newPos != -1) && (newPos != lastPos) {
 			newEvent := def.NewEvent{def.NEWFLOOR_EVENT, newPos}
-			eventChan_fromHW <- newEvent
+			newMsg := def.ConstructChannelMessage(nil, newEvent)
+			msgChan_fromHW <- newMsg
 			lastPos = newPos
 		}
 		for f := 0; f < def.FLOORS; f++ {
@@ -131,7 +132,8 @@ func pollNewEvents(eventChan_fromHW chan def.NewEvent) {
 				if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
 					if readButton(f, b) && buttonState[f][b] == false {
 						newEvent := def.NewEvent{def.BUTTONPUSH_EVENT, []int{f, b}}
-						eventChan_fromHW <- newEvent
+						newMsg := def.ConstructChannelMessage(nil, newEvent)
+						msgChan_fromHW <- newMsg
 						buttonState[f][b] = true
 
 					} else if !readButton(f, b) {

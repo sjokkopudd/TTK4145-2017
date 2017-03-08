@@ -12,57 +12,71 @@ import (
 
 func main() {
 
-	transmitChan := make(chan def.ElevMap, 100)
-	receiveChan := make(chan def.ElevMap, 100)
-	deadElevatorChan := make(chan def.NewEvent, 100)
-
-	eventChan_fromHW := make(chan def.NewEvent, 100)
-	eventChan_fromTH := make(chan def.NewEvent, 100)
-	eventChan_toTH := make(chan def.NewEvent, 4)
-	mapChan_toHW := make(chan def.ElevMap)
+	msgChan_toNetwork := make(chan def.ChannelMessage, 100)
+	msgChan_fromNetwork := make(chan def.ChannelMessage, 100)
+	msgChan_deadElevator := make(chan def.ChannelMessage, 100)
+	msgChan_toHardware := make(chan def.ChannelMessage, 100)
+	msgChan_toHardware := make(chan def.ChannelMessage, 100)
+	msgChan_toFsm := make(chan def.ChannelMessage, 100)
+	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
 
 	elevatorMap.InitMap()
 
 	time.Sleep(50 * time.Millisecond)
 
-	go hardware.InitHardware(mapChan_toHW, eventChan_fromHW)
-	go fsm.Fsm(eventChan_toTH, eventChan_fromTH)
+	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware)
+	go fsm.Fsm(msgChan_toFsm, msgChan_fromFsm)
 
-	go network.StartNetworkCommunication(transmitChan, receiveChan, deadElevatorChan)
+	go network.StartNetworkCommunication(msgChan_toNetwork, msgChan_fromNetwork, msgChan_deadElevator)
 
 	for {
 		select {
-		case newEvent := <-eventChan_fromHW:
-			fmt.Println("FROM HW CHAN")
+		case newEvent := <- msgChan_fromHardware.Event(.def.NewEvent):
+			fmt.Println("FROM HARDWARE")
 			elevatorMap.PrintEvent(newEvent)
+
 			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
-			mapChan_toHW <- currentMap
+
+			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
+
+			msgChan_toHardware <- newMsg
+
 			if changeMade {
-				transmitChan <- currentMap
-				eventChan_toTH <- newEvent
+				msgChan_toNetwork <- newMsg
+				msgChan_toFsm <- newMsg
 			}
 
-		case receivedMap := <-receiveChan:
-			fmt.Println("FROM RECEIVE CHAN")
+		case receivedMap := <-msgChan_fromNetwork.Map(.def.ElevMap):
+			fmt.Println("FROM NETWORK")
+
 			newEvent := elevatorMap.ReceivedMapFromNetwork(receivedMap)
-			elevatorMap.PrintEvent(newEvent)
-			currentMap, changemade := elevatorMap.UpdateMap(newEvent)
-			mapChan_toHW <- currentMap
-			elevatorMap.PrintMap(currentMap)
-			if changemade {
-				transmitChan <- currentMap
-			} else {
-				mapChan_toHW <- currentMap
-				eventChan_toTH <- newEvent
 
-			}
-		case newEvent := <-eventChan_fromTH:
-			fmt.Println("NEW TH EVENT: ", newEvent)
+			elevatorMap.PrintEvent(newEvent)
+
+			currentMap, changemade := elevatorMap.UpdateMap(newEvent)
+
+			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
+
+			msgChan_toHardware <- newMsg
+
+			elevatorMap.PrintMap(currentMap)
+
+			if changemade {
+				msgChan_toNetwork <- newMsg
+				msgChan_toFsm <- newMsg
+			} 
+
+		case newEvent := <-msgChan_fromFsm.Event(.def.NewEvent):
+
+			fmt.Println("FROM FSM")
+			elevatorMap.PrintEvent(newEvent)
+
 			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
+			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
+
 			if changeMade {
-				transmitChan <- currentMap
-				mapChan_toHW <- currentMap
-				eventChan_toTH <- newEvent
+				msgChan_toNetwork <- newMsg
+				msgChan_toHardware <- newMsg
 			}
 		}
 	}

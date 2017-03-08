@@ -175,16 +175,12 @@ func GetMap() def.ElevMap {
 	mapMutex.Lock()
 	currentMap := *localMap
 	mapMutex.Unlock()
-	fmt.Println("Copied localMap: ")
-	fmt.Println(currentMap)
 	return currentMap
 }
 
 func setMap(newMap def.ElevMap) {
 	mapMutex.Lock()
 	*localMap = newMap
-	fmt.Println("Overwrote localMap: ")
-	fmt.Println(*localMap)
 	mapMutex.Unlock()
 
 }

@@ -41,6 +41,8 @@ func InitHardware(mapChan_toHW chan def.ElevMap, eventChan_fromHW chan def.NewEv
 		}
 		fmt.Println("Dial success")
 
+		goToNearestFloor()
+
 		go setLights(mapChan_toHW)
 
 		go pollNewEvents(eventChan_fromHW)
@@ -55,10 +57,21 @@ func InitHardware(mapChan_toHW chan def.ElevMap, eventChan_fromHW chan def.NewEv
 			log.Fatal(errors.New("Unsucsessful init of IO"))
 		}
 
-		SetMotorDir(0)
-
+		goToNearestFloor()
 		go pollNewEvents(eventChan_fromHW)
 		go setLights(mapChan_toHW)
+	}
+}
+
+func goToNearestFloor() {
+	if readFloor() == -1 {
+		SetMotorDir(-1)
+	}
+	for {
+		if readFloor() != -1 {
+			SetMotorDir(0)
+			break
+		}
 	}
 }
 

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"hardware"
 	"network"
-	//"taskHandler"
-	//"time"
+	"taskHandler"
+	"time"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 
 	eventChan_fromHW := make(chan def.NewEvent, 100)
 	eventChan_fromTH := make(chan def.NewEvent, 100)
-	//eventChan_toTH := make(chan def.NewEvent, 4)
+	eventChan_toTH := make(chan def.NewEvent, 4)
 	mapChan_toHW := make(chan def.ElevMap)
 
 	elevatorMap.InitMap()

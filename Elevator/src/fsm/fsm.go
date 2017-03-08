@@ -14,6 +14,7 @@ const (
 )
 
 var state int
+var direction int
 
 func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage) {
 	for {
@@ -27,7 +28,9 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 				switch data.Event.(def.NewEvent).EventType {
 				case def.BUTTONPUSH:
 
-					doorOpen = stopAndOpenDoors(data.Map)
+					var doorOpen bool
+
+					doorOpen, direction = stopAndOpenDoors(data.Map)
 
 					if doorOpen {
 
@@ -41,11 +44,13 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 
 					}
 
-					startedMoving, dir = takeOrder(data.Map)
+					var startedMoving bool
+
+					startedMoving, direction = takeOrder(data.Map)
 
 					if startedMoving {
 
-						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, dir})
+						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, direction})
 
 						outDataChan <- msg
 
@@ -60,7 +65,9 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 				switch data.Event.(def.NewEvent).EventType {
 				case def.NEWFLOOR_EVENT:
 
-					doorOpen = stopAndOpenDoors(data.Map)
+					var doorOpen bool
+
+					doorOpen, direction = stopAndOpenDoors(data.Map)
 
 					if doorOpen {
 
@@ -81,7 +88,8 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 				switch data.Event.(def.NewEvent).EventType {
 				case def.BUTTONPUSH_EVENT:
 
-					doorOpen = stopAndOpenDoors(data.Map)
+					var doorOpen bool
+					doorOpen, direction = stopAndOpenDoors(data.Map)
 
 					if doorOpen {
 
@@ -97,9 +105,11 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 
 					outDataChan <- msg
 
-					startedMoving, dir := takeOrder(data.Map)
+					var startedMoving bool
+
+					startedMoving, direction = takeOrder(data.Map)
 					if startedMoving {
-						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, dir})
+						msg = def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, direction})
 
 						outDataChan <- msg
 
@@ -108,7 +118,7 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 						break
 					}
 
-					msg := def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, dir})
+					msg = def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, direction})
 
 					outDataChan <- msg
 

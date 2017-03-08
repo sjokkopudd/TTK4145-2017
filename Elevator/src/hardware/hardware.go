@@ -12,7 +12,7 @@ import (
 
 const (
 	simServAddr     = "127.0.0.1:15657"
-	USING_SIMULATOR = false
+	USING_SIMULATOR = true
 )
 
 var conn net.Conn

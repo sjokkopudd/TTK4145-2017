@@ -11,9 +11,15 @@ const (
 	IDLE      = 0
 	MOVING    = 1
 	DOOR_OPEN = 2
+
+	UP = 1
+	DOWN = -1
 )
 
+
+
 var state int
+var direction int
 
 func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage) {
 	for {
@@ -61,6 +67,7 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 				case def.NEWFLOOR_EVENT:
 
 					doorOpen = stopAndOpenDoors(data.Map)
+
 
 					if doorOpen {
 

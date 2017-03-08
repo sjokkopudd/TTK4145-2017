@@ -77,7 +77,6 @@ func doorTimeout() bool {
 func takeOrder(m data.Map)bool,int{
 
 
-
 	Idle?
 		isOrderAbove(currentMap)
 			if elevator above me but under floor where button pushed with direction upward or is idle
@@ -93,9 +92,18 @@ func takeOrder(m data.Map)bool,int{
 }
 
 
-func sortOrdersAbove(m def.ElevMap)[]int {
+func sortOrders(m def.ElevMap)[]int {
 
-	var orders []int 
+	switch m[def.MY_ID].Dir{
+	case def.UP:
+
+	case def.DOWN:
+
+	case def.STILL:
+
+	}
+
+	var orders []int
 
 	for f := m[def.MY_ID].Pos ; f < def.FLOORS ; f++{
 		if m[def.MY_ID].Buttons[f][def.UP_BUTTON]  == 1 || m[def.MY_ID].Buttons[f][def.PANEL_BUTTON]  == 1  {
@@ -114,7 +122,7 @@ func sortOrdersAbove(m def.ElevMap)[]int {
 
 func sortOrdersBelow(m def.ElevMap)[]int {
 
-	var orders []int 
+	var orders []int
 
 	for f := m[def.MY_ID].Pos ; f > -1 ; f--{
 		if m[def.MY_ID].Buttons[f][def.UP_BUTTON]  == 1 || m[def.MY_ID].Buttons[f][def.PANEL_BUTTON]  == 1  {
@@ -131,28 +139,33 @@ func sortOrdersBelow(m def.ElevMap)[]int {
 	return orders
 }
 
-func chooseDirection(m def.ElevMap, orders []int) bool {
+func chooseDirection(m def.ElevMap, ordes []int) bool {
 
 	myPos := m[def.MY_ID].Pos
 
-	for o := 0; o < len(orders); o++ {
-		
-	}
+	for i, order = range(orders){
 
-	if myPos < floor { //we goin upp
-		for e := 0 ; e < def.ELEVATORS ; e++{
-			if e != def.MY_ID{
-				if m[e].Pos > myPos && m[e].Pos < floor && (m[e].Dir == def.UP || m[e].State == def.IDLE){
-
+		if myPos < order { //we goin upp
+			for e := 0 ; e < def.ELEVATORS ; e++{
+				if e != def.MY_ID{
+					if m[e].Pos > myPos && m[e].Pos < order && (m[e].Dir == def.UP || m[e].State == def.IDLE){
+						return false
+					} else if m[e].Pos == m[def.MY_ID].Pos  && (m[e].Dir == def.UP || (m[e].State == def.IDLE && e < def.MY_ID){
+						return false	
+					}
+				}
+			}
+		} else { //we goin down
+			for e := 0 ; e < def.ELEVATORS ; e++{
+				if e != def.MY_ID{
+					if m[e].Pos < myPos && m[e].Pos > order && (m[e].Dir == def.DOWN || m[e].State == def.IDLE){
+						return false
+					}  else if m[e].Pos == m[def.MY_ID].Pos  && (m[e].Dir == def.DOWN || (m[e].State == def.IDLE && e < def.MY_ID){
+						return false	
+					}
 				}
 			}
 		}
-	} else { //we goin down
-		for e := 0 ; e < def.ELEVATORS ; e++{
-			if e != def.MY_ID{
-				if m[e].Pos >
-			}
-		}
 	}
-
+	return true
 }

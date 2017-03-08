@@ -76,6 +76,7 @@ func WriteBackup(localMap def.ElevMap) {
 			}
 			stringMatrix = append(stringMatrix, stringArray)
 		}
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].State)})
 		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Dir)})
 		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Pos)})
 		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Door)})

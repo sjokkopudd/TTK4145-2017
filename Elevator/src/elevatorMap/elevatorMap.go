@@ -18,7 +18,7 @@ func InitMap() {
 
 }
 
-func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
+func ReceivedMapFromNetwork(data def.ElevMap) def.NewEvent {
 	newMap := GetMap()
 	for e := 0; e < def.ELEVATORS; e++ {
 		if e != def.MY_ID {

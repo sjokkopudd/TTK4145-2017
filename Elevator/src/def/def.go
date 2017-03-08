@@ -2,7 +2,7 @@ package def
 
 const (
 	//Physical constants
-	ELEVATORS    = 2
+	ELEVATORS    = 1
 	FLOORS       = 4
 	UP_BUTTON    = 0
 	DOWN_BUTTON  = 1
@@ -23,18 +23,18 @@ const (
 	OTHERELEVATOR_EVENT = 3
 	ELEVATORDEAD_EVENT  = 4
 	NEWDIR_EVENT        = 5
+	DOOR_TIMEOUT        = 6
 
 	//Directions and door cases
 	UP    = 1
 	STILL = 0
 	DOWN  = -1
 
-	IDLE      = 0
-	MOVING    = 1
-	DOOR_OPEN = 2
+	DOOR_CLOSED = 0
+	DOOR_OPEN   = 1
 )
 
-var IPs = [ELEVATORS]string{ELEV_1, ELEV_2}
+var IPs = [ELEVATORS]string{ELEV_1}
 
 type NewEvent struct {
 	EventType int
@@ -44,7 +44,6 @@ type NewEvent struct {
 type ElevatorInfo struct {
 	ID      int
 	Buttons [FLOORS][BUTTONS]int
-	State   int
 	Dir     int
 	Pos     int
 	Door    int
@@ -64,10 +63,9 @@ func NewCleanElevMap() *ElevMap {
 				newMap[e].Buttons[f][b] = 0
 			}
 		}
-		newMap[e].State = IDLE
 		newMap[e].Dir = STILL
 		newMap[e].Pos = 0
-		newMap[e].Door = 0
+		newMap[e].Door = DOOR_CLOSED
 		newMap[e].IsAlive = 1
 	}
 	return newMap

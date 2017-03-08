@@ -18,7 +18,7 @@ func InitMap() {
 
 }
 
-func ReceivedMapFromNetwork(data def.ElevMap) def.NewEvent {
+func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
 	newMap := GetMap()
 	for e := 0; e < def.ELEVATORS; e++ {
 		if e != def.MY_ID {
@@ -41,8 +41,8 @@ func ReceivedMapFromNetwork(data def.ElevMap) def.NewEvent {
 
 						}
 					} else {
-						if receivedMap[e].Door == 1 && receivedMap[e].Pos == f {
-							newMap[e].Door = 1
+						if receivedMap[e].Door == def.DOOR_OPEN && receivedMap[e].Pos == f {
+							newMap[e].Door = def.DOOR_OPEN
 							newMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
 							newMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
 
@@ -106,10 +106,12 @@ func UpdateMap(newEvent def.NewEvent) (def.ElevMap, bool) {
 
 	case def.DOOR_EVENT:
 		newMap[def.MY_ID].Door = newEvent.Data.(int)
-		newMap[def.MY_ID].Dir = def.IDLE
-		for b := 0; b < def.BUTTONS; b++ {
-			newMap[def.MY_ID].Buttons[newMap[def.MY_ID].Pos][b] = 0
+		if newMap[def.MY_ID].Door == def.DOOR_OPEN {
+			for b := 0; b < def.BUTTONS; b++ {
+				newMap[def.MY_ID].Buttons[newMap[def.MY_ID].Pos][b] = 0
+			}
 		}
+
 		changeMade = true
 
 	case def.OTHERELEVATOR_EVENT:

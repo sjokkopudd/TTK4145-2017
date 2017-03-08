@@ -12,7 +12,7 @@ import (
 
 const (
 	simServAddr     = "127.0.0.1:15657"
-	USING_SIMULATOR = true
+	USING_SIMULATOR = false
 )
 
 var conn net.Conn
@@ -82,7 +82,8 @@ func goToNearestFloor() {
 func setLights(msgChan_toHW chan def.ChannelMessage) {
 	for {
 		select {
-		case currentMap := <-msgChan_toHW.Map.(def.ElevMap):
+		case msg := <-msgChan_toHW:
+			currentMap := msg.Map.(def.ElevMap)
 			for b := 0; b < def.BUTTONS; b++ {
 				for f := 0; f < def.FLOORS; f++ {
 					lightVal := 1
@@ -105,7 +106,7 @@ func setLights(msgChan_toHW chan def.ChannelMessage) {
 			}
 			setFloorIndicator(currentMap[def.MY_ID].Pos)
 
-			if currentMap[def.MY_ID].State == def.DOOR_OPEN {
+			if currentMap[def.MY_ID].Door == def.DOOR_OPEN {
 				SetDoorLight(1)
 			} else {
 				SetDoorLight(0)

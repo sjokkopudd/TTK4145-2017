@@ -6,24 +6,36 @@ import (
 	"time"
 )
 
-var doorTimer int
+var doorTimer float32
 
-func stopAndOpenDoors(m def.ElevMap) (bool, int) {
+func doorTimeout(m def.ElevMap, timeoutChan chan bool, offset float32) {
+	doorTimer = float32(time.Now().Second()) - offset
+
+	time.Sleep(1000 * time.Millisecond)
+
+	if float32(time.Now().Second())-doorTimer >= 1 {
+
+		msg := true
+		timeoutChan <- msg
+	}
+}
+
+func stopAndOpenDoors(m def.ElevMap, timeoutChan chan bool) (bool, int) {
 	floor := m[def.MY_ID].Pos
 
 	switch m[def.MY_ID].Dir {
 
 	case def.UP:
 		if m[def.MY_ID].Buttons[floor][def.PANEL_BUTTON] == 1 {
-			doorTimer = time.Now().Second()
+			go doorTimeout(m, timeoutChan, 0)
 			hardware.SetMotorDir(def.STILL)
 			return true, m[def.MY_ID].Dir
 		} else if m[def.MY_ID].Buttons[floor][def.UP_BUTTON] == 1 {
-			doorTimer = time.Now().Second()
+			go doorTimeout(m, timeoutChan, 0)
 			hardware.SetMotorDir(def.STILL)
 			return true, def.UP
 		} else if !isOrderAbove(m) {
-			doorTimer = time.Now().Second() - 1
+			go doorTimeout(m, timeoutChan, 1)
 			hardware.SetMotorDir(def.STILL)
 			return true, def.DOWN
 		}
@@ -31,15 +43,15 @@ func stopAndOpenDoors(m def.ElevMap) (bool, int) {
 
 	case def.DOWN:
 		if m[def.MY_ID].Buttons[floor][def.PANEL_BUTTON] == 1 {
-			doorTimer = time.Now().Second()
+			go doorTimeout(m, timeoutChan, 0)
 			hardware.SetMotorDir(def.STILL)
 			return true, m[def.MY_ID].Dir
 		} else if m[def.MY_ID].Buttons[floor][def.DOWN_BUTTON] == 1 {
-			doorTimer = time.Now().Second()
+			go doorTimeout(m, timeoutChan, 0)
 			hardware.SetMotorDir(def.STILL)
 			return true, def.DOWN
 		} else if !isOrderBelow(m) {
-			doorTimer = time.Now().Second() - 1
+			go doorTimeout(m, timeoutChan, 1)
 			hardware.SetMotorDir(def.STILL)
 			return true, def.UP
 		}
@@ -47,7 +59,7 @@ func stopAndOpenDoors(m def.ElevMap) (bool, int) {
 
 	case def.STILL:
 		if m[def.MY_ID].Buttons[floor][def.UP_BUTTON] == 1 || m[def.MY_ID].Buttons[floor][def.DOWN_BUTTON] == 1 || m[def.MY_ID].Buttons[floor][def.PANEL_BUTTON] == 1 {
-			doorTimer = time.Now().Second()
+			go doorTimeout(m, timeoutChan, 0)
 			return true, def.STILL
 		}
 		return false, m[def.MY_ID].Dir
@@ -76,10 +88,6 @@ func isOrderBelow(m def.ElevMap) bool {
 	return false
 }
 
-func doorTimeout() bool {
-	return (time.Now().Second()-doorTimer > 1)
-}
-
 func shouldTake(m def.ElevMap, f int, d int) bool {
 	floor := m[def.MY_ID].Pos
 	isOrder, button := isOrderHere(m, f)
@@ -95,8 +103,9 @@ func shouldTake(m def.ElevMap, f int, d int) bool {
 			}
 
 		}
+		return true
 	}
-	return true
+	return false
 }
 
 func takeOrder(m def.ElevMap) (bool, int) {
@@ -106,51 +115,60 @@ func takeOrder(m def.ElevMap) (bool, int) {
 	switch direction {
 	case def.UP:
 
-		for f := def.FLOORS; f > floor; f-- {
+		for f := def.FLOORS - 1; f > floor; f-- {
 			if shouldTake(m, f, def.UP) {
+				hardware.SetMotorDir(def.UP)
 				return true, def.UP
 			}
 		}
 
 		for f := 0; f < floor; f++ {
 			if shouldTake(m, f, def.DOWN) {
+				hardware.SetMotorDir(def.DOWN)
 				return true, def.DOWN
 			}
 		}
 
+		hardware.SetMotorDir(def.STILL)
 		return false, def.STILL
 	case def.DOWN:
 
 		for f := 0; f < floor; f++ {
 			if shouldTake(m, f, def.DOWN) {
+				hardware.SetMotorDir(def.DOWN)
 				return true, def.DOWN
 			}
 		}
 
-		for f := def.FLOORS; f > floor; f-- {
+		for f := def.FLOORS - 1; f > floor; f-- {
 			if shouldTake(m, f, def.UP) {
+				hardware.SetMotorDir(def.UP)
 				return true, def.UP
 			}
 		}
 
+		hardware.SetMotorDir(def.STILL)
 		return false, def.STILL
 
 	case def.STILL:
-		f := findClosestOrder(m)
-		if f == -1 {
-			return false, def.STILL
-		} else if f < floor {
-			if shouldTake(m, f, def.DOWN) {
-				return true, def.DOWN
-			}
-		} else if f > floor {
-			if shouldTake(m, f, def.UP) {
-				return true, def.UP
+		for r := 1; r < def.FLOORS; r++ {
+			f := findClosestOrder(m, r)
+			if f > -1 && (f < floor) {
+				if shouldTake(m, f, def.DOWN) {
+					hardware.SetMotorDir(def.DOWN)
+					return true, def.DOWN
+				}
+			} else if f > floor {
+				if shouldTake(m, f, def.UP) {
+					hardware.SetMotorDir(def.UP)
+					return true, def.UP
+				}
 			}
 		}
-
+		hardware.SetMotorDir(def.STILL)
 		return false, def.STILL
 	}
+	hardware.SetMotorDir(def.STILL)
 	return false, def.STILL
 }
 
@@ -163,23 +181,20 @@ func isOrderHere(m def.ElevMap, f int) (bool, int) {
 	return false, -1
 }
 
-func findClosestOrder(m def.ElevMap) int {
+func findClosestOrder(m def.ElevMap, r int) int {
 	floor := m[def.MY_ID].Pos
 
-	for i := 0; i < def.FLOORS; i++ {
-		if floor+i < def.FLOORS {
-			isOrder, _ := isOrderHere(m, floor+i)
-			if isOrder {
-				return floor + i
-			}
+	if (floor + r) < def.FLOORS {
+		isOrder, _ := isOrderHere(m, floor+r)
+		if isOrder {
+			return floor + r
 		}
-		if floor-i > -1 {
-			isOrder, _ := isOrderHere(m, floor+i)
-			if isOrder {
-				return floor - i
-			}
+	}
+	if (floor - r) > -1 {
+		isOrder, _ := isOrderHere(m, floor-r)
+		if isOrder {
+			return floor - r
 		}
-
 	}
 
 	return -1

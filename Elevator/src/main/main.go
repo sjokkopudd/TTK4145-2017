@@ -3,7 +3,6 @@ package main
 import (
 	"def"
 	"elevatorMap"
-	"fmt"
 	"fsm"
 	"hardware"
 	"network"
@@ -16,7 +15,7 @@ func main() {
 	msgChan_fromNetwork := make(chan def.ChannelMessage, 100)
 	msgChan_deadElevator := make(chan def.ChannelMessage, 100)
 	msgChan_toHardware := make(chan def.ChannelMessage, 100)
-	msgChan_toHardware := make(chan def.ChannelMessage, 100)
+	msgChan_fromHardware := make(chan def.ChannelMessage, 100)
 	msgChan_toFsm := make(chan def.ChannelMessage, 100)
 	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
 
@@ -31,27 +30,25 @@ func main() {
 
 	for {
 		select {
-		case newEvent := <- msgChan_fromHardware.Event(.def.NewEvent):
-			fmt.Println("FROM HARDWARE")
-			elevatorMap.PrintEvent(newEvent)
+		case msg := <-msgChan_fromHardware:
+			newEvent := msg.Event.(def.NewEvent)
 
 			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
 
 			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
 
 			msgChan_toHardware <- newMsg
+			msgChan_toFsm <- newMsg
 
 			if changeMade {
 				msgChan_toNetwork <- newMsg
-				msgChan_toFsm <- newMsg
+
 			}
 
-		case receivedMap := <-msgChan_fromNetwork.Map(.def.ElevMap):
-			fmt.Println("FROM NETWORK")
+		case msg := <-msgChan_fromNetwork:
+			receivedMap := msg.Map.(def.ElevMap)
 
 			newEvent := elevatorMap.ReceivedMapFromNetwork(receivedMap)
-
-			elevatorMap.PrintEvent(newEvent)
 
 			currentMap, changemade := elevatorMap.UpdateMap(newEvent)
 
@@ -64,12 +61,11 @@ func main() {
 			if changemade {
 				msgChan_toNetwork <- newMsg
 				msgChan_toFsm <- newMsg
-			} 
+			}
 
-		case newEvent := <-msgChan_fromFsm.Event(.def.NewEvent):
+		case msg := <-msgChan_fromFsm:
 
-			fmt.Println("FROM FSM")
-			elevatorMap.PrintEvent(newEvent)
+			newEvent := msg.Event.(def.NewEvent)
 
 			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
 			newMsg := def.ConstructChannelMessage(currentMap, newEvent)

@@ -102,7 +102,7 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 	for {
 		select {
 		case msg := <-transmitChan:
-			localMap := msg.Map.(ElevMap)
+			localMap := msg.Map.(def.ElevMap)
 			for e := 0; e < def.ELEVATORS; e++ {
 				if e != def.MY_ID {
 

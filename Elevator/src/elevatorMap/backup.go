@@ -45,11 +45,10 @@ func ReadBackup() def.ElevMap {
 				newMap[e].Buttons[f][b], _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+1+f][b])
 			}
 		}
-		newMap[e].State, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+1][0])
-		newMap[e].Dir, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+2][0])
-		newMap[e].Pos, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+3][0])
-		newMap[e].Door, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+4][0])
-		newMap[e].IsAlive, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+5][0])
+		newMap[e].Dir, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+1][0])
+		newMap[e].Pos, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+2][0])
+		newMap[e].Door, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+3][0])
+		newMap[e].IsAlive, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+4][0])
 	}
 
 	return newMap
@@ -76,7 +75,6 @@ func WriteBackup(localMap def.ElevMap) {
 			}
 			stringMatrix = append(stringMatrix, stringArray)
 		}
-		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].State)})
 		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Dir)})
 		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Pos)})
 		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Door)})

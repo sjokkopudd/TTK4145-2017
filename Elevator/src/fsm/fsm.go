@@ -2,6 +2,8 @@ package fsm
 
 import (
 	"def"
+	"elevatorMap"
+	"fmt"
 )
 
 const (
@@ -14,6 +16,9 @@ var state int
 var direction int
 
 func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage) {
+
+	timeoutChan := make(chan bool)
+
 	for {
 		select {
 		case data := <-inDataChan:
@@ -22,16 +27,21 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 
 			case IDLE:
 
+				fmt.Println("State: IDLE")
+
 				switch data.Event.(def.NewEvent).EventType {
 				case def.BUTTONPUSH_EVENT:
+					fmt.Println("Button pushed")
 
 					var doorOpen bool
 
-					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap))
+					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap), timeoutChan)
 
 					if doorOpen {
 
-						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, 1})
+						fmt.Println("Door open")
+
+						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, def.DOOR_OPEN})
 
 						outDataChan <- msg
 
@@ -59,16 +69,20 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 
 			case MOVING:
 
+				fmt.Println("State: MOVING")
+
 				switch data.Event.(def.NewEvent).EventType {
 				case def.NEWFLOOR_EVENT:
 
+					fmt.Println("Reached floor")
+
 					var doorOpen bool
 
-					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap))
+					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap), timeoutChan)
 
 					if doorOpen {
 
-						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, 1})
+						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, def.DOOR_OPEN})
 
 						outDataChan <- msg
 
@@ -82,45 +96,51 @@ func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage
 
 			case DOOR_OPEN:
 
+				fmt.Println("State: DOOR_OPEN")
+
 				switch data.Event.(def.NewEvent).EventType {
 				case def.BUTTONPUSH_EVENT:
 
 					var doorOpen bool
-					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap))
+					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap), timeoutChan)
 
 					if doorOpen {
-
+						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, def.DOOR_OPEN})
+						outDataChan <- msg
 						break
 
 					}
 				}
+			}
+		case timeoutData := <-timeoutChan:
 
-				closeDoors := doorTimeout()
+			if timeoutData {
 
-				if closeDoors {
-					msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, 0})
+				fmt.Println("Door timeout")
 
-					outDataChan <- msg
+				msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, def.DOOR_CLOSED})
 
-					var startedMoving bool
+				outDataChan <- msg
 
-					startedMoving, direction = takeOrder(data.Map.(def.ElevMap))
-					if startedMoving {
-						msg = def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, direction})
+				var startedMoving bool
 
-						outDataChan <- msg
+				startedMoving, direction = takeOrder(elevatorMap.GetMap())
 
-						state = MOVING
-
-						break
-					}
-
+				if startedMoving {
 					msg = def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, direction})
 
 					outDataChan <- msg
 
-					state = IDLE
+					state = MOVING
+
+					break
 				}
+
+				msg = def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, direction})
+
+				outDataChan <- msg
+
+				state = IDLE
 			}
 		}
 	}

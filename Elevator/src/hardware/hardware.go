@@ -105,12 +105,6 @@ func setLights(msgChan_toHW chan def.ChannelMessage) {
 				}
 			}
 			setFloorIndicator(currentMap[def.MY_ID].Pos)
-
-			if currentMap[def.MY_ID].Door == def.DOOR_OPEN {
-				SetDoorLight(1)
-			} else {
-				SetDoorLight(0)
-			}
 		}
 		time.Sleep(100 * time.Millisecond)
 	}

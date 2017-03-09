@@ -153,14 +153,14 @@ func chooseDirection(m def.ElevMap) int {
 
 	switch currentDir {
 	case UP:
-		for f := m[def.MY_ID].Pos; f < def.FLOORS; f++ {
+		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
 			if orderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return UP
 				}
 			}
 		}
-		for f := m[def.MY_ID].Pos; f > -1; f-- {
+		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
 			if orderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return DOWN
@@ -170,14 +170,14 @@ func chooseDirection(m def.ElevMap) int {
 		return STILL
 
 	case DOWN:
-		for f := m[def.MY_ID].Pos; f > -1; f-- {
+		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
 			if orderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return DOWN
 				}
 			}
 		}
-		for f := m[def.MY_ID].Pos; f < def.FLOORS; f++ {
+		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
 			if orderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return UP
@@ -187,14 +187,14 @@ func chooseDirection(m def.ElevMap) int {
 		return STILL
 
 	case STILL:
-		for f := m[def.MY_ID].Pos; f > -1; f-- {
+		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
 			if orderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return DOWN
 				}
 			}
 		}
-		for f := m[def.MY_ID].Pos; f < def.FLOORS; f++ {
+		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
 			if orderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return UP

@@ -25,7 +25,7 @@ func main() {
 
 	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware)
 
-	go fsm.Fsm(msgChan_toFsm, msgChan_fromFsm)
+	go fsm.InitFsm(msgChan_toFsm, msgChan_fromFsm)
 
 	go network.StartNetworkCommunication(msgChan_toNetwork, msgChan_fromNetwork, msgChan_deadElevator)
 
@@ -58,9 +58,7 @@ func main() {
 			// AddNewMapChanges() skal luke ut om det er gjort en fms_trigger event
 			// og returnere et event, det nye mappet og om alle er eninge
 
-			elevatorMap.PrintMap(currentMap)
-
-			newMsg := def.ConstructChannelMessage(currentMap, fsm)
+			newMsg := def.ConstructChannelMessage(currentMap, fsmEvent)
 
 			msgChan_toHardware <- newMsg
 
@@ -76,7 +74,7 @@ func main() {
 
 			receivedMap := msg.Map.(def.ElevMap)
 
-			newEvent, currentMap, changemade, allAgree := elevatorMap.AddNewMapChanges(receivedMap)
+			newEvent, currentMap, changemade, _ := elevatorMap.AddNewMapChanges(receivedMap)
 
 			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
 

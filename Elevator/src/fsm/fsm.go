@@ -78,7 +78,9 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 			currentDir = chooseDirection(localMap)
 			hardware.SetMotorDir(currentDir)
 			localMap[def.MY_ID].Dir = currentDir
-			state = MOVING
+			if currentDir != 0 {
+				state = MOVING
+			}
 
 			msg := def.ConstructChannelMessage(localMap, nil)
 			outDataChan <- msg

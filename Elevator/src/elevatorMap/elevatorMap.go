@@ -72,7 +72,9 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.NewEvent, def.Elev
 		//  ?
 		if receivedMap[e].Dir != currentMap[e].Dir {
 			currentMap[e].Dir = receivedMap[e].Dir
-			changeMade = true
+			if e == def.MY_ID {
+				changeMade = true
+			}
 		}
 		if receivedMap[e].Pos != currentMap[e].Pos && e != def.MY_ID {
 			currentMap[e].Pos = receivedMap[e].Pos

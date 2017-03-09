@@ -65,12 +65,12 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 			localMap[e].Pos = receivedMap[e].Pos
 			changeMade = true
 		}
-		if receivedMap[e].Door != localMap[e].Door {
-			localMap[e].Door = receivedMap[e].Door
-			changeMade = true
-		}
-
 	}
+	if receivedMap[def.MY_ID].Door != localMap[def.MY_ID].Door {
+			localMap[def.MY_ID].Door = receivedMap[def.MY_ID].Door
+			changeMade = true
+	}
+
 
 	setMap(localMap)
 

@@ -78,18 +78,18 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 func deleteOrders(receivedMap def.ElevMap, localMap def.ElevMap) def.ElevMap{
 	for e:= 0; e < def.ELEVATORS; e ++{
 		for f:= 0; f < def.ELEVATORS; f++{
-		if receivedMap[e].Door == def.DOOR_OPEN && receivedMap[e].Pos == f {
-			//localMap[e].Door = def.DOOR_OPEN
-			localMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
-			localMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
+			if receivedMap[e].Door == def.DOOR_OPEN && receivedMap[e].Pos == f {
+				//localMap[e].Door = def.DOOR_OPEN
+				localMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
+				localMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
 
-			localMap[e].Buttons[f][def.UP_BUTTON] = 0
-			localMap[e].Buttons[f][def.DOWN_BUTTON] = 0
+				localMap[e].Buttons[f][def.UP_BUTTON] = 0
+				localMap[e].Buttons[f][def.DOWN_BUTTON] = 0
 
-			localMap[e].Buttons[f][def.PANEL_BUTTON] = 0
+				localMap[e].Buttons[f][def.PANEL_BUTTON] = 0
 
+			}
 		}
-	}
 	}
 
 	return localMap

@@ -30,6 +30,7 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 	timer.Stop()
 
 	for {
+
 		select {
 		case data := <-inDataChan:
 
@@ -45,10 +46,12 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 
 		case <-timer.C:
 
-			fmt.Println("timeout")
-
 			onDoorTimeout(outDataChan)
+		default:
+			fmt.Println("STATE: ", state)
 		}
+		time.Sleep(100 * time.Millisecond)
+
 	}
 }
 
@@ -57,9 +60,6 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 	switch state {
 	case IDLE:
 		localMap := elevatorMap.GetMap()
-
-		fmt.Println("onRequestButtonPressed")
-		elevatorMap.PrintMap(localMap)
 
 		if localMap[def.MY_ID].Pos == f {
 
@@ -100,8 +100,6 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 
 			outDataChan <- msg
 
-			fmt.Println("ÅPNER DØR PÅ NYTT")
-
 			timer.Reset(2 * time.Second)
 		}
 	}
@@ -114,8 +112,6 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 
 		localMap := elevatorMap.GetMap()
 
-		fmt.Println("onFloorArrival")
-		elevatorMap.PrintMap(localMap)
 		if shouldStop(localMap) {
 			hardware.SetMotorDir(0)
 
@@ -146,16 +142,12 @@ func onDoorTimeout(outDataChan chan def.ChannelMessage) {
 
 		localMap := elevatorMap.GetMap()
 
-		fmt.Println("onDoorTimeout")
-		elevatorMap.PrintMap(localMap)
 		localMap[def.MY_ID].Door = -1
 		hardware.SetDoorLight(0)
 
 		currentDir = chooseDirection(localMap)
 		hardware.SetMotorDir(currentDir)
 		localMap[def.MY_ID].Dir = currentDir
-
-		fmt.Println("DIR: ", currentDir)
 
 		if currentDir == STILL {
 			state = IDLE

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hardware"
 	"math"
+	"time"
 )
 
 const (
@@ -25,8 +26,8 @@ var state int
 
 func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage) {
 
-	timeoutChan := make(chan bool, 1)
-	go timer(timeoutChan)
+	timer := time.NewTimer(2 * time.Second)
+	timer.Stop()
 
 	for {
 		select {
@@ -35,25 +36,23 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 			switch data.Event.(def.NewEvent).EventType {
 			case def.BUTTON_PUSH:
 				button := data.Event.(def.NewEvent).Data.([]int)
-				onRequestButtonPressed(button[0], button[1], outDataChan)
+				onRequestButtonPressed(button[0], button[1], outDataChan, timer)
 
 			case def.FLOOR_ARRIVAL:
-				onFloorArrival(data.Event.(def.NewEvent).Data.(int), outDataChan)
+				onFloorArrival(data.Event.(def.NewEvent).Data.(int), outDataChan, timer)
 
 			}
 
-		case timeout := <-timeoutChan:
+		case <-timer.C:
 
 			fmt.Println("timeout")
 
-			if timeout {
-				onDoorTimeout(outDataChan)
-			}
+			onDoorTimeout(outDataChan)
 		}
 	}
 }
 
-func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage) {
+func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, timer *time.Timer) {
 
 	switch state {
 	case IDLE:
@@ -66,17 +65,19 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage) {
 
 			// send delete all orders on floor signal
 
-			localMap[def.MY_ID].Door = localMap[def.MY_ID].Pos
+			localMap[def.MY_ID].Door = f
+
+			localMap = clearRequests(localMap, localMap[def.MY_ID].Pos)
 
 			hardware.SetDoorLight(1)
 			msg := def.ConstructChannelMessage(localMap, nil)
 			outDataChan <- msg
-			timerStart()
+			timer.Reset(2 * time.Second)
 			state = DOOR_OPEN
 		} else {
 			currentDir = chooseDirection(localMap)
 			hardware.SetMotorDir(currentDir)
-			localMap[def.MY_ID].Door = currentDir
+			localMap[def.MY_ID].Dir = currentDir
 			state = MOVING
 
 			msg := def.ConstructChannelMessage(localMap, nil)
@@ -89,16 +90,24 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage) {
 	case DOOR_OPEN:
 		localMap := elevatorMap.GetMap()
 
-		fmt.Println("onRequestButtonPressed")
-		elevatorMap.PrintMap(localMap)
-
 		if localMap[def.MY_ID].Pos == f {
-			timerStart()
+
+			localMap[def.MY_ID].Door = f
+
+			localMap = clearRequests(localMap, localMap[def.MY_ID].Pos)
+
+			msg := def.ConstructChannelMessage(localMap, nil)
+
+			outDataChan <- msg
+
+			fmt.Println("ÅPNER DØR PÅ NYTT")
+
+			timer.Reset(2 * time.Second)
 		}
 	}
 }
 
-func onFloorArrival(f int, outDataChan chan def.ChannelMessage) {
+func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Timer) {
 
 	switch state {
 	case MOVING:
@@ -114,9 +123,11 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage) {
 
 			localMap[def.MY_ID].Door = localMap[def.MY_ID].Pos
 
+			localMap = clearRequests(localMap, localMap[def.MY_ID].Pos)
+
 			hardware.SetDoorLight(1)
 
-			timerStart()
+			timer.Reset(2 * time.Second)
 
 			//elevatorMap.ClearRequests(localMap)
 
@@ -325,4 +336,14 @@ func isOrderBelow(m def.ElevMap) bool {
 		}
 	}
 	return false
+}
+
+func clearRequests(m def.ElevMap, f int) def.ElevMap {
+	for e := 0; e < def.ELEVATORS; e++ {
+		m[e].Buttons[f][def.UP_BUTTON] = 0
+		m[e].Buttons[f][def.DOWN_BUTTON] = 0
+	}
+	m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] = 0
+
+	return m
 }

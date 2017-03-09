@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-const (
-	simServAddr     = "127.0.0.1:15657"
-	USING_SIMULATOR = true
-)
-
 var conn net.Conn
 var mutex = &sync.Mutex{}
 
@@ -23,11 +18,11 @@ var mutex = &sync.Mutex{}
 // -----------------------------------------------------------------
 
 func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.ChannelMessage) {
-	if USING_SIMULATOR {
+	if def.USING_SIMULATOR {
 
-		fmt.Println("Mode: USING_SIMULATOR")
+		fmt.Println("Mode: def.USING_SIMULATOR")
 
-		tcpAddr, err := net.ResolveTCPAddr("tcp", simServAddr)
+		tcpAddr, err := net.ResolveTCPAddr("tcp", def.SIM_SERV_ADDR)
 		if err != nil {
 			fmt.Println("ResolveTCPAddr failed:", err.Error())
 			log.Fatal(err)
@@ -51,7 +46,7 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 
 	}
 
-	if !USING_SIMULATOR {
+	if !def.USING_SIMULATOR {
 
 		if IoInit() != true {
 			log.Fatal(errors.New("Unsucsessful init of IO"))

@@ -2,7 +2,7 @@ package def
 
 const (
 	//Physical constants
-	ELEVATORS    = 2
+	ELEVATORS    = 1
 	FLOORS       = 4
 	UP_BUTTON    = 0
 	DOWN_BUTTON  = 1
@@ -17,8 +17,6 @@ const (
 	PORT   = ":20005"
 
 	//Event types
-
-	//FSM triggers
 	FLOOR_ARRIVAL = 1
 	BUTTON_PUSH   = 2
 	DOOR_TIMEOUT  = 3
@@ -30,9 +28,13 @@ const (
 
 	DOOR_CLOSED = 0
 	DOOR_OPEN   = 1
+
+	//Simulator constants
+	SIM_SERV_ADDR   = "127.0.0.1:15657"
+	USING_SIMULATOR = false
 )
 
-var IPs = [ELEVATORS]string{ELEV_1, ELEV_2}
+var IPs = [ELEVATORS]string{ELEV_1}
 
 type NewEvent struct {
 	EventType int
@@ -63,7 +65,7 @@ func NewCleanElevMap() *ElevMap {
 		}
 		newMap[e].Dir = STILL
 		newMap[e].Pos = 0
-		newMap[e].Door = DOOR_CLOSED
+		newMap[e].Door = -1
 		newMap[e].IsAlive = 1
 	}
 	return newMap

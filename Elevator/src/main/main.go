@@ -84,8 +84,9 @@ func main() {
 			if changemade {
 				fmt.Println("Sending this map, came from FSM")
 				elevatorMap.PrintMap(currentMap)
-				msgChan_toNetwork <- newMsg
 				msgChan_toHardware <- newMsg
+				msgChan_toNetwork <- newMsg
+
 			}
 		}
 	}

@@ -12,7 +12,7 @@ import (
 
 const (
 	simServAddr     = "127.0.0.1:15657"
-	USING_SIMULATOR = false
+	USING_SIMULATOR = true
 )
 
 var conn net.Conn
@@ -123,7 +123,7 @@ func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 	for {
 		newPos := readFloor()
 		if (newPos != -1) && (newPos != lastPos) {
-			newEvent := def.NewEvent{def.NEWFLOOR_EVENT, newPos}
+			newEvent := def.NewEvent{def.FLOOR_ARRIVAL, newPos}
 			newMsg := def.ConstructChannelMessage(nil, newEvent)
 			msgChan_fromHW <- newMsg
 			lastPos = newPos
@@ -132,7 +132,7 @@ func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 			for b := 0; b < def.BUTTONS; b++ {
 				if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
 					if readButton(f, b) && buttonState[f][b] == false {
-						newEvent := def.NewEvent{def.BUTTONPUSH_EVENT, []int{f, b}}
+						newEvent := def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
 						newMsg := def.ConstructChannelMessage(nil, newEvent)
 						msgChan_fromHW <- newMsg
 						buttonState[f][b] = true

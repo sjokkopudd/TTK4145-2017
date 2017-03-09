@@ -1,5 +1,6 @@
 package fsm
 
+/*
 import (
 	"def"
 	"hardware"
@@ -198,4 +199,4 @@ func findClosestOrder(m def.ElevMap, r int) int {
 	}
 
 	return -1
-}
+}*/

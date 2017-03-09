@@ -18,117 +18,89 @@ func InitMap() {
 
 }
 
-func ReceivedMapFromNetwork(receivedMap def.ElevMap) def.NewEvent {
-	newMap := GetMap()
+func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool, bool) {
+	localMap := GetMap()
+	var fsmEvent def.NewEvent
+	allAgree := true
+	changeMade := false
 	for e := 0; e < def.ELEVATORS; e++ {
-		if e != def.MY_ID {
-			for f := 0; f < def.FLOORS; f++ {
-				for b := 0; b < def.BUTTONS; b++ {
-					if receivedMap[e].Buttons[f][b] != newMap[e].Buttons[f][b] {
-						if receivedMap[e].Buttons[f][b] == 1 && newMap[e].Buttons[f][b] != 1 {
-							if b != def.PANEL_BUTTON {
-								newMap[e].Buttons[f][b] = 1
-								changes := def.NewEvent{def.BUTTONPUSH_EVENT, []int{f, b}}
-								setMap(newMap)
-								return changes
+		for f := 0; f < def.FLOORS; f++ {
+			for b := 0; b < def.BUTTONS; b++ {
+				if receivedMap[e].Buttons[f][b] != localMap[e].Buttons[f][b] {
+					if receivedMap[e].Buttons[f][b] == 1 && localMap[e].Buttons[f][b] != 1 {
+						if b != def.PANEL_BUTTON {
+							localMap[e].Buttons[f][b] = 1
+							localMap[def.MY_ID].Buttons[f][b] = 1
+							changeMade = true
+							fsmEvent = def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
 
-							} else {
-								newMap[e].Buttons[f][b] = 1
-								changes := def.NewEvent{def.OTHERELEVATOR_EVENT, -1}
-								setMap(newMap)
-								return changes
-							}
-
+						} else {
+							localMap[e].Buttons[f][b] = 1
 						}
-					} else {
-						if receivedMap[e].Door == def.DOOR_OPEN && receivedMap[e].Pos == f {
-							newMap[e].Door = def.DOOR_OPEN
-							newMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
-							newMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
 
-							newMap[e].Buttons[f][def.UP_BUTTON] = 0
-							newMap[e].Buttons[f][def.DOWN_BUTTON] = 0
-
-							newMap[e].Buttons[f][def.PANEL_BUTTON] = 0
-
-							changes := def.NewEvent{def.OTHERELEVATOR_EVENT, -1}
-							setMap(newMap)
-							return changes
-						}
 					}
-
 				}
-			}
+				if receivedMap[e].Door == def.DOOR_OPEN && receivedMap[e].Pos == f {
+					localMap[e].Door = def.DOOR_OPEN
+					localMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
+					localMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
 
-			if receivedMap[e].Dir != newMap[e].Dir {
-				newMap[e].Dir = receivedMap[e].Dir
-				changes := def.NewEvent{def.OTHERELEVATOR_EVENT, -1}
-				setMap(newMap)
-				return changes
-			}
-			if receivedMap[e].Pos != newMap[e].Pos {
-				newMap[e].Pos = receivedMap[e].Pos
-				changes := def.NewEvent{def.OTHERELEVATOR_EVENT, -1}
-				setMap(newMap)
-				return changes
-			}
-			if receivedMap[e].Door != newMap[e].Door {
-				newMap[e].Door = receivedMap[e].Door
-				changes := def.NewEvent{def.OTHERELEVATOR_EVENT, -1}
-				setMap(newMap)
-				return changes
+					localMap[e].Buttons[f][def.UP_BUTTON] = 0
+					localMap[e].Buttons[f][def.DOWN_BUTTON] = 0
+
+					localMap[e].Buttons[f][def.PANEL_BUTTON] = 0
+
+					changeMade = true
+				}
+
 			}
 		}
+
+		if receivedMap[e].Dir != localMap[e].Dir {
+			localMap[e].Dir = receivedMap[e].Dir
+			changeMade = true
+		}
+		if receivedMap[e].Pos != localMap[e].Pos {
+			localMap[e].Pos = receivedMap[e].Pos
+			changeMade = true
+		}
+		if receivedMap[e].Door != localMap[e].Door {
+			localMap[e].Door = receivedMap[e].Door
+			changeMade = true
+		}
+
 	}
 
-	changes := def.NewEvent{def.NEWFLOOR_EVENT, newMap[def.MY_ID].Pos}
-	return changes
+	//implement allAgree
+
+	setMap(localMap)
+
+	return fsmEvent, localMap, changeMade, allAgree
 
 }
 
-func UpdateMap(newEvent def.NewEvent) (def.ElevMap, bool) {
+func AddNewEvent(newEvent def.NewEvent) (def.ElevMap, bool, bool) {
 	changeMade := false
-	newMap := GetMap()
+	allAgree := true
+	localMap := GetMap()
 	switch newEvent.EventType {
 
-	case def.NEWFLOOR_EVENT:
-		if newMap[def.MY_ID].Pos != newEvent.Data.(int) {
-			newMap[def.MY_ID].Pos = newEvent.Data.(int)
+	case def.FLOOR_ARRIVAL:
+		if localMap[def.MY_ID].Pos != newEvent.Data.(int) {
+			localMap[def.MY_ID].Pos = newEvent.Data.(int)
 			changeMade = true
 		}
 
-	case def.BUTTONPUSH_EVENT:
+	case def.BUTTON_PUSH:
 		data := newEvent.Data.([]int)
-		if newMap[def.MY_ID].Buttons[data[0]][data[1]] != 1 {
-			newMap[def.MY_ID].Buttons[data[0]][data[1]] = 1
-			changeMade = true
-		}
-
-	case def.DOOR_EVENT:
-		newMap[def.MY_ID].Door = newEvent.Data.(int)
-		if newMap[def.MY_ID].Door == def.DOOR_OPEN {
-			for b := 0; b < def.BUTTONS; b++ {
-				newMap[def.MY_ID].Buttons[newMap[def.MY_ID].Pos][b] = 0
-			}
-		}
-
-		changeMade = true
-
-	case def.OTHERELEVATOR_EVENT:
-		changeMade = true
-
-	case def.NEWDIR_EVENT:
-		if newMap[def.MY_ID].Dir != newEvent.Data.(int) {
-			newMap[def.MY_ID].Dir = newEvent.Data.(int)
+		if localMap[def.MY_ID].Buttons[data[0]][data[1]] != 1 {
+			localMap[def.MY_ID].Buttons[data[0]][data[1]] = 1
 			changeMade = true
 		}
 	}
-	if changeMade {
-		WriteBackup(newMap)
-		setMap(newMap)
-	}
+	setMap(localMap)
 
-	return newMap, changeMade
+	return localMap, changeMade, allAgree
 
 }
 
@@ -154,20 +126,11 @@ func PrintMap(elevatorMap def.ElevMap) {
 func PrintEvent(event def.NewEvent) {
 	switch event.EventType {
 
-	case def.NEWFLOOR_EVENT:
+	case def.FLOOR_ARRIVAL:
 		fmt.Println("Event: elevator arrival at floor: ", event.Data)
 
-	case def.BUTTONPUSH_EVENT:
+	case def.BUTTON_PUSH:
 		fmt.Println("Event: button pressed: ", event.Data)
-
-	case def.DOOR_EVENT:
-		fmt.Println("Event: door open/close")
-
-	case def.OTHERELEVATOR_EVENT:
-		fmt.Println("Event: another elevator did something")
-
-	case def.NEWDIR_EVENT:
-		fmt.Println("Event: elevator changed direction")
 
 	}
 

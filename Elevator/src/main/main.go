@@ -24,6 +24,7 @@ func main() {
 	time.Sleep(50 * time.Millisecond)
 
 	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware)
+
 	go fsm.Fsm(msgChan_toFsm, msgChan_fromFsm)
 
 	go network.StartNetworkCommunication(msgChan_toNetwork, msgChan_fromNetwork, msgChan_deadElevator)
@@ -34,7 +35,7 @@ func main() {
 
 			newEvent := msg.Event.(def.NewEvent)
 
-			currentMap, changeMade, allAgree := elevatorMap.UpdateMap(newEvent)
+			currentMap, changeMade, allAgree := elevatorMap.AddNewEvent(newEvent)
 
 			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
 
@@ -53,20 +54,35 @@ func main() {
 
 			receivedMap := msg.Map.(def.ElevMap)
 
-			newEvent := elevatorMap.ReceivedMapFromNetwork(receivedMap)
-
-			currentMap, changemade, allAgree := elevatorMap.UpdateMap(newEvent)
+			fsmEvent, currentMap, changemade, allAgree := elevatorMap.AddNewMapChanges(receivedMap)
+			// AddNewMapChanges() skal luke ut om det er gjort en fms_trigger event
+			// og returnere et event, det nye mappet og om alle er eninge
 
 			elevatorMap.PrintMap(currentMap)
 
-			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
+			newMsg := def.ConstructChannelMessage(currentMap, fsm)
 
 			msgChan_toHardware <- newMsg
 
-			msgChan_toFsm <- newMsg
+			if allAgree {
+				msgChan_toFsm <- newMsg
+			}
 
 			if changemade {
 				msgChan_toNetwork <- newMsg
+			}
+
+		case msg := <-msgChan_fromFsm:
+
+			receivedMap := msg.Map.(def.ElevMap)
+
+			newEvent, currentMap, changemade, allAgree := elevatorMap.AddNewMapChanges(receivedMap)
+
+			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
+
+			if changemade {
+				msgChan_toNetwork <- newMsg
+				msgChan_toHardware <- newMsg
 			}
 		}
 	}

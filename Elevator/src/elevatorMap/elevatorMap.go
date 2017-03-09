@@ -56,8 +56,10 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.NewEvent, def.Elev
 				} else if receivedMap[e].Buttons[f][b] == 0 && receivedMap[e].Door == f {
 					if b != def.PANEL_BUTTON {
 						currentMap[e].Buttons[f][b] = receivedMap[e].Buttons[f][b]
+						changeMade = true
 					} else if e == def.MY_ID {
 						currentMap[e].Buttons[f][def.PANEL_BUTTON] = receivedMap[e].Buttons[f][def.PANEL_BUTTON]
+						changeMade = true
 					}
 				}
 			}

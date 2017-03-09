@@ -34,6 +34,9 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 							changeMade = true
 							fsmEvent = def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
 
+						} else if e == def.MY_ID {
+							localMap[e].Buttons[f][b] = 1
+							changeMade = true
 						} else {
 							localMap[e].Buttons[f][b] = 1
 						}
@@ -121,8 +124,6 @@ func AddNewEvent(newEvent def.NewEvent) (def.ElevMap, bool, bool) {
 		}
 	}
 	setMap(localMap)
-
-	//allAgree = allButtonsAgree(localMap)
 
 	if changeMade {
 		WriteBackup(localMap)

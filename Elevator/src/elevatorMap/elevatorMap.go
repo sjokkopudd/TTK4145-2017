@@ -74,6 +74,10 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 
 	setMap(localMap)
 
+	if changeMade{
+		WriteBackup(localMap)
+	}
+
 	allAgree = allButtonsAgree(localMap)
 
 	return fsmEvent, localMap, changeMade, allAgree
@@ -119,6 +123,10 @@ func AddNewEvent(newEvent def.NewEvent) (def.ElevMap, bool, bool) {
 	setMap(localMap)
 
 	allAgree = allButtonsAgree(localMap)
+
+	if changeMade{
+		WriteBackup(localMap)
+	}
 
 	return localMap, changeMade, allAgree
 

@@ -14,14 +14,14 @@ const (
 	ELEV_1 = "127.0.0.1:20005"
 	ELEV_2 = "127.0.0.1:20010"
 	ELEV_3 = "127.0.0.1:20015"
-	PORT   = ":20010"
+	PORT   = ":20005"
 
 	//Event types
 
 	//FSM triggers
-	FLOOR_ARRIVAL = 0
-	BUTTON_PUSH   = 1
-	DOOR_TIMEOUT  = 2
+	FLOOR_ARRIVAL = 1
+	BUTTON_PUSH   = 2
+	DOOR_TIMEOUT  = 3
 
 	//Directions and door cases
 	UP    = 1

@@ -117,7 +117,7 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 
 						packet.sendAsJSON(def.IPs[e])
 
-						time.Sleep(200 * time.Millisecond)
+						time.Sleep(100 * time.Millisecond)
 
 						select {
 						case ackRecived = <-ackChan:

@@ -23,6 +23,7 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 	var fsmEvent def.NewEvent
 	allAgree := true
 	changeMade := false
+	currentMap, receivedMap = deleteOrders(receivedMap, currentMap)
 	for e := 0; e < def.ELEVATORS; e++ {
 		for f := 0; f < def.FLOORS; f++ {
 			for b := 0; b < def.BUTTONS; b++ {
@@ -59,8 +60,6 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 		}
 	}
 
-	currentMap = deleteOrders(receivedMap, currentMap)
-
 	if receivedMap[def.MY_ID].Door != currentMap[def.MY_ID].Door {
 		currentMap[def.MY_ID].Door = receivedMap[def.MY_ID].Door
 		changeMade = true
@@ -75,24 +74,29 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 
 }
 
-func deleteOrders(receivedMap def.ElevMap, localMap def.ElevMap) def.ElevMap{
+func deleteOrders(receivedMap def.ElevMap, currentMap def.ElevMap) (def.ElevMap, def.ElevMap){
 	for e:= 0; e < def.ELEVATORS; e ++{
 		for f:= 0; f < def.ELEVATORS; f++{
 			if receivedMap[e].Door == def.DOOR_OPEN && receivedMap[e].Pos == f {
 				//localMap[e].Door = def.DOOR_OPEN
-				localMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
-				localMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
+				currentMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
+				currentMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
+				receivedMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
+				receivedMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
 
-				localMap[e].Buttons[f][def.UP_BUTTON] = 0
-				localMap[e].Buttons[f][def.DOWN_BUTTON] = 0
+				currentMap[e].Buttons[f][def.UP_BUTTON] = 0
+				currentMap[e].Buttons[f][def.DOWN_BUTTON] = 0
+				receivedMap[e].Buttons[f][def.UP_BUTTON] = 0
+				receivedMap[e].Buttons[f][def.DOWN_BUTTON] = 0
 
-				localMap[e].Buttons[f][def.PANEL_BUTTON] = 0
+				currentMap[e].Buttons[f][def.PANEL_BUTTON] = 0
+				receivedMap[e].Buttons[f][def.PANEL_BUTTON] = 0
 
 			}
 		}
 	}
 
-	return localMap
+	return currentMap, receivedMap
 
 }
 

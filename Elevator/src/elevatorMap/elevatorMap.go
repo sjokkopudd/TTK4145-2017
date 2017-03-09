@@ -44,13 +44,17 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 					//localMap[e].Door = def.DOOR_OPEN
 					localMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
 					localMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
+					receivedMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
+					receivedMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
 
 					localMap[e].Buttons[f][def.UP_BUTTON] = 0
 					localMap[e].Buttons[f][def.DOWN_BUTTON] = 0
+					receivedMap[e].Buttons[f][def.UP_BUTTON] = 0
+					receivedMap[e].Buttons[f][def.DOWN_BUTTON] = 0
 
 					localMap[e].Buttons[f][def.PANEL_BUTTON] = 0
+					receivedMap[e].Buttons[f][def.PANEL_BUTTON] = 0
 
-					//changeMade = true
 				}
 
 			}
@@ -73,10 +77,8 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 
 
 	setMap(localMap)
+	WriteBackup(localMap)
 
-	if changeMade{
-		WriteBackup(localMap)
-	}
 
 	allAgree = allButtonsAgree(localMap)
 

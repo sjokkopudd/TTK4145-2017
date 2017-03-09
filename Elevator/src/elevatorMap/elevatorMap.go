@@ -39,6 +39,7 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.NewEvent, def.Elev
 				changeMade = true
 			} else {
 				receivedMap[e].Door = currentMap[e].Door
+				changeMade = true
 			}
 
 		}

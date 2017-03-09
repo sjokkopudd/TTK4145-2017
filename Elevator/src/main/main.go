@@ -31,14 +31,18 @@ func main() {
 	for {
 		select {
 		case msg := <-msgChan_fromHardware:
+
 			newEvent := msg.Event.(def.NewEvent)
 
-			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
+			currentMap, changeMade, allAgree := elevatorMap.UpdateMap(newEvent)
 
 			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
 
 			msgChan_toHardware <- newMsg
-			msgChan_toFsm <- newMsg
+
+			if allAgree {
+				msgChan_toFsm <- newMsg
+			}
 
 			if changeMade {
 				msgChan_toNetwork <- newMsg
@@ -46,33 +50,23 @@ func main() {
 			}
 
 		case msg := <-msgChan_fromNetwork:
+
 			receivedMap := msg.Map.(def.ElevMap)
 
 			newEvent := elevatorMap.ReceivedMapFromNetwork(receivedMap)
 
-			currentMap, changemade := elevatorMap.UpdateMap(newEvent)
+			currentMap, changemade, allAgree := elevatorMap.UpdateMap(newEvent)
+
+			elevatorMap.PrintMap(currentMap)
 
 			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
 
 			msgChan_toHardware <- newMsg
 
-			elevatorMap.PrintMap(currentMap)
+			msgChan_toFsm <- newMsg
 
 			if changemade {
 				msgChan_toNetwork <- newMsg
-				msgChan_toFsm <- newMsg
-			}
-
-		case msg := <-msgChan_fromFsm:
-
-			newEvent := msg.Event.(def.NewEvent)
-
-			currentMap, changeMade := elevatorMap.UpdateMap(newEvent)
-			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
-
-			if changeMade {
-				msgChan_toNetwork <- newMsg
-				msgChan_toHardware <- newMsg
 			}
 		}
 	}

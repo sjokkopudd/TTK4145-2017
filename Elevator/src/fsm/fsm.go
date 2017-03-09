@@ -12,136 +12,126 @@ const (
 	DOOR_OPEN = 2
 )
 
-var state int
-var direction int
+const (
+	UP    = 1
+	STILL = 0
+	DOWN  = -1
+)
 
-func Fsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage) {
+var currentDir int
 
-	timeoutChan := make(chan bool)
+func Fsm(inDataChan chan def.ChannelMessage) {
 
 	for {
 		select {
 		case data := <-inDataChan:
 
-			switch state {
+			switch data.Event.(def.NewEvent).EventType {
+			case def.BUTTONPUSH_EVENT:
+				onRequestButtonPressed(data.Event.(def.NewEvent).Data[0], data.Event.(def.NewEvent).Data[1])
 
-			case IDLE:
+			case def.NEWFLOOR_EVENT:
+				onFloorArrival(data.Event.(def.NewEvent).Data)
 
-				fmt.Println("State: IDLE")
+			case def.TIMEOUT_EVENT:
+				onDoorTimeOut()
+			}
+		}
+	}
+}
 
-				switch data.Event.(def.NewEvent).EventType {
-				case def.BUTTONPUSH_EVENT:
-					fmt.Println("Button pushed")
+func onRequestButtonPressed(f int, b int) {
 
-					var doorOpen bool
+	localMap := elevatorMap.GetMap()
 
-					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap), timeoutChan)
+	switch state {
+	case IDLE:
+		if localMap[def.MY_ID].Pos == f {
+			hardware.SetDoorLigth(1)
+			timer.Start(1)
+		} else {
+			dir = chooseDirection(localMap)
+			hardware.SetMotorDirection(dir)
+			state = MOVING
+		}
 
-					if doorOpen {
+	case MOVING:
 
-						fmt.Println("Door open")
+	case DOOR_OPEN:
+		if localMap[def.MY_ID].Pos == f {
+			timer.Start(1)
+		}
+	}
+}
 
-						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, def.DOOR_OPEN})
+func onFloorArrival(f int) {
 
-						outDataChan <- msg
+	localMap := elevator.GetMap()
 
-						state = DOOR_OPEN
+	switch state {
+	case MOVING:
+		if shouldStop(localMap) {
+			hardware.SetMotorDirection(0)
+			hardware.SetDoorLigth(1)
+			timer.Start(1)
 
-						break
+			elevatorMap.ClearRequests(localMap)
 
-					}
+			state = DOOR_OPEN
+		}
+	}
+}
 
-					var startedMoving bool
+func onDoorTimeout() {
+	localMap := elevator.GetMap()
 
-					startedMoving, direction = takeOrder(data.Map.(def.ElevMap))
+	switch state {
+	case DOOR_OPEN:
+		hardware.SetDoorLigth(0)
 
-					if startedMoving {
+		dir = chooseDirection(localMap)
+		hardware.SetMotorDirection(dir)
 
-						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, direction})
+		if dir == 0 {
+			state = IDLE
+		} else {
+			state = MOVING
+		}
+	}
+}
 
-						outDataChan <- msg
+func chooseDirection(m def.ElevMap) int {
 
-						state = MOVING
-
-						break
-					}
-				}
-
-			case MOVING:
-
-				fmt.Println("State: MOVING")
-
-				switch data.Event.(def.NewEvent).EventType {
-				case def.NEWFLOOR_EVENT:
-
-					fmt.Println("Reached floor")
-
-					var doorOpen bool
-
-					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap), timeoutChan)
-
-					if doorOpen {
-
-						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, def.DOOR_OPEN})
-
-						outDataChan <- msg
-
-						state = DOOR_OPEN
-
-						break
-
-					}
-
-				}
-
-			case DOOR_OPEN:
-
-				fmt.Println("State: DOOR_OPEN")
-
-				switch data.Event.(def.NewEvent).EventType {
-				case def.BUTTONPUSH_EVENT:
-
-					var doorOpen bool
-					doorOpen, direction = stopAndOpenDoors(data.Map.(def.ElevMap), timeoutChan)
-
-					if doorOpen {
-						msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, def.DOOR_OPEN})
-						outDataChan <- msg
-						break
-
-					}
+	switch currentDir {
+	case UP:
+		for f := m[def.MY_ID].Pos; f < def.FLOORS; f++ {
+			if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || m[def.MY_ID].Buttons[f][def.UP_BUTTON] == 1 || m[def.MY_ID].Buttons[f][def.DOWN_BUTTON] == 1 {
+				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
+					return UP
 				}
 			}
-		case timeoutData := <-timeoutChan:
+		}
 
-			if timeoutData {
-
-				fmt.Println("Door timeout")
-
-				msg := def.ConstructChannelMessage(nil, def.NewEvent{def.DOOR_EVENT, def.DOOR_CLOSED})
-
-				outDataChan <- msg
-
-				var startedMoving bool
-
-				startedMoving, direction = takeOrder(elevatorMap.GetMap())
-
-				if startedMoving {
-					msg = def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, direction})
-
-					outDataChan <- msg
-
-					state = MOVING
-
-					break
+	case DOWN:
+		for f := m[def.MY_ID].Pos; f > -1; f-- {
+			if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || m[def.MY_ID].Buttons[f][def.UP_BUTTON] == 1 || m[def.MY_ID].Buttons[f][def.DOWN_BUTTON] == 1 {
+				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
+					return DOWN
 				}
-
-				msg = def.ConstructChannelMessage(nil, def.NewEvent{def.NEWDIR_EVENT, direction})
-
-				outDataChan <- msg
-
-				state = IDLE
 			}
+		}
+
+	default:
+		return STILL
+	}
+
+}
+
+func iAmClosest(m def.ElevMap, f int) bool {
+	result := true
+	for e := 0; e < def.ELEVATORS; e++ {
+		if e != def.MY_ID {
+
 		}
 	}
 }

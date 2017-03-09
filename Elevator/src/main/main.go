@@ -54,7 +54,7 @@ func main() {
 
 			receivedMap := msg.Map.(def.ElevMap)
 
-			fsmEvent, currentMap, changemade, allAgree := elevatorMap.AddNewMapChanges(receivedMap)
+			fsmEvent, currentMap, changemade, allAgree := elevatorMap.AddNewMapChanges(receivedMap, 1)
 			// AddNewMapChanges() skal luke ut om det er gjort en fms_trigger event
 			// og returnere et event, det nye mappet og om alle er eninge
 
@@ -74,7 +74,7 @@ func main() {
 
 			receivedMap := msg.Map.(def.ElevMap)
 
-			newEvent, currentMap, changemade, _ := elevatorMap.AddNewMapChanges(receivedMap)
+			newEvent, currentMap, changemade, _ := elevatorMap.AddNewMapChanges(receivedMap, 0)
 
 			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
 

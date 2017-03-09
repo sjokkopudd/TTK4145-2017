@@ -6,6 +6,11 @@ import (
 	"sync"
 )
 
+const (
+	FSM     = 0
+	NETWORK = 1
+)
+
 var mapMutex = &sync.Mutex{}
 var localMap *def.ElevMap
 
@@ -18,34 +23,42 @@ func InitMap() {
 
 }
 
-func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool, bool) {
+func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.NewEvent, def.ElevMap, bool, bool) {
 	currentMap := GetMap()
 	var fsmEvent def.NewEvent
 	allAgree := true
 	changeMade := false
 
 	for e := 0; e < def.ELEVATORS; e++ {
+		if receivedMap[e].Door != currentMap[e].Door {
+			if user == FSM {
+				currentMap[e].Door = receivedMap[e].Door
+				changeMade = true
+			} else if e != def.MY_ID {
+				currentMap[e].Door = receivedMap[e].Door
+				changeMade = true
+			} else {
+				receivedMap[e].Door = currentMap[e].Door
+			}
+
+		}
 		for f := 0; f < def.FLOORS; f++ {
 			for b := 0; b < def.BUTTONS; b++ {
-				if receivedMap[e].Buttons[f][b] != currentMap[e].Buttons[f][b] {
-					if receivedMap[e].Buttons[f][b] == 1 && currentMap[e].Buttons[f][b] != 1 {
-						if b != def.PANEL_BUTTON {
-							currentMap[e].Buttons[f][b] = 1
-							currentMap[def.MY_ID].Buttons[f][b] = 1
-							changeMade = true
-							fsmEvent = def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
 
-						} else if e == def.MY_ID {
-							currentMap[e].Buttons[f][b] = 1
-							changeMade = true
-						} else {
-							currentMap[e].Buttons[f][b] = 1
-						}
-
+				if receivedMap[e].Buttons[f][b] == 1 && currentMap[e].Buttons[f][b] != 1 {
+					if b != def.PANEL_BUTTON {
+						currentMap[e].Buttons[f][b] = receivedMap[e].Buttons[f][b]
+						currentMap[def.MY_ID].Buttons[f][b] = receivedMap[e].Buttons[f][b]
+						changeMade = true
+						fsmEvent = def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
+					}
+				} else if receivedMap[e].Buttons[f][b] == 0 && receivedMap[e].Door == f {
+					if b != def.PANEL_BUTTON {
+						currentMap[e].Buttons[f][b] = receivedMap[e].Buttons[f][b]
+					} else if e == def.MY_ID {
+						currentMap[e].Buttons[f][def.PANEL_BUTTON] = receivedMap[e].Buttons[f][def.PANEL_BUTTON]
 					}
 				}
-				
-
 			}
 		}
 
@@ -61,13 +74,6 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 
 	}
 
-	if receivedMap[def.MY_ID].Door != currentMap[def.MY_ID].Door {
-		currentMap[def.MY_ID].Door = receivedMap[def.MY_ID].Door
-		changeMade = true
-	}
-
-	currentMap, receivedMap = deleteOrders(receivedMap, currentMap)
-
 	setMap(currentMap)
 	WriteBackup(currentMap)
 
@@ -77,8 +83,8 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 
 }
 
-func deleteOrders(receivedMap def.ElevMap, currentMap def.ElevMap) (def.ElevMap, def.ElevMap){
-	for e:= 0; e < def.ELEVATORS; e ++{
+func deleteOrders(receivedMap def.ElevMap, currentMap def.ElevMap) (def.ElevMap, def.ElevMap) {
+	for e := 0; e < def.ELEVATORS; e++ {
 		if receivedMap[e].Door != -1 {
 			f := receivedMap[e].Door
 			//localMap[e].Door = def.DOOR_OPEN
@@ -95,7 +101,7 @@ func deleteOrders(receivedMap def.ElevMap, currentMap def.ElevMap) (def.ElevMap,
 			currentMap[e].Buttons[f][def.PANEL_BUTTON] = 0
 			receivedMap[e].Buttons[f][def.PANEL_BUTTON] = 0
 
-			if e == def.MY_ID{
+			if e == def.MY_ID {
 				currentMap[def.MY_ID].Buttons[f][def.PANEL_BUTTON] = 0
 				receivedMap[def.MY_ID].Buttons[f][def.PANEL_BUTTON] = 0
 			}

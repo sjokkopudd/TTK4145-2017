@@ -63,7 +63,11 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage) {
 		elevatorMap.PrintMap(localMap)
 
 		if localMap[def.MY_ID].Pos == f {
-			localMap[def.MY_ID].Door = 1
+
+			// send delete all orders on floor signal
+
+			localMap[def.MY_ID].Door = localMap[def.MY_ID].Pos
+
 			hardware.SetDoorLight(1)
 			msg := def.ConstructChannelMessage(localMap, nil)
 			outDataChan <- msg
@@ -105,7 +109,11 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage) {
 		elevatorMap.PrintMap(localMap)
 		if shouldStop(localMap) {
 			hardware.SetMotorDir(0)
-			localMap[def.MY_ID].Door = 1
+
+			// send delete all orders on floor signal
+
+			localMap[def.MY_ID].Door = localMap[def.MY_ID].Pos
+
 			hardware.SetDoorLight(1)
 
 			timerStart()
@@ -129,7 +137,7 @@ func onDoorTimeout(outDataChan chan def.ChannelMessage) {
 
 		fmt.Println("onDoorTimeout")
 		elevatorMap.PrintMap(localMap)
-		localMap[def.MY_ID].Door = 0
+		localMap[def.MY_ID].Door = -1
 		hardware.SetDoorLight(0)
 
 		currentDir = chooseDirection(localMap)

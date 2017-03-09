@@ -23,7 +23,7 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 	var fsmEvent def.NewEvent
 	allAgree := true
 	changeMade := false
-	currentMap, receivedMap = deleteOrders(receivedMap, currentMap)
+
 	for e := 0; e < def.ELEVATORS; e++ {
 		for f := 0; f < def.FLOORS; f++ {
 			for b := 0; b < def.BUTTONS; b++ {
@@ -58,12 +58,15 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 			currentMap[e].Pos = receivedMap[e].Pos
 			changeMade = true
 		}
+
 	}
 
 	if receivedMap[def.MY_ID].Door != currentMap[def.MY_ID].Door {
 		currentMap[def.MY_ID].Door = receivedMap[def.MY_ID].Door
 		changeMade = true
 	}
+
+	currentMap, receivedMap = deleteOrders(receivedMap, currentMap)
 
 	setMap(currentMap)
 	WriteBackup(currentMap)
@@ -76,22 +79,25 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 
 func deleteOrders(receivedMap def.ElevMap, currentMap def.ElevMap) (def.ElevMap, def.ElevMap){
 	for e:= 0; e < def.ELEVATORS; e ++{
-		for f:= 0; f < def.ELEVATORS; f++{
-			if receivedMap[e].Door == def.DOOR_OPEN && receivedMap[e].Pos == f {
-				//localMap[e].Door = def.DOOR_OPEN
-				currentMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
-				currentMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
-				receivedMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
-				receivedMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
+		if receivedMap[e].Door != -1 {
+			f := receivedMap[e].Door
+			//localMap[e].Door = def.DOOR_OPEN
+			currentMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
+			currentMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
+			receivedMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
+			receivedMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
 
-				currentMap[e].Buttons[f][def.UP_BUTTON] = 0
-				currentMap[e].Buttons[f][def.DOWN_BUTTON] = 0
-				receivedMap[e].Buttons[f][def.UP_BUTTON] = 0
-				receivedMap[e].Buttons[f][def.DOWN_BUTTON] = 0
+			currentMap[e].Buttons[f][def.UP_BUTTON] = 0
+			currentMap[e].Buttons[f][def.DOWN_BUTTON] = 0
+			receivedMap[e].Buttons[f][def.UP_BUTTON] = 0
+			receivedMap[e].Buttons[f][def.DOWN_BUTTON] = 0
 
-				currentMap[e].Buttons[f][def.PANEL_BUTTON] = 0
-				receivedMap[e].Buttons[f][def.PANEL_BUTTON] = 0
+			currentMap[e].Buttons[f][def.PANEL_BUTTON] = 0
+			receivedMap[e].Buttons[f][def.PANEL_BUTTON] = 0
 
+			if e == def.MY_ID{
+				currentMap[def.MY_ID].Buttons[f][def.PANEL_BUTTON] = 0
+				receivedMap[def.MY_ID].Buttons[f][def.PANEL_BUTTON] = 0
 			}
 		}
 	}

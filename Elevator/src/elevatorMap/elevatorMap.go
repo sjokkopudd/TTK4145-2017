@@ -41,7 +41,7 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 					}
 				}
 				if receivedMap[e].Door == def.DOOR_OPEN && receivedMap[e].Pos == f {
-					localMap[e].Door = def.DOOR_OPEN
+					//localMap[e].Door = def.DOOR_OPEN
 					localMap[def.MY_ID].Buttons[f][def.UP_BUTTON] = 0
 					localMap[def.MY_ID].Buttons[f][def.DOWN_BUTTON] = 0
 
@@ -50,21 +50,22 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 
 					localMap[e].Buttons[f][def.PANEL_BUTTON] = 0
 
-					changeMade = true
+					//changeMade = true
 				}
 
 			}
 		}
 
-		if receivedMap[e].Dir != localMap[e].Dir && e != def.MY_ID {
+		//  ?
+		if receivedMap[e].Dir != localMap[e].Dir {
 			localMap[e].Dir = receivedMap[e].Dir
 			changeMade = true
 		}
-		if receivedMap[e].Pos != localMap[e].Pos && e != def.MY_ID {
+		if receivedMap[e].Pos != localMap[e].Pos && e != def.MY_ID{
 			localMap[e].Pos = receivedMap[e].Pos
 			changeMade = true
 		}
-		if receivedMap[e].Door != localMap[e].Door && e != def.MY_ID {
+		if receivedMap[e].Door != localMap[e].Door {
 			localMap[e].Door = receivedMap[e].Door
 			changeMade = true
 		}
@@ -82,7 +83,7 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 func allButtonsAgree(m def.ElevMap) bool {
 
 	for f := 0; f < def.FLOORS; f++ {
-		for b := 0; b < def.BUTTONS; b++ {
+		for b := 0; b < def.BUTTONS - 1; b++ {
 			prevVal := -1
 			for e := 0; e < def.ELEVATORS; e++ {
 				if prevVal == -1 {

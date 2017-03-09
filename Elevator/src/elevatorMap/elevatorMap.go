@@ -34,7 +34,10 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 							changeMade = true
 							fsmEvent = def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
 
-						} else {
+						} else if e == def.MY_ID{
+							localMap[e].Buttons[f][b] = 1
+							changeMade = true
+						}else{
 							localMap[e].Buttons[f][b] = 1
 						}
 
@@ -79,28 +82,8 @@ func AddNewMapChanges(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap, bool,
 	setMap(localMap)
 	WriteBackup(localMap)
 
-
-	allAgree = allButtonsAgree(localMap)
-
 	return fsmEvent, localMap, changeMade, allAgree
 
-}
-
-func allButtonsAgree(m def.ElevMap) bool {
-
-	for f := 0; f < def.FLOORS; f++ {
-		for b := 0; b < def.BUTTONS - 1; b++ {
-			prevVal := -1
-			for e := 0; e < def.ELEVATORS; e++ {
-				if prevVal == -1 {
-					prevVal = m[e].Buttons[f][b]
-				} else if m[e].Buttons[f][b] != prevVal {
-					return false
-				}
-			}
-		}
-	}
-	return true
 }
 
 func AddNewEvent(newEvent def.NewEvent) (def.ElevMap, bool, bool) {
@@ -124,7 +107,6 @@ func AddNewEvent(newEvent def.NewEvent) (def.ElevMap, bool, bool) {
 	}
 	setMap(localMap)
 
-	allAgree = allButtonsAgree(localMap)
 
 	if changeMade{
 		WriteBackup(localMap)

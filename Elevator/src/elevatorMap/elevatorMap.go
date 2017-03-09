@@ -166,5 +166,4 @@ func setMap(newMap def.ElevMap) {
 	mapMutex.Lock()
 	*localMap = newMap
 	mapMutex.Unlock()
-
 }

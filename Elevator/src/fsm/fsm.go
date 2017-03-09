@@ -131,7 +131,7 @@ func onDoorTimeout(outDataChan chan def.ChannelMessage) {
 
 		currentDir = chooseDirection(localMap)
 		hardware.SetMotorDir(currentDir)
-		localMap[def.MY_ID].Door = currentDir
+		localMap[def.MY_ID].Dir = currentDir
 
 		fmt.Println("DIR: ", currentDir)
 

@@ -137,6 +137,8 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 				}
 			}
 		}
+
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 
@@ -213,5 +215,7 @@ func reciveUdpPacket(receiveChan chan def.ChannelMessage, ackChan chan ackInfo) 
 
 			}
 		}
+
+		time.Sleep(10 * time.Millisecond)
 	}
 }

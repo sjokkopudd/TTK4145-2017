@@ -6,7 +6,6 @@ import (
 	"fsm"
 	"hardware"
 	"network"
-	"time"
 )
 
 func main() {

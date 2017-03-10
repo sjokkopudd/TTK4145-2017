@@ -2,7 +2,7 @@ package def
 
 const (
 	//Physical constants
-	ELEVATORS    = 1
+	ELEVATORS    = 2
 	FLOORS       = 4
 	UP_BUTTON    = 0
 	DOWN_BUTTON  = 1
@@ -10,11 +10,11 @@ const (
 	BUTTONS      = 3
 
 	//Identification constants
-	MY_ID  = 0
+	MY_ID  = 1
 	ELEV_1 = "127.0.0.1:20005"
 	ELEV_2 = "127.0.0.1:20010"
 	ELEV_3 = "127.0.0.1:20015"
-	PORT   = ":20005"
+	PORT   = ":20010"
 
 	//Event types
 	FLOOR_ARRIVAL = 1
@@ -30,11 +30,11 @@ const (
 	DOOR_OPEN   = 1
 
 	//Simulator constants
-	SIM_SERV_ADDR   = "127.0.0.1:15657"
-	USING_SIMULATOR = false
+	SIM_SERV_ADDR   = "127.0.0.1:15658"
+	USING_SIMULATOR = true
 )
 
-var IPs = [ELEVATORS]string{ELEV_1}
+var IPs = [ELEVATORS]string{ELEV_1, ELEV_2}
 
 type NewEvent struct {
 	EventType int

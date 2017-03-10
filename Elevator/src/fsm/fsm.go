@@ -3,7 +3,7 @@ package fsm
 import (
 	"def"
 	"elevatorMap"
-	"fmt"
+	//"fmt"
 	"hardware"
 	"math"
 	"time"

@@ -6,6 +6,7 @@ import (
 	"fsm"
 	"hardware"
 	"network"
+	"time"
 )
 
 func main() {
@@ -25,6 +26,8 @@ func main() {
 	go fsm.InitFsm(msgChan_toFsm, msgChan_fromFsm)
 
 	go network.StartNetworkCommunication(msgChan_toNetwork, msgChan_fromNetwork, msgChan_deadElevator)
+
+	time.Sleep(1000 * time.Millisecond)
 
 	for {
 		select {

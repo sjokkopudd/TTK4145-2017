@@ -23,13 +23,13 @@ const (
 
 var currentDir int
 var state int
+var watchdog *time.Timer
 
 func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage) {
 
 	timer := time.NewTimer(DOOR_TIMEOUT * time.Second)
 	timer.Stop()
-	idleTimer := time.NewTimer(IDLE_TIMEOUT * time.Second)
-	idleTimer.Stop()
+	watchdog = time.NewTimer(IDLE_TIMEOUT * time.Second)
 
 	for {
 
@@ -40,18 +40,18 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 			case def.BUTTON_PUSH:
 				button := data.Event.(def.NewEvent).Data.([]int)
 				onRequestButtonPressed(button[0], button[1], outDataChan, timer)
-				idleTimer.Reset(IDLE_TIMEOUT * time.Second)
+				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 			case def.FLOOR_ARRIVAL:
 				onFloorArrival(data.Event.(def.NewEvent).Data.(int), outDataChan, timer)
-				idleTimer.Reset(IDLE_TIMEOUT * time.Second)
+				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 			}
 
 		case <-timer.C:
 
 			onDoorTimeout(outDataChan, idleTimer)
-			idleTimer.Reset(IDLE_TIMEOUT * time.Second)
+			watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 		case <-idleTimer.C:
 			forceOrder(outDataChan, idleTimer)
@@ -67,25 +67,20 @@ func forceOrder(outDataChan chan def.ChannelMessage, idleTimer *time.Timer) {
 
 	localMap := elevatorMap.GetMap()
 
-	if isOrderAbove(localMap) || isOrderBelow(localMap) {
-		dir := chooseDirection(localMap)
-		if dir == def.STILL {
-			if isOrderAbove(localMap) {
-				dir = def.UP
-			} else {
-				dir = def.DOWN
-			}
+	switch state {
+	case IDLE:
+		currentDir = forceChooseDirection(localMap)
+		hardware.SetMotorDir(currentDir)
+
+		localMap[def.MY_ID].Dir = currentDir
+
+		if currentDir != def.STILL {
+			state = MOVING
 		}
-		hardware.SetMotorDir(dir)
-		localMap[def.MY_ID].Dir = dir
+
 		msg := def.ConstructChannelMessage(localMap, nil)
 		outDataChan <- msg
 
-		state = MOVING
-
-	} else {
-		idleTimer.Reset(IDLE_TIMEOUT * time.Second)
-		state = IDLE
 	}
 }
 
@@ -206,6 +201,57 @@ func onDoorTimeout(outDataChan chan def.ChannelMessage, idleTimer *time.Timer) {
 		outDataChan <- msg
 	}
 }
+
+
+func forceChooseDirection(m def.ElevMap) int {
+
+	switch currentDir {
+	case UP:
+		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
+			if validOrderOnFloor(m, f) {{
+				return UP
+			}
+		}
+		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
+			if validOrderOnFloor(m, f) {
+				return DOWN	
+			}
+		}
+		return STILL
+
+	case DOWN:
+		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
+			if validOrderOnFloor(m, f) {
+				return DOWN
+			}
+		}
+		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
+			if validOrderOnFloor(m, f) {
+				return UP
+			}
+		}
+		return STILL
+
+	case STILL:
+		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
+			if validOrderOnFloor(m, f) {
+				return DOWN
+			}
+		}
+		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
+			if validOrderOnFloor(m, f) {
+				return UP
+			}
+		}
+		return STILL
+
+	default:
+		return STILL
+
+	}
+
+}
+
 
 func chooseDirection(m def.ElevMap) int {
 
@@ -369,7 +415,7 @@ func shouldStop(m def.ElevMap) bool {
 			return true
 		} else if !isOrderBelow(m) {
 			return true
-		}
+		} else if m[def.MY_ID].Pos 
 	}
 
 	return false

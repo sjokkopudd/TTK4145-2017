@@ -42,8 +42,6 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 
 		go pollNewEvents(msgChan_fromHW)
 
-		//go goUpAndDown()
-
 	}
 
 	if !def.USING_SIMULATOR {
@@ -52,7 +50,7 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 			log.Fatal(errors.New("Unsucsessful init of IO"))
 		}
 
-		goToNearestFloor()
+		go goToNearestFloor()
 		go pollNewEvents(msgChan_fromHW)
 		go setLights(msgChan_toHW)
 	}
@@ -133,7 +131,6 @@ func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 				}
 			}
 		}
-		time.Sleep(100 * time.Millisecond)
 	}
 }
 

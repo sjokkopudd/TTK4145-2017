@@ -109,7 +109,6 @@ func setLights(msgChan_toHW chan def.ChannelMessage) {
 func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 	lastPos := -1
 	var buttonState [def.FLOORS][def.BUTTONS]bool
-	time.Sleep(50 * time.Millisecond)
 	for {
 		newPos := readFloor()
 		if (newPos != -1) && (newPos != lastPos) {

@@ -63,8 +63,8 @@ func main() {
 				msgChan_toNetwork <- newMsg
 			}
 		default:
-			time.Sleep(10 * time.Millisecond)
-		}
 
+		}
+		time.Sleep(50 * time.Millisecond)
 	}
 }

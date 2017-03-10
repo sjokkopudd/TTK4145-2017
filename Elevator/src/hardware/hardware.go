@@ -101,7 +101,7 @@ func setLights(msgChan_toHW chan def.ChannelMessage) {
 			}
 			setFloorIndicator(currentMap[def.MY_ID].Pos)
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 
 }
@@ -133,7 +133,7 @@ func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 				}
 			}
 		}
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 

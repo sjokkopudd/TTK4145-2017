@@ -202,7 +202,6 @@ func onDoorTimeout(outDataChan chan def.ChannelMessage, idleTimer *time.Timer) {
 	}
 }
 
-
 func forceChooseDirection(m def.ElevMap) int {
 
 	switch currentDir {
@@ -214,7 +213,7 @@ func forceChooseDirection(m def.ElevMap) int {
 		}
 		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
 			if validOrderOnFloor(m, f) {
-				return DOWN	
+				return DOWN
 			}
 		}
 		return STILL
@@ -251,7 +250,6 @@ func forceChooseDirection(m def.ElevMap) int {
 	}
 
 }
-
 
 func chooseDirection(m def.ElevMap) int {
 
@@ -406,6 +404,8 @@ func shouldStop(m def.ElevMap) bool {
 			return true
 		} else if !isOrderAbove(m) {
 			return true
+		} else if f == 3 {
+			return true
 		}
 
 	case DOWN:
@@ -415,7 +415,9 @@ func shouldStop(m def.ElevMap) bool {
 			return true
 		} else if !isOrderBelow(m) {
 			return true
-		} else if m[def.MY_ID].Pos 
+		} else if f == 0 {
+			return true
+		}
 	}
 
 	return false

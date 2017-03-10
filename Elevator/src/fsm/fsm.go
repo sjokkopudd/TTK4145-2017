@@ -12,9 +12,10 @@ const (
 	IDLE      = 0
 	MOVING    = 1
 	DOOR_OPEN = 2
-)
 
-const (
+	DOOR_TIMEOUT = 2
+	IDLE_TIMEOUT = 5
+
 	UP    = 1
 	STILL = 0
 	DOWN  = -1
@@ -25,9 +26,10 @@ var state int
 
 func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage) {
 
-	timer := time.NewTimer(2 * time.Second)
+	timer := time.NewTimer(DOOR_TIMEOUT * time.Second)
 	timer.Stop()
-	state = IDLE
+	idleTimer := time.NewTimer(IDLE_TIMEOUT * time.Second)
+	idleTimer.Stop()
 
 	for {
 
@@ -46,12 +48,42 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 
 		case <-timer.C:
 
-			onDoorTimeout(outDataChan)
+			onDoorTimeout(outDataChan, idleTimer)
+
+		case <-idleTimer.C:
+			forceOrder(outDataChan, idleTimer)
+
 		default:
 			//fmt.Println("STATE: ", state)
 		}
 		time.Sleep(100 * time.Millisecond)
 
+	}
+}
+
+func forceOrder(outDataChan chan def.ChannelMessage, idleTimer *time.Timer) {
+
+	localMap := elevatorMap.GetMap()
+
+	if isOrderAbove(localMap) || isOrderBelow(localMap) {
+		dir := chooseDirection(localMap)
+		if dir == def.STILL {
+			if isOrderAbove(localMap) {
+				dir = def.UP
+			} else {
+				dir = def.DOWN
+			}
+		}
+		hardware.SetMotorDir(dir)
+		localMap[def.MY_ID].Dir = dir
+		msg := def.ConstructChannelMessage(localMap, nil)
+		outDataChan <- msg
+
+		state = MOVING
+
+	} else {
+		idleTimer.Reset(IDLE_TIMEOUT * time.Second)
+		state = IDLE
 	}
 }
 
@@ -69,7 +101,7 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 			hardware.SetDoorLight(1)
 			msg := def.ConstructChannelMessage(localMap, nil)
 			outDataChan <- msg
-			timer.Reset(2 * time.Second)
+			timer.Reset(DOOR_TIMEOUT * time.Second)
 			state = DOOR_OPEN
 		} else {
 			localMap[def.MY_ID].Buttons[f][b] = 1
@@ -106,7 +138,7 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 
 			outDataChan <- msg
 
-			timer.Reset(2 * time.Second)
+			timer.Reset(DOOR_TIMEOUT * time.Second)
 		} else {
 			localMap[def.MY_ID].Buttons[f][b] = 1
 			msg := def.ConstructChannelMessage(localMap, nil)
@@ -131,7 +163,7 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 
 			hardware.SetDoorLight(1)
 
-			timer.Reset(2 * time.Second)
+			timer.Reset(DOOR_TIMEOUT * time.Second)
 
 			state = DOOR_OPEN
 
@@ -144,7 +176,7 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 	}
 }
 
-func onDoorTimeout(outDataChan chan def.ChannelMessage) {
+func onDoorTimeout(outDataChan chan def.ChannelMessage, idleTimer *time.Timer) {
 
 	switch state {
 	case DOOR_OPEN:
@@ -159,6 +191,7 @@ func onDoorTimeout(outDataChan chan def.ChannelMessage) {
 		localMap[def.MY_ID].Dir = currentDir
 
 		if currentDir == STILL {
+			idleTimer.Reset(IDLE_TIMEOUT * time.Second)
 			state = IDLE
 		} else {
 			state = MOVING

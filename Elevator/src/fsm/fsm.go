@@ -50,11 +50,12 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 
 		case <-timer.C:
 
-			onDoorTimeout(outDataChan, idleTimer)
+			onDoorTimeout(outDataChan)
 			watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
-		case <-idleTimer.C:
-			forceOrder(outDataChan, idleTimer)
+		case <-watchdog.C:
+			forceOrder(outDataChan)
+			watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 		default:
 			//fmt.Println("STATE: ", state)
@@ -63,7 +64,7 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 	}
 }
 
-func forceOrder(outDataChan chan def.ChannelMessage, idleTimer *time.Timer) {
+func forceOrder(outDataChan chan def.ChannelMessage) {
 
 	localMap := elevatorMap.GetMap()
 
@@ -176,7 +177,7 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 	}
 }
 
-func onDoorTimeout(outDataChan chan def.ChannelMessage, idleTimer *time.Timer) {
+func onDoorTimeout(outDataChan chan def.ChannelMessage) {
 
 	switch state {
 	case DOOR_OPEN:
@@ -191,7 +192,6 @@ func onDoorTimeout(outDataChan chan def.ChannelMessage, idleTimer *time.Timer) {
 		localMap[def.MY_ID].Dir = currentDir
 
 		if currentDir == STILL {
-			idleTimer.Reset(IDLE_TIMEOUT * time.Second)
 			state = IDLE
 		} else {
 			state = MOVING

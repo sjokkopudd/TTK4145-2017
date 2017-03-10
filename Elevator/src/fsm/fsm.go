@@ -14,7 +14,7 @@ const (
 	DOOR_OPEN = 2
 
 	DOOR_TIMEOUT = 2
-	IDLE_TIMEOUT = 5
+	IDLE_TIMEOUT = 10
 
 	UP    = 1
 	STILL = 0

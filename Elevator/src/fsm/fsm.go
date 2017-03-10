@@ -48,7 +48,7 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 
 			onDoorTimeout(outDataChan)
 		default:
-			fmt.Println("STATE: ", state)
+			//fmt.Println("STATE: ", state)
 		}
 		time.Sleep(100 * time.Millisecond)
 

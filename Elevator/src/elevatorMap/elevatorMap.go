@@ -30,15 +30,17 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.NewEvent, def.Elev
 	changeMade := false
 	floorWithDoorOpen := -1
 
-	for e := 0; e < def.ELEVATORS; e++{
-		if receivedMap[e].Door =! -1 {
+	for e := 0; e < def.ELEVATORS; e++ {
+		if receivedMap[e].Door != -1 {
 			floorWithDoorOpen = receivedMap[e].Door
-			if e == def.MY_ID{
+			if e == def.MY_ID {
 				currentMap[e].Door = receivedMap[e].Door
 				changeMade = true
 			}
 		}
 	}
+
+	fmt.Println(floorWithDoorOpen)
 
 	for e := 0; e < def.ELEVATORS; e++ {
 		/*if receivedMap[e].Door != currentMap[e].Door {
@@ -58,7 +60,7 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.NewEvent, def.Elev
 		for f := 0; f < def.FLOORS; f++ {
 			for b := 0; b < def.BUTTONS; b++ {
 
-				if (receivedMap[e].Buttons[f][b] == 1 && currentMap[e].Buttons[f][b] != 1) /*&& f != currentMap[def.MY_ID].Door */{
+				if receivedMap[e].Buttons[f][b] == 1 && currentMap[e].Buttons[f][b] != 1 /*&& f != currentMap[def.MY_ID].Door */ {
 					if b != def.PANEL_BUTTON {
 						currentMap[e].Buttons[f][b] = receivedMap[e].Buttons[f][b]
 						currentMap[def.MY_ID].Buttons[f][b] = receivedMap[e].Buttons[f][b]

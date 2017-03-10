@@ -3,6 +3,7 @@ package main
 import (
 	"def"
 	"elevatorMap"
+	"fmt"
 	"fsm"
 	"hardware"
 	"network"
@@ -54,7 +55,7 @@ func main() {
 
 			receivedMap := msg.Map.(def.ElevMap)
 
-			fsmEvent, currentMap, changemade, allAgree := elevatorMap.AddNewMapChanges(receivedMap, 1)
+			fsmEvent, currentMap, changemade, _ := elevatorMap.AddNewMapChanges(receivedMap, 1)
 			// AddNewMapChanges() skal luke ut om det er gjort en fms_trigger event
 			// og returnere et event, det nye mappet og om alle er eninge
 
@@ -62,12 +63,13 @@ func main() {
 
 			msgChan_toHardware <- newMsg
 
-			if allAgree {
-				msgChan_toFsm <- newMsg
-			}
+			msgChan_toFsm <- newMsg
 
 			if changemade {
-				msgChan_toNetwork <- newMsg
+				fmt.Println("From network")
+				elevatorMap.PrintMap(currentMap)
+				fmt.Println()
+				//msgChan_toNetwork <- newMsg
 			}
 
 		case msg := <-msgChan_fromFsm:
@@ -80,6 +82,9 @@ func main() {
 
 			if changemade {
 				msgChan_toHardware <- newMsg
+				fmt.Println("From FSM")
+				elevatorMap.PrintMap(currentMap)
+				fmt.Println()
 				msgChan_toNetwork <- newMsg
 
 			}

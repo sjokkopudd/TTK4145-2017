@@ -36,26 +36,19 @@ func main() {
 
 			newEvent := msg.Event.(def.NewEvent)
 
-			currentMap, changeMade, allAgree := elevatorMap.AddNewEvent(newEvent)
+			//currentMap, _, _ := elevatorMap.AddNewEvent(newEvent)
 
-			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
+			newMsg := def.ConstructChannelMessage(nil, newEvent)
 
-			msgChan_toHardware <- newMsg
+			//msgChan_toHardware <- newMsg
 
-			if allAgree {
-				msgChan_toFsm <- newMsg
-			}
-
-			if changeMade {
-				msgChan_toNetwork <- newMsg
-
-			}
+			msgChan_toFsm <- newMsg
 
 		case msg := <-msgChan_fromNetwork:
 
 			receivedMap := msg.Map.(def.ElevMap)
 
-			fsmEvent, currentMap, changemade, _ := elevatorMap.AddNewMapChanges(receivedMap, 1)
+			fsmEvent, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
 			// AddNewMapChanges() skal luke ut om det er gjort en fms_trigger event
 			// og returnere et event, det nye mappet og om alle er eninge
 
@@ -63,13 +56,7 @@ func main() {
 
 			msgChan_toHardware <- newMsg
 
-			if changemade {
-				msgChan_toFsm <- newMsg
-				fmt.Println("From network")
-				elevatorMap.PrintMap(currentMap)
-				fmt.Println()
-				//msgChan_toNetwork <- newMsg
-			}
+			msgChan_toFsm <- newMsg
 
 		case msg := <-msgChan_fromFsm:
 

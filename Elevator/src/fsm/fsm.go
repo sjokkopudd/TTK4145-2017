@@ -75,6 +75,7 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 			timer.Reset(2 * time.Second)
 			state = DOOR_OPEN
 		} else {
+			localMap[def.MY_ID].Buttons[f][b] = 1
 			currentDir = chooseDirection(localMap)
 			hardware.SetMotorDir(currentDir)
 			localMap[def.MY_ID].Dir = currentDir
@@ -88,6 +89,9 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 		}
 
 	case MOVING:
+		localMap[def.MY_ID].Buttons[f][b] = 1
+		msg := def.ConstructChannelMessage(localMap, nil)
+		outDataChan <- msg
 
 	case DOOR_OPEN:
 		localMap := elevatorMap.GetMap()
@@ -103,17 +107,21 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 			outDataChan <- msg
 
 			timer.Reset(2 * time.Second)
+		} else {
+			localMap[def.MY_ID].Buttons[f][b] = 1
+			msg := def.ConstructChannelMessage(localMap, nil)
+			outDataChan <- msg
 		}
 	}
 }
 
 func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Timer) {
 
+	localMap := elevatorMap.GetMap()
+	localMap[def.MY_ID].Pos = f
+
 	switch state {
 	case MOVING:
-
-		localMap := elevatorMap.GetMap()
-
 		if shouldStop(localMap) {
 			hardware.SetMotorDir(0)
 
@@ -131,6 +139,9 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 
 			state = DOOR_OPEN
 
+			msg := def.ConstructChannelMessage(localMap, nil)
+			outDataChan <- msg
+		} else {
 			msg := def.ConstructChannelMessage(localMap, nil)
 			outDataChan <- msg
 		}

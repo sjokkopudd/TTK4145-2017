@@ -208,7 +208,7 @@ func forceChooseDirection(m def.ElevMap) int {
 	switch currentDir {
 	case UP:
 		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
-			if validOrderOnFloor(m, f) {{
+			if validOrderOnFloor(m, f) {
 				return UP
 			}
 		}

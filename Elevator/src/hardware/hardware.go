@@ -131,6 +131,7 @@ func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 				}
 			}
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 

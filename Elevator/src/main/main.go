@@ -19,9 +19,7 @@ func main() {
 	msgChan_toFsm := make(chan def.ChannelMessage, 100)
 	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
 
-	elevatorMap.InitMap()
-
-	time.Sleep(50 * time.Millisecond)
+	go elevatorMap.InitMap()
 
 	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware)
 

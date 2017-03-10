@@ -21,8 +21,6 @@ func main() {
 
 	elevatorMap.InitMap()
 
-	time.Sleep(50 * time.Millisecond)
-
 	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware)
 
 	go fsm.InitFsm(msgChan_toFsm, msgChan_fromFsm)

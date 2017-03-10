@@ -320,6 +320,8 @@ func shouldStop(m def.ElevMap) bool {
 			return true
 		} else if !isOrderAbove(m) && m[def.MY_ID].Buttons[f][def.DOWN_BUTTON] == 1 {
 			return true
+		} else if !isOrderAbove(m) {
+			return true
 		}
 
 	case DOWN:

@@ -40,15 +40,18 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 			case def.BUTTON_PUSH:
 				button := data.Event.(def.NewEvent).Data.([]int)
 				onRequestButtonPressed(button[0], button[1], outDataChan, timer)
+				idleTimer.Reset(IDLE_TIMEOUT * time.Second)
 
 			case def.FLOOR_ARRIVAL:
 				onFloorArrival(data.Event.(def.NewEvent).Data.(int), outDataChan, timer)
+				idleTimer.Reset(IDLE_TIMEOUT * time.Second)
 
 			}
 
 		case <-timer.C:
 
 			onDoorTimeout(outDataChan, idleTimer)
+			idleTimer.Reset(IDLE_TIMEOUT * time.Second)
 
 		case <-idleTimer.C:
 			forceOrder(outDataChan, idleTimer)
@@ -56,7 +59,6 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 		default:
 			//fmt.Println("STATE: ", state)
 		}
-		time.Sleep(100 * time.Millisecond)
 
 	}
 }
@@ -173,6 +175,9 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 			msg := def.ConstructChannelMessage(localMap, nil)
 			outDataChan <- msg
 		}
+	case IDLE:
+		msg := def.ConstructChannelMessage(localMap, nil)
+		outDataChan <- msg
 	}
 }
 

@@ -36,11 +36,11 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 		}
 		fmt.Println("Dial success")
 
-		go goToNearestFloor()
-
-		go setLights(msgChan_toHW)
+		goToNearestFloor()
 
 		go pollNewEvents(msgChan_fromHW)
+
+		go setLights(msgChan_toHW)
 
 	}
 
@@ -50,8 +50,10 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 			log.Fatal(errors.New("Unsucsessful init of IO"))
 		}
 
-		go goToNearestFloor()
+		goToNearestFloor()
+
 		go pollNewEvents(msgChan_fromHW)
+
 		go setLights(msgChan_toHW)
 	}
 }
@@ -131,7 +133,7 @@ func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 				}
 			}
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 }
 

@@ -19,7 +19,7 @@ func main() {
 	msgChan_toFsm := make(chan def.ChannelMessage, 100)
 	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
 
-	go elevatorMap.InitMap()
+	elevatorMap.InitMap()
 
 	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware)
 
@@ -27,7 +27,7 @@ func main() {
 
 	go network.StartNetworkCommunication(msgChan_toNetwork, msgChan_fromNetwork, msgChan_deadElevator)
 
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	for {
 		select {
@@ -62,6 +62,9 @@ func main() {
 			if changemade {
 				msgChan_toNetwork <- newMsg
 			}
+		default:
+			time.Sleep(10 * time.Millisecond)
 		}
+
 	}
 }

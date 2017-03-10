@@ -78,7 +78,7 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 			currentDir = chooseDirection(localMap)
 			hardware.SetMotorDir(currentDir)
 			localMap[def.MY_ID].Dir = currentDir
-			if currentDir != 0 {
+			if currentDir != def.STILL {
 				state = MOVING
 			}
 
@@ -246,7 +246,7 @@ func iAmClosest(m def.ElevMap, f int) bool {
 						result = false
 					} else if m[e].Pos > f && (m[e].Dir == DOWN || m[e].Dir == IDLE) { // Om denne heisen er over order og på vei ned eller idle
 						result = false
-					} else if m[e].Pos == f { // Om denne heisen er på samme floor som order
+					} else if m[e].Pos == f && m[e].Dir == IDLE { // Om denne heisen er på samme floor som order
 						result = false
 
 					}
@@ -272,7 +272,7 @@ func iAmClosest(m def.ElevMap, f int) bool {
 						result = false
 					} else if m[e].Pos > f && (m[e].Dir == DOWN || m[e].Dir == IDLE) { // Om denne heisen er over order og på vei ned eller idle
 						result = false
-					} else if m[e].Pos == f { // Om denne heisen er på samme floor som order
+					} else if m[e].Pos == f && m[e].Dir == IDLE { // Om denne heisen er på samme floor som order
 						result = false
 
 					}

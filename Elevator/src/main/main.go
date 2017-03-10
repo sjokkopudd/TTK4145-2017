@@ -63,9 +63,8 @@ func main() {
 
 			msgChan_toHardware <- newMsg
 
-			msgChan_toFsm <- newMsg
-
 			if changemade {
+				msgChan_toFsm <- newMsg
 				fmt.Println("From network")
 				elevatorMap.PrintMap(currentMap)
 				fmt.Println()
@@ -80,12 +79,13 @@ func main() {
 
 			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
 
+			msgChan_toNetwork <- newMsg
+
 			if changemade {
 				msgChan_toHardware <- newMsg
 				fmt.Println("From FSM")
 				elevatorMap.PrintMap(currentMap)
 				fmt.Println()
-				msgChan_toNetwork <- newMsg
 
 			}
 		}

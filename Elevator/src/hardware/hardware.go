@@ -36,7 +36,7 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 		}
 		fmt.Println("Dial success")
 
-		goToNearestFloor()
+		go goToNearestFloor()
 
 		go setLights(msgChan_toHW)
 

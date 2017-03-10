@@ -12,7 +12,7 @@ import (
 // ----------------------------------------------------------
 
 func readFloor() int {
-	if USING_SIMULATOR {
+	if def.USING_SIMULATOR {
 		mutex.Lock()
 		_, err := conn.Write([]byte{7, byte(0), byte(0), byte(0)})
 		mutex.Unlock()
@@ -33,7 +33,7 @@ func readFloor() int {
 		}
 	}
 
-	if !USING_SIMULATOR {
+	if !def.USING_SIMULATOR {
 		if IoReadBit(SENSOR_FLOOR1) {
 			return 0
 		} else if IoReadBit(SENSOR_FLOOR2) {
@@ -50,7 +50,7 @@ func readFloor() int {
 }
 
 func readButton(floor int, button int) bool {
-	if USING_SIMULATOR {
+	if def.USING_SIMULATOR {
 		mutex.Lock()
 		_, err := conn.Write([]byte{6, byte(button), byte(floor), byte(0)})
 		mutex.Unlock()
@@ -71,7 +71,7 @@ func readButton(floor int, button int) bool {
 		}
 	}
 
-	if !USING_SIMULATOR {
+	if !def.USING_SIMULATOR {
 		if floor < 0 || floor >= def.FLOORS {
 			log.Printf("Error: Floor %d out of range!\n", floor)
 			return false
@@ -103,7 +103,7 @@ func readButton(floor int, button int) bool {
 // ----------------------------------------------------------
 
 func SetMotorDir(dir int) {
-	if USING_SIMULATOR {
+	if def.USING_SIMULATOR {
 		mutex.Lock()
 		_, err := conn.Write([]byte{1, byte(dir), byte(0), byte(0)})
 		mutex.Unlock()
@@ -114,7 +114,7 @@ func SetMotorDir(dir int) {
 		}
 	}
 
-	if !USING_SIMULATOR {
+	if !def.USING_SIMULATOR {
 		if dir == 0 {
 			IoWriteAnalog(MOTOR, 0)
 		} else if dir < 0 {
@@ -128,7 +128,7 @@ func SetMotorDir(dir int) {
 }
 
 func setFloorIndicator(floor int) {
-	if USING_SIMULATOR {
+	if def.USING_SIMULATOR {
 		mutex.Lock()
 		_, err := conn.Write([]byte{3, byte(floor), byte(0), byte(0)})
 		mutex.Unlock()
@@ -139,7 +139,7 @@ func setFloorIndicator(floor int) {
 		}
 	}
 
-	if !USING_SIMULATOR {
+	if !def.USING_SIMULATOR {
 		if floor < 0 || floor > 3 {
 			IoClearBit(LIGHT_FLOOR_IND1)
 			IoClearBit(LIGHT_FLOOR_IND2)
@@ -162,7 +162,7 @@ func setFloorIndicator(floor int) {
 
 func setOrderLight(f byte, b byte, val byte) {
 
-	if USING_SIMULATOR {
+	if def.USING_SIMULATOR {
 		mutex.Lock()
 		_, err := conn.Write([]byte{2, byte(b), byte(f), byte(val)})
 		mutex.Unlock()
@@ -172,7 +172,7 @@ func setOrderLight(f byte, b byte, val byte) {
 			log.Fatal(err)
 		}
 	}
-	if !USING_SIMULATOR {
+	if !def.USING_SIMULATOR {
 		if val == 1 {
 			IoSetBit(lightChannelMatrix[f][b])
 		} else {
@@ -184,7 +184,7 @@ func setOrderLight(f byte, b byte, val byte) {
 
 func SetDoorLight(val int) {
 
-	if USING_SIMULATOR {
+	if def.USING_SIMULATOR {
 		mutex.Lock()
 		_, err := conn.Write([]byte{4, byte(val), byte(0), byte(0)})
 		mutex.Unlock()
@@ -194,7 +194,7 @@ func SetDoorLight(val int) {
 			log.Fatal(err)
 		}
 	}
-	if !USING_SIMULATOR {
+	if !def.USING_SIMULATOR {
 		if val == 1 {
 			IoSetBit(LIGHT_DOOR_OPEN)
 		} else {

@@ -10,26 +10,28 @@ const (
 	BUTTONS      = 3
 
 	//Identification constants
-	MY_ID  = 0
+	MY_ID  = 1
 	ELEV_1 = "127.0.0.1:20005"
 	ELEV_2 = "127.0.0.1:20010"
 	ELEV_3 = "127.0.0.1:20015"
-	PORT   = ":20005"
+	PORT   = ":20010"
 
 	//Event types
-	NEWFLOOR      = 0
-	BUTTONPUSH    = 1
-	DOOR          = 2
-	OTHERELEVATOR = 3
-	ELEVATORDEAD  = 4
-	NEWDIR        = 5
+	FLOOR_ARRIVAL = 1
+	BUTTON_PUSH   = 2
+	DOOR_TIMEOUT  = 3
 
 	//Directions and door cases
-	UP         = 1
-	IDLE       = 0
-	DOWN       = -1
-	DOOR_OPEN  = 1
-	DOOR_CLOSE = 0
+	UP    = 1
+	STILL = 0
+	DOWN  = -1
+
+	DOOR_CLOSED = 0
+	DOOR_OPEN   = 1
+
+	//Simulator constants
+	SIM_SERV_ADDR   = "127.0.0.1:15658"
+	USING_SIMULATOR = true
 )
 
 var IPs = [ELEVATORS]string{ELEV_1, ELEV_2}
@@ -48,11 +50,6 @@ type ElevatorInfo struct {
 	IsAlive int
 }
 
-type Ack struct {
-	Msg string
-	IP  string
-}
-
 type ElevMap [ELEVATORS]ElevatorInfo
 
 func NewCleanElevMap() *ElevMap {
@@ -66,10 +63,24 @@ func NewCleanElevMap() *ElevMap {
 				newMap[e].Buttons[f][b] = 0
 			}
 		}
-		newMap[e].Dir = 0
+		newMap[e].Dir = STILL
 		newMap[e].Pos = 0
-		newMap[e].Door = 0
+		newMap[e].Door = -1
 		newMap[e].IsAlive = 1
 	}
 	return newMap
+}
+
+type ChannelMessage struct {
+	Map   interface{}
+	Event interface{}
+}
+
+func ConstructChannelMessage(m interface{}, e interface{}) ChannelMessage {
+	newChannelMessage := ChannelMessage{
+		Map:   m,
+		Event: e,
+	}
+
+	return newChannelMessage
 }

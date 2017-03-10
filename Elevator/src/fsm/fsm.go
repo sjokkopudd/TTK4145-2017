@@ -3,7 +3,6 @@ package fsm
 import (
 	"def"
 	"elevatorMap"
-	//"fmt"
 	"hardware"
 	"math"
 	"time"
@@ -28,6 +27,7 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 
 	timer := time.NewTimer(2 * time.Second)
 	timer.Stop()
+	state = IDLE
 
 	for {
 
@@ -56,14 +56,11 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 }
 
 func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, timer *time.Timer) {
-
+	localMap := elevatorMap.GetMap()
 	switch state {
 	case IDLE:
-		localMap := elevatorMap.GetMap()
 
 		if localMap[def.MY_ID].Pos == f {
-
-			// send delete all orders on floor signal
 
 			localMap[def.MY_ID].Door = f
 
@@ -76,9 +73,12 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 			state = DOOR_OPEN
 		} else {
 			localMap[def.MY_ID].Buttons[f][b] = 1
+
 			currentDir = chooseDirection(localMap)
 			hardware.SetMotorDir(currentDir)
+
 			localMap[def.MY_ID].Dir = currentDir
+
 			if currentDir != def.STILL {
 				state = MOVING
 			}
@@ -125,8 +125,6 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 		if shouldStop(localMap) {
 			hardware.SetMotorDir(0)
 
-			// send delete all orders on floor signal
-
 			localMap[def.MY_ID].Door = localMap[def.MY_ID].Pos
 
 			localMap = clearRequests(localMap, localMap[def.MY_ID].Pos)
@@ -134,8 +132,6 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 			hardware.SetDoorLight(1)
 
 			timer.Reset(2 * time.Second)
-
-			//elevatorMap.ClearRequests(localMap)
 
 			state = DOOR_OPEN
 
@@ -244,10 +240,8 @@ func validOrderOnFloor(m def.ElevMap, f int) bool {
 		return true
 	}
 	for e := 0; e < def.ELEVATORS; e++ {
-		for b := 0; b < def.BUTTONS-1; b++ {
-			if m[e].Buttons[f][b] != 1 {
-				return false
-			}
+		if m[e].Buttons[f][def.UP_BUTTON] != 1 && m[e].Buttons[f][def.DOWN_BUTTON] != 1 {
+			return false
 		}
 	}
 	return true

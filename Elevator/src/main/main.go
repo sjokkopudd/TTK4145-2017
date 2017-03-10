@@ -3,7 +3,6 @@ package main
 import (
 	"def"
 	"elevatorMap"
-	"fmt"
 	"fsm"
 	"hardware"
 	"network"
@@ -34,15 +33,7 @@ func main() {
 		select {
 		case msg := <-msgChan_fromHardware:
 
-			newEvent := msg.Event.(def.NewEvent)
-
-			//currentMap, _, _ := elevatorMap.AddNewEvent(newEvent)
-
-			newMsg := def.ConstructChannelMessage(nil, newEvent)
-
-			//msgChan_toHardware <- newMsg
-
-			msgChan_toFsm <- newMsg
+			msgChan_toFsm <- msg
 
 		case msg := <-msgChan_fromNetwork:
 
@@ -62,18 +53,14 @@ func main() {
 
 			receivedMap := msg.Map.(def.ElevMap)
 
-			newEvent, currentMap, changemade, _ := elevatorMap.AddNewMapChanges(receivedMap, 0)
+			currentMap, changemade := elevatorMap.AddNewMapChanges(receivedMap, 0)
 
-			newMsg := def.ConstructChannelMessage(currentMap, newEvent)
+			newMsg := def.ConstructChannelMessage(currentMap, nil)
 
-			msgChan_toNetwork <- newMsg
+			msgChan_toHardware <- newMsg
 
 			if changemade {
-				msgChan_toHardware <- newMsg
-				fmt.Println("From FSM")
-				elevatorMap.PrintMap(currentMap)
-				fmt.Println()
-
+				msgChan_toNetwork <- newMsg
 			}
 		}
 	}

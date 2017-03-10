@@ -72,8 +72,7 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.ElevMap, bool) {
 
 	setMap(currentMap)
 	WriteBackup(currentMap)
-	allAgree = allButtonsAgree(currentMap)
-	return currentMap, changeMade, allAgree
+	return currentMap, changeMade
 }
 
 func GetEventFromNetwork(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap) {

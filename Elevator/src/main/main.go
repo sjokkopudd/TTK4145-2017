@@ -6,7 +6,7 @@ import (
 	"fsm"
 	"hardware"
 	"network"
-	//"time"
+	"time"
 )
 
 func main() {
@@ -20,6 +20,8 @@ func main() {
 	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
 
 	elevatorMap.InitMap()
+
+	time.Sleep(50 * time.Millisecond)
 
 	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware)
 

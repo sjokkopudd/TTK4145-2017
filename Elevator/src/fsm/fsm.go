@@ -167,14 +167,14 @@ func chooseDirection(m def.ElevMap) int {
 	switch currentDir {
 	case UP:
 		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
-			if orderOnFloor(m, f) {
+			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return UP
 				}
 			}
 		}
 		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
-			if orderOnFloor(m, f) {
+			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return DOWN
 				}
@@ -184,14 +184,14 @@ func chooseDirection(m def.ElevMap) int {
 
 	case DOWN:
 		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
-			if orderOnFloor(m, f) {
+			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return DOWN
 				}
 			}
 		}
 		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
-			if orderOnFloor(m, f) {
+			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return UP
 				}
@@ -201,14 +201,14 @@ func chooseDirection(m def.ElevMap) int {
 
 	case STILL:
 		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
-			if orderOnFloor(m, f) {
+			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return DOWN
 				}
 			}
 		}
 		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
-			if orderOnFloor(m, f) {
+			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
 					return UP
 				}
@@ -225,6 +225,21 @@ func chooseDirection(m def.ElevMap) int {
 
 func orderOnFloor(m def.ElevMap, f int) bool {
 	return m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || m[def.MY_ID].Buttons[f][def.UP_BUTTON] == 1 || m[def.MY_ID].Buttons[f][def.DOWN_BUTTON] == 1
+}
+
+func validOrderOnFloor(m def.ElevMap, f int) bool {
+
+	if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 {
+		return true
+	}
+	for e := 0; e < def.ELEVATORS; e++ {
+		for b := 0; b < def.BUTTONS-1; b++ {
+			if m[e].Buttons[f][b] != 1 {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func iAmClosest(m def.ElevMap, f int) bool {

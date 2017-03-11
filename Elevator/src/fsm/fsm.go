@@ -47,6 +47,7 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 			case def.ELEVATOR_DEAD:
 				deadElev := data.Event.(def.NewEvent).Data.(int)
+				localMap := elevatorMap.GetMap()
 				localMap[deadElev].IsAlive = 0
 				msg := def.ConstructChannelMessage(localMap, nil)
 				outDataChan <- msg

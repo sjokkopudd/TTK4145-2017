@@ -54,6 +54,7 @@ type udpPacket struct {
 func constructUdpPacket(m interface{}) udpPacket {
 
 	id, err := exec.Command("uuidgen").Output()
+	fmt.Println("id: ", id)
 	if err != nil {
 		log.Fatal(err)
 	}

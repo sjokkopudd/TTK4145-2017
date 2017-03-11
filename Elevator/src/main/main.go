@@ -80,7 +80,6 @@ func main() {
 			msgChan_toFsm <- msg
 
 		case <-transmitTicker.C:
-			fmt.Println("tickerout")
 			if ligthFlag {
 				fmt.Println("setting lights")
 				msgChan_toHardware <- newMsg

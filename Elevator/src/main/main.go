@@ -30,6 +30,12 @@ func main() {
 
 	time.Sleep(500 * time.Millisecond)
 
+	transmitTicker := time.NewTicker(200 * time.Millisecond)
+
+	transmitFlag := false
+
+	var transmitMsg def.ChannelMessage
+
 	for {
 		select {
 		case msg := <-msgChan_fromHardware:
@@ -41,8 +47,6 @@ func main() {
 			receivedMap := msg.Map.(def.ElevMap)
 
 			fsmEvent, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
-			// AddNewMapChanges() skal luke ut om det er gjort en fms_trigger event
-			// og returnere et event, det nye mappet og om alle er eninge
 
 			newMsg := def.ConstructChannelMessage(currentMap, fsmEvent)
 
@@ -56,15 +60,21 @@ func main() {
 
 			currentMap, changemade := elevatorMap.AddNewMapChanges(receivedMap, 0)
 
-			newMsg := def.ConstructChannelMessage(currentMap, nil)
+			transmitMsg = def.ConstructChannelMessage(currentMap, nil)
 
-			msgChan_toHardware <- newMsg
+			msgChan_toHardware <- transmitMsg
 
 			if changemade {
-				msgChan_toNetwork <- newMsg
+				transmitFlag = true
 			}
 		case msg := <-msgChan_deadElevator:
 			msgChan_toFsm <- msg
+
+		case <-transmitTicker.C:
+			if transmitFlag {
+				msgChan_toNetwork <- transmitMsg
+				transmitFlag = false
+			}
 
 		default:
 

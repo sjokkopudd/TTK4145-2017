@@ -3,6 +3,7 @@ package fsm
 import (
 	"def"
 	"elevatorMap"
+	"fmt"
 	"hardware"
 	"math"
 	"time"
@@ -173,6 +174,8 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 
 	localMap := elevatorMap.GetMap()
 	localMap[def.MY_ID].Pos = f
+
+	fmt.Println("New floor: ", f)
 
 	switch state {
 	case MOVING:

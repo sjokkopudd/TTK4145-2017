@@ -2,7 +2,7 @@ package def
 
 const (
 	//Physical constants
-	ELEVATORS    = 3
+	ELEVATORS    = 2
 	FLOORS       = 4
 	UP_BUTTON    = 0
 	DOWN_BUTTON  = 1
@@ -35,7 +35,7 @@ const (
 	USING_SIMULATOR = false
 )
 
-var IPs = [ELEVATORS]string{ELEV_1, ELEV_2, ELEV_3}
+var IPs = [ELEVATORS]string{ELEV_1, ELEV_2}
 
 type NewEvent struct {
 	EventType int
@@ -69,6 +69,7 @@ func NewCleanElevMap() *ElevMap {
 		newMap[e].Door = -1
 		newMap[e].IsAlive = 0
 	}
+	newMap[MY_ID].IsAlive = 1
 	return newMap
 }
 

@@ -4,7 +4,8 @@ GOINSTALL=$(GO) install
 GOCLEAN = $(GO) clean
 GOBUILD = $(GO) build
 
-export GOPATH =$(CURDIR)
+export GOPATH = ${CURDIR}
+export GOBIN=${CURDIR}/bin
 
 myname:
 	@echo "Call to makefile"

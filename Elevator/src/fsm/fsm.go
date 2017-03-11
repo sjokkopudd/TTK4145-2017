@@ -149,7 +149,6 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 		outDataChan <- msg
 
 	case DOOR_OPEN:
-		localMap := elevatorMap.GetMap()
 
 		if localMap[def.MY_ID].Pos == f {
 

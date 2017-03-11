@@ -104,7 +104,7 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 		case msg := <-transmitChan:
 			localMap := msg.Map.(def.ElevMap)
 			for e := 0; e < def.ELEVATORS; e++ {
-				if e != def.MY_ID {
+				if e != def.MY_ID && localMap[e].IsAlive == 1 {
 
 					packet := constructUdpPacket(localMap)
 

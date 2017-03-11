@@ -282,14 +282,18 @@ func chooseDirection(m def.ElevMap) int {
 		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
 			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
-					return UP
+					if m[def.MY_ID].Pos != 3 {
+						return UP
+					}
 				}
 			}
 		}
 		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
 			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
-					return DOWN
+					if m[def.MY_ID].Pos != 0 {
+						return DOWN
+					}
 				}
 			}
 		}
@@ -299,14 +303,18 @@ func chooseDirection(m def.ElevMap) int {
 		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
 			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
-					return DOWN
+					if m[def.MY_ID].Pos != 0 {
+						return DOWN
+					}
 				}
 			}
 		}
 		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
 			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
-					return UP
+					if m[def.MY_ID].Pos != 3 {
+						return UP
+					}
 				}
 			}
 		}
@@ -316,14 +324,18 @@ func chooseDirection(m def.ElevMap) int {
 		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
 			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
-					return DOWN
+					if m[def.MY_ID].Pos != 0 {
+						return DOWN
+					}
 				}
 			}
 		}
 		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
 			if validOrderOnFloor(m, f) {
 				if m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 || iAmClosest(m, f) {
-					return UP
+					if m[def.MY_ID].Pos != 3 {
+						return UP
+					}
 				}
 			}
 		}

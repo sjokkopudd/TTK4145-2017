@@ -92,7 +92,7 @@ func onDeadElevator(deadElev int, outDataChan chan def.ChannelMessage) {
 
 func forceOrder(outDataChan chan def.ChannelMessage) {
 
-	GoToNearestFloor()
+	hardware.GoToNearestFloor()
 
 	localMap := elevatorMap.GetMap()
 

@@ -3,6 +3,7 @@ package main
 import (
 	"def"
 	"elevatorMap"
+	"fmt"
 	"fsm"
 	"hardware"
 	"network"
@@ -30,7 +31,7 @@ func main() {
 
 	time.Sleep(500 * time.Millisecond)
 
-	transmitTicker := time.NewTicker(50 * time.Millisecond)
+	transmitTicker := time.NewTicker(100 * time.Millisecond)
 
 	transmitFlag := false
 
@@ -39,12 +40,16 @@ func main() {
 	var newMsg def.ChannelMessage
 
 	for {
+
 		select {
 		case msg := <-msgChan_fromHardware:
+			fmt.Println("got hardware event")
 
 			msgChan_toFsm <- msg
 
 		case msg := <-msgChan_fromNetwork:
+
+			fmt.Println("got network event")
 
 			receivedMap := msg.Map.(def.ElevMap)
 
@@ -57,6 +62,7 @@ func main() {
 			ligthFlag = true
 
 		case msg := <-msgChan_fromFsm:
+			fmt.Println("got fsm event")
 
 			receivedMap := msg.Map.(def.ElevMap)
 
@@ -70,21 +76,41 @@ func main() {
 				transmitFlag = true
 			}
 		case msg := <-msgChan_deadElevator:
+			fmt.Println("got dead event")
 			msgChan_toFsm <- msg
+			/*
+				case <-transmitTicker.C:
+					fmt.Println("tickerout")
+					if ligthFlag {
+						fmt.Println("setting lights")
+						msgChan_toHardware <- newMsg
+						ligthFlag = false
+					}
+					if transmitFlag {
+						fmt.Println("transmitting shit")
+						msgChan_toNetwork <- newMsg
+						fmt.Println("am i full?")
+						transmitFlag = false
+					}*/
+		}
 
-		case <-transmitTicker.C:
-			if ligthFlag {
+		if ligthFlag {
+			select {
+			case <-transmitTicker.C:
+				fmt.Println("setting lights")
 				msgChan_toHardware <- newMsg
 				ligthFlag = false
 			}
-			if transmitFlag {
+		}
+		if transmitFlag {
+			select {
+			case <-transmitTicker.C:
+				fmt.Println("transmitting shit")
 				msgChan_toNetwork <- newMsg
+				fmt.Println("am i full?")
 				transmitFlag = false
 			}
-
-		default:
-
 		}
-		time.Sleep(50 * time.Millisecond)
+
 	}
 }

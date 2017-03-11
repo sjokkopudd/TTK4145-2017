@@ -68,6 +68,9 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.ElevMap, bool) {
 				}
 			}
 		}
+		if currentMap[e].IsAlive == 1 && receivedMap[e].IsAlive != 1 {
+			currentMap[e].IsAlive = 0
+		}
 	}
 
 	setMap(currentMap)
@@ -111,6 +114,9 @@ func GetEventFromNetwork(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap) {
 		}
 		if receivedMap[e].Pos != currentMap[e].Pos && e != def.MY_ID {
 			currentMap[e].Pos = receivedMap[e].Pos
+		}
+		if currentMap[e].IsAlive != 1 && receivedMap[e].IsAlive == 1 {
+			currentMap[e].IsAlive = 1
 		}
 	}
 

@@ -131,8 +131,9 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 
 						fmt.Println("No acknowledge recieved. ", def.IPs[e], " is dead.")
 
-						//elevatorIsDead := def.NewEvent{def.ELEVATOR_DEAD, e}
-						//deadElev <- elevatorIsDead
+						elevatorIsDead := def.NewEvent{def.ELEVATOR_DEAD, e}
+						msg := def.ConstructChannelMessage(nil, elevatorIsDead)
+						deadElev <- msg
 					}
 				}
 			}

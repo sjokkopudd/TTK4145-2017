@@ -12,8 +12,6 @@ import (
 
 func main() {
 
-	fmt.Println("hello")
-
 	msgChan_toNetwork := make(chan def.ChannelMessage, 100)
 	msgChan_fromNetwork := make(chan def.ChannelMessage, 100)
 	msgChan_deadElevator := make(chan def.ChannelMessage, 100)
@@ -21,12 +19,7 @@ func main() {
 	msgChan_fromHardware := make(chan def.ChannelMessage, 100)
 	msgChan_toFsm := make(chan def.ChannelMessage, 100)
 	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
-
-	fmt.Println("hello")
-
 	elevatorMap.InitMap()
-
-	fmt.Println("hello")
 
 	time.Sleep(500 * time.Millisecond)
 
@@ -37,7 +30,6 @@ func main() {
 	go network.StartNetworkCommunication(msgChan_toNetwork, msgChan_fromNetwork, msgChan_deadElevator)
 
 	time.Sleep(500 * time.Millisecond)
-	fmt.Println("hello")
 
 	for {
 		select {
@@ -72,6 +64,9 @@ func main() {
 			if changemade {
 				msgChan_toNetwork <- newMsg
 			}
+		case msg := <-msgChan_deadElevator:
+			msgChan_toFsm <- msg
+
 		default:
 
 		}

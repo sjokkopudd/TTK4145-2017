@@ -37,6 +37,7 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 		case data := <-inDataChan:
 
 			switch data.Event.(def.NewEvent).EventType {
+
 			case def.BUTTON_PUSH:
 				button := data.Event.(def.NewEvent).Data.([]int)
 				onRequestButtonPressed(button[0], button[1], outDataChan, timer)
@@ -45,9 +46,10 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 			case def.FLOOR_ARRIVAL:
 				onFloorArrival(data.Event.(def.NewEvent).Data.(int), outDataChan, timer)
 				watchdog.Reset(IDLE_TIMEOUT * time.Second)
+
 			case def.ELEVATOR_DEAD:
 				deadElev := data.Event.(def.NewEvent).Data.(int)
-				onDeadElevator(deadElev)
+				onDeadElevator(deadElev, outDataChan)
 				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 			}
@@ -68,15 +70,16 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 	}
 }
 
-func onDeadElevator(deadElev int) {
+func onDeadElevator(deadElev int, outDataChan chan def.ChannelMessage) {
+
 	m := elevatorMap.GetMap()
 	m[deadElev].IsAlive = 0
 
 	switch state {
 	case IDLE:
 		dir := chooseDirection(m)
-		hardware.SetMotorDirection(dir)
-		m[MY_ID].Dir = dir
+		hardware.SetMotorDir(dir)
+		m[def.MY_ID].Dir = dir
 		if dir != def.STILL {
 			state = MOVING
 		}

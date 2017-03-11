@@ -34,7 +34,7 @@ func main() {
 
 	transmitFlag := false
 
-	var transmitMsg def.ChannelMessage
+	var newMsg def.ChannelMessage
 
 	for {
 		select {
@@ -48,9 +48,7 @@ func main() {
 
 			fsmEvent, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
 
-			newMsg := def.ConstructChannelMessage(currentMap, fsmEvent)
-
-			msgChan_toHardware <- newMsg
+			newMsg = def.ConstructChannelMessage(currentMap, fsmEvent)
 
 			msgChan_toFsm <- newMsg
 
@@ -60,9 +58,7 @@ func main() {
 
 			currentMap, changemade := elevatorMap.AddNewMapChanges(receivedMap, 0)
 
-			transmitMsg = def.ConstructChannelMessage(currentMap, nil)
-
-			msgChan_toHardware <- transmitMsg
+			newMsg = def.ConstructChannelMessage(currentMap, nil)
 
 			if changemade {
 				transmitFlag = true
@@ -71,8 +67,9 @@ func main() {
 			msgChan_toFsm <- msg
 
 		case <-transmitTicker.C:
+			msgChan_toHardware <- newMsg
 			if transmitFlag {
-				msgChan_toNetwork <- transmitMsg
+				msgChan_toNetwork <- newMsg
 				transmitFlag = false
 			}
 

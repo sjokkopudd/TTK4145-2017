@@ -43,13 +43,10 @@ func main() {
 
 		select {
 		case msg := <-msgChan_fromHardware:
-			fmt.Println("got hardware event")
 
 			msgChan_toFsm <- msg
 
 		case msg := <-msgChan_fromNetwork:
-
-			fmt.Println("got network event")
 
 			receivedMap := msg.Map.(def.ElevMap)
 
@@ -62,7 +59,6 @@ func main() {
 			ligthFlag = true
 
 		case msg := <-msgChan_fromFsm:
-			fmt.Println("got fsm event")
 
 			receivedMap := msg.Map.(def.ElevMap)
 
@@ -76,7 +72,6 @@ func main() {
 				transmitFlag = true
 			}
 		case msg := <-msgChan_deadElevator:
-			fmt.Println("got dead event")
 			msgChan_toFsm <- msg
 
 			/*case <-transmitTicker.C:

@@ -79,7 +79,7 @@ func main() {
 			fmt.Println("got dead event")
 			msgChan_toFsm <- msg
 
-		case <-transmitTicker.C:
+			/*case <-transmitTicker.C:
 			if ligthFlag {
 				fmt.Println("setting lights")
 				msgChan_toHardware <- newMsg
@@ -88,28 +88,25 @@ func main() {
 			if transmitFlag {
 				fmt.Println("transmitting shit")
 				msgChan_toNetwork <- newMsg
-				fmt.Println("am i full?")
 				transmitFlag = false
-			}
+			}*/
 		}
 
-		/*if ligthFlag {
+		if ligthFlag || transmitFlag {
 			select {
 			case <-transmitTicker.C:
-				fmt.Println("setting lights")
-				msgChan_toHardware <- newMsg
-				ligthFlag = false
+				if ligthFlag {
+					fmt.Println("setting lights")
+					msgChan_toHardware <- newMsg
+					ligthFlag = false
+				}
+				if transmitFlag {
+					fmt.Println("transmitting shit")
+					msgChan_toNetwork <- newMsg
+					fmt.Println("am i full?")
+					transmitFlag = false
+				}
 			}
 		}
-		if transmitFlag {
-			select {
-			case <-transmitTicker.C:
-				fmt.Println("transmitting shit")
-				msgChan_toNetwork <- newMsg
-				fmt.Println("am i full?")
-				transmitFlag = false
-			}
-		}*/
-
 	}
 }

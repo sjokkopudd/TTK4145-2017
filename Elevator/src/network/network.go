@@ -54,7 +54,6 @@ type udpPacket struct {
 func constructUdpPacket(m interface{}) udpPacket {
 
 	id, err := exec.Command("uuidgen").Output()
-	fmt.Println("id: ", id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -116,7 +115,7 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 
 						packet.sendAsJSON(def.IPs[e])
 
-						time.Sleep(100 * time.Millisecond)
+						time.Sleep(200 * time.Millisecond)
 
 						select {
 						case ackRecived = <-ackChan:
@@ -194,7 +193,7 @@ func reciveUdpPacket(receiveChan chan def.ChannelMessage, ackChan chan ackInfo) 
 					receiveChan <- msg
 
 				} else {
-					fmt.Println("RECEIVED AN OLD MAP - I THREW IT ON THE GROUND!!!")
+					fmt.Println("RECEIVED AN OLD MAP")
 				}
 
 				receivedPacket.sendAck()

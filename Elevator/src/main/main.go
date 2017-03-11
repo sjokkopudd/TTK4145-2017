@@ -16,16 +16,17 @@ func main() {
 	msgChan_fromNetwork := make(chan def.ChannelMessage, 100)
 	msgChan_deadElevator := make(chan def.ChannelMessage, 100)
 	msgChan_toHardware := make(chan def.ChannelMessage, 100)
-	msgChan_fromHardware := make(chan def.ChannelMessage, 100)
-	msgChan_toFsm := make(chan def.ChannelMessage, 100)
+	msgChan_buttonEvent := make(chan def.ChannelMessage, 100)
+	msgChan_fromHardware_buttons := make(chan def.ChannelMessage, 100)
+	msgChan_fromHardware_floors := make(chan def.ChannelMessage, 100)
 	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
 	elevatorMap.InitMap()
 
 	time.Sleep(500 * time.Millisecond)
 
-	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware)
+	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware_buttons, msgChan_fromHardware_floors)
 
-	go fsm.InitFsm(msgChan_toFsm, msgChan_fromFsm)
+	go fsm.InitFsm(msgChan_buttonEvent, msgChan_fromHardware_floors, msgChan_fromFsm, msgChan_deadElevator)
 
 	go network.StartNetworkCommunication(msgChan_toNetwork, msgChan_fromNetwork, msgChan_deadElevator)
 
@@ -42,9 +43,8 @@ func main() {
 	for {
 
 		select {
-		case msg := <-msgChan_fromHardware:
-
-			msgChan_toFsm <- msg
+		case msg := <-msgChan_fromHardware_buttons:
+			msgChan_buttonEvent <- msg
 
 		case msg := <-msgChan_fromNetwork:
 
@@ -54,7 +54,7 @@ func main() {
 
 			newMsg = def.ConstructChannelMessage(currentMap, fsmEvent)
 
-			msgChan_toFsm <- newMsg
+			msgChan_buttonEvent <- newMsg
 
 			ligthFlag = true
 
@@ -71,8 +71,6 @@ func main() {
 			if changemade {
 				transmitFlag = true
 			}
-		case msg := <-msgChan_deadElevator:
-			msgChan_toFsm <- msg
 
 			/*case <-transmitTicker.C:
 			if ligthFlag {
@@ -98,7 +96,6 @@ func main() {
 				if transmitFlag {
 					fmt.Println("transmitting shit")
 					msgChan_toNetwork <- newMsg
-					fmt.Println("am i full?")
 					transmitFlag = false
 				}
 			}

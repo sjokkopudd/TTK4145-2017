@@ -26,7 +26,7 @@ var currentDir int
 var state int
 var watchdog *time.Timer
 
-func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage) {
+func InitFsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_floors chan def.ChannelMessage, outDataChan chan def.ChannelMessage, msgChan_deadElevator chan def.ChannelMessage) {
 
 	timer := time.NewTimer(DOOR_TIMEOUT * time.Second)
 	timer.Stop()
@@ -35,21 +35,27 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 	for {
 
 		select {
-		case data := <-inDataChan:
-
-			switch data.Event.(def.NewEvent).EventType {
-
-			case def.BUTTON_PUSH:
-				button := data.Event.(def.NewEvent).Data.([]int)
-				onRequestButtonPressed(button[0], button[1], outDataChan, timer)
-				watchdog.Reset(IDLE_TIMEOUT * time.Second)
+		case floorEvent := <-msgChan_fromHardware_floors:
+			switch floorEvent.Event.(def.NewEvent).EventType {
 
 			case def.FLOOR_ARRIVAL:
-				onFloorArrival(data.Event.(def.NewEvent).Data.(int), outDataChan, timer)
+				onFloorArrival(floorEvent.Event.(def.NewEvent).Data.(int), outDataChan, timer)
 				watchdog.Reset(IDLE_TIMEOUT * time.Second)
+			}
 
+		case buttonEvent := <-msgChan_buttonEvent:
+			switch buttonEvent.Event.(def.NewEvent).EventType {
+
+			case def.BUTTON_PUSH:
+				button := buttonEvent.Event.(def.NewEvent).Data.([]int)
+				onRequestButtonPressed(button[0], button[1], outDataChan, timer)
+				watchdog.Reset(IDLE_TIMEOUT * time.Second)
+			}
+
+		case deadElevatorEvent := <-msgChan_deadElevator:
+			switch deadElevatorEvent.Event.(def.NewEvent).EventType {
 			case def.ELEVATOR_DEAD:
-				deadElev := data.Event.(def.NewEvent).Data.(int)
+				deadElev := deadElevatorEvent.Event.(def.NewEvent).Data.(int)
 				onDeadElevator(deadElev, outDataChan)
 				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
@@ -130,26 +136,30 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 			timer.Reset(DOOR_TIMEOUT * time.Second)
 			state = DOOR_OPEN
 		} else {
-			localMap[def.MY_ID].Buttons[f][b] = 1
+			if localMap[def.MY_ID].Buttons[f][b] != 1 {
 
-			currentDir = chooseDirection(localMap)
-			hardware.SetMotorDir(currentDir)
+				localMap[def.MY_ID].Buttons[f][b] = 1
 
-			localMap[def.MY_ID].Dir = currentDir
+				currentDir = chooseDirection(localMap)
+				hardware.SetMotorDir(currentDir)
 
-			if currentDir != def.STILL {
-				state = MOVING
+				localMap[def.MY_ID].Dir = currentDir
+
+				if currentDir != def.STILL {
+					state = MOVING
+				}
+
+				msg := def.ConstructChannelMessage(localMap, nil)
+				outDataChan <- msg
 			}
-
-			msg := def.ConstructChannelMessage(localMap, nil)
-			outDataChan <- msg
-
 		}
 
 	case MOVING:
-		localMap[def.MY_ID].Buttons[f][b] = 1
-		msg := def.ConstructChannelMessage(localMap, nil)
-		outDataChan <- msg
+		if localMap[def.MY_ID].Buttons[f][b] != 1 {
+			localMap[def.MY_ID].Buttons[f][b] = 1
+			msg := def.ConstructChannelMessage(localMap, nil)
+			outDataChan <- msg
+		}
 
 	case DOOR_OPEN:
 
@@ -165,9 +175,11 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 
 			timer.Reset(DOOR_TIMEOUT * time.Second)
 		} else {
-			localMap[def.MY_ID].Buttons[f][b] = 1
-			msg := def.ConstructChannelMessage(localMap, nil)
-			outDataChan <- msg
+			if localMap[def.MY_ID].Buttons[f][b] != 1 {
+				localMap[def.MY_ID].Buttons[f][b] = 1
+				msg := def.ConstructChannelMessage(localMap, nil)
+				outDataChan <- msg
+			}
 		}
 	}
 }

@@ -17,7 +17,7 @@ var mutex = &sync.Mutex{}
 // ----------------------- Interface -------------------------------
 // -----------------------------------------------------------------
 
-func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.ChannelMessage) {
+func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW_buttons chan def.ChannelMessage, msgChan_fromHW_floors chan def.ChannelMessage) {
 	if def.USING_SIMULATOR {
 
 		fmt.Println("Mode: def.USING_SIMULATOR")
@@ -38,7 +38,9 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 
 		GoToNearestFloor()
 
-		go pollNewEvents(msgChan_fromHW)
+		go pollButtonEvents(msgChan_fromHW_buttons)
+
+		go pollFloorEvents(msgChan_fromHW_floors)
 
 		go setLights(msgChan_toHW)
 
@@ -52,7 +54,9 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 
 		GoToNearestFloor()
 
-		go pollNewEvents(msgChan_fromHW)
+		go pollButtonEvents(msgChan_fromHW_buttons)
+
+		go pollFloorEvents(msgChan_fromHW_floors)
 
 		go setLights(msgChan_toHW)
 	}
@@ -106,23 +110,12 @@ func setLights(msgChan_toHW chan def.ChannelMessage) {
 
 }
 
-func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
-	lastPos := -1
+func pollButtonEvents(msgChan_fromHW_buttons chan def.ChannelMessage) {
 	buttonTicker := time.NewTicker(200 * time.Millisecond)
-
-	floorTicker := time.NewTicker(10 * time.Millisecond)
 
 	var buttonState [def.FLOORS][def.BUTTONS]bool
 	for {
 		select {
-		case <-floorTicker.C:
-			newPos := readFloor()
-			if (newPos != -1) && (newPos != lastPos) {
-				newEvent := def.NewEvent{def.FLOOR_ARRIVAL, newPos}
-				newMsg := def.ConstructChannelMessage(nil, newEvent)
-				msgChan_fromHW <- newMsg
-				lastPos = newPos
-			}
 		case <-buttonTicker.C:
 			for f := 0; f < def.FLOORS; f++ {
 				for b := 0; b < def.BUTTONS; b++ {
@@ -130,7 +123,7 @@ func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 						if readButton(f, b) && buttonState[f][b] == false {
 							newEvent := def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
 							newMsg := def.ConstructChannelMessage(nil, newEvent)
-							msgChan_fromHW <- newMsg
+							msgChan_fromHW_buttons <- newMsg
 							buttonState[f][b] = true
 
 						} else if !readButton(f, b) {
@@ -140,7 +133,23 @@ func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 					}
 				}
 			}
+		}
+	}
+}
 
+func pollFloorEvents(msgChan_fromHW_floors chan def.ChannelMessage) {
+	lastPos := -1
+	floorTicker := time.NewTicker(50 * time.Millisecond)
+	for {
+		select {
+		case <-floorTicker.C:
+			newPos := readFloor()
+			if (newPos != -1) && (newPos != lastPos) {
+				newEvent := def.NewEvent{def.FLOOR_ARRIVAL, newPos}
+				newMsg := def.ConstructChannelMessage(nil, newEvent)
+				msgChan_fromHW_floors <- newMsg
+				lastPos = newPos
+			}
 		}
 	}
 }

@@ -235,12 +235,16 @@ func forceChooseDirection(m def.ElevMap) int {
 	case UP:
 		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
 			if validOrderOnFloor(m, f) {
-				return UP
+				if m[def.MY_ID].Pos != 3 {
+					return UP
+				}
 			}
 		}
 		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
 			if validOrderOnFloor(m, f) {
-				return DOWN
+				if m[def.MY_ID].Pos != 0 {
+					return DOWN
+				}
 			}
 		}
 		return STILL
@@ -248,12 +252,16 @@ func forceChooseDirection(m def.ElevMap) int {
 	case DOWN:
 		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
 			if validOrderOnFloor(m, f) {
-				return DOWN
+				if m[def.MY_ID].Pos != 0 {
+					return DOWN
+				}
 			}
 		}
 		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
 			if validOrderOnFloor(m, f) {
-				return UP
+				if m[def.MY_ID].Pos != 3 {
+					return UP
+				}
 			}
 		}
 		return STILL
@@ -261,12 +269,16 @@ func forceChooseDirection(m def.ElevMap) int {
 	case STILL:
 		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
 			if validOrderOnFloor(m, f) {
-				return DOWN
+				if m[def.MY_ID].Pos != 0 {
+					return DOWN
+				}
 			}
 		}
 		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
 			if validOrderOnFloor(m, f) {
-				return UP
+				if m[def.MY_ID].Pos != 3 {
+					return UP
+				}
 			}
 		}
 		return STILL

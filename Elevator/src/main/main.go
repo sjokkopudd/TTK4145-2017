@@ -30,7 +30,7 @@ func main() {
 
 	time.Sleep(500 * time.Millisecond)
 
-	transmitTicker := time.NewTicker(200 * time.Millisecond)
+	transmitTicker := time.NewTicker(50 * time.Millisecond)
 
 	transmitFlag := false
 

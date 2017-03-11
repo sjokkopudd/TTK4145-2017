@@ -36,7 +36,7 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 		}
 		fmt.Println("Dial success")
 
-		goToNearestFloor()
+		GoToNearestFloor()
 
 		go pollNewEvents(msgChan_fromHW)
 
@@ -50,7 +50,7 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 			log.Fatal(errors.New("Unsucsessful init of IO"))
 		}
 
-		goToNearestFloor()
+		GoToNearestFloor()
 
 		go pollNewEvents(msgChan_fromHW)
 
@@ -58,7 +58,7 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 	}
 }
 
-func goToNearestFloor() {
+func GoToNearestFloor() {
 	if readFloor() == -1 {
 		SetMotorDir(-1)
 	}
@@ -134,21 +134,5 @@ func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 			}
 		}
 		time.Sleep(10 * time.Millisecond)
-	}
-}
-
-func goUpAndDown() {
-	SetMotorDir(-1)
-	dir := -1
-
-	for {
-		if readFloor() == 0 && dir == -1 {
-			SetMotorDir(1)
-			dir = 1
-		}
-		if readFloor() == 3 && dir == 1 {
-			SetMotorDir(-1)
-			dir = -1
-		}
 	}
 }

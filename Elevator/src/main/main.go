@@ -34,6 +34,8 @@ func main() {
 
 	transmitFlag := false
 
+	ligthFlag := false
+
 	var newMsg def.ChannelMessage
 
 	for {
@@ -52,6 +54,8 @@ func main() {
 
 			msgChan_toFsm <- newMsg
 
+			ligthFlag = true
+
 		case msg := <-msgChan_fromFsm:
 
 			receivedMap := msg.Map.(def.ElevMap)
@@ -60,6 +64,8 @@ func main() {
 
 			newMsg = def.ConstructChannelMessage(currentMap, nil)
 
+			ligthFlag = true
+
 			if changemade {
 				transmitFlag = true
 			}
@@ -67,7 +73,10 @@ func main() {
 			msgChan_toFsm <- msg
 
 		case <-transmitTicker.C:
-			msgChan_toHardware <- newMsg
+			if ligthFlag {
+				msgChan_toHardware <- newMsg
+				ligthFlag = false
+			}
 			if transmitFlag {
 				msgChan_toNetwork <- newMsg
 				transmitFlag = false

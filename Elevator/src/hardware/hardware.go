@@ -38,11 +38,9 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 
 		goToNearestFloor()
 
-		go setLights(msgChan_toHW)
-
 		go pollNewEvents(msgChan_fromHW)
 
-		//go goUpAndDown()
+		go setLights(msgChan_toHW)
 
 	}
 
@@ -53,7 +51,9 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 		}
 
 		goToNearestFloor()
+
 		go pollNewEvents(msgChan_fromHW)
+
 		go setLights(msgChan_toHW)
 	}
 }
@@ -101,7 +101,7 @@ func setLights(msgChan_toHW chan def.ChannelMessage) {
 			}
 			setFloorIndicator(currentMap[def.MY_ID].Pos)
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 
 }
@@ -133,7 +133,7 @@ func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
 				}
 			}
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 

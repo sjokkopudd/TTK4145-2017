@@ -3,7 +3,6 @@ package fsm
 import (
 	"def"
 	"elevatorMap"
-	//"fmt"
 	"hardware"
 	"math"
 	"time"
@@ -13,9 +12,10 @@ const (
 	IDLE      = 0
 	MOVING    = 1
 	DOOR_OPEN = 2
-)
 
-const (
+	DOOR_TIMEOUT = 2
+	IDLE_TIMEOUT = 10
+
 	UP    = 1
 	STILL = 0
 	DOWN  = -1
@@ -23,11 +23,13 @@ const (
 
 var currentDir int
 var state int
+var watchdog *time.Timer
 
 func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMessage) {
 
-	timer := time.NewTimer(2 * time.Second)
+	timer := time.NewTimer(DOOR_TIMEOUT * time.Second)
 	timer.Stop()
+	watchdog = time.NewTimer(IDLE_TIMEOUT * time.Second)
 
 	for {
 
@@ -38,32 +40,57 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 			case def.BUTTON_PUSH:
 				button := data.Event.(def.NewEvent).Data.([]int)
 				onRequestButtonPressed(button[0], button[1], outDataChan, timer)
+				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 			case def.FLOOR_ARRIVAL:
 				onFloorArrival(data.Event.(def.NewEvent).Data.(int), outDataChan, timer)
+				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 			}
 
 		case <-timer.C:
 
 			onDoorTimeout(outDataChan)
+			watchdog.Reset(IDLE_TIMEOUT * time.Second)
+
+		case <-watchdog.C:
+			forceOrder(outDataChan)
+			watchdog.Reset(IDLE_TIMEOUT * time.Second)
+
 		default:
 			//fmt.Println("STATE: ", state)
 		}
-		time.Sleep(100 * time.Millisecond)
+
+	}
+}
+
+func forceOrder(outDataChan chan def.ChannelMessage) {
+
+	localMap := elevatorMap.GetMap()
+
+	switch state {
+	case IDLE:
+		currentDir = forceChooseDirection(localMap)
+		hardware.SetMotorDir(currentDir)
+
+		localMap[def.MY_ID].Dir = currentDir
+
+		if currentDir != def.STILL {
+			state = MOVING
+		}
+
+		msg := def.ConstructChannelMessage(localMap, nil)
+		outDataChan <- msg
 
 	}
 }
 
 func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, timer *time.Timer) {
-
+	localMap := elevatorMap.GetMap()
 	switch state {
 	case IDLE:
-		localMap := elevatorMap.GetMap()
 
 		if localMap[def.MY_ID].Pos == f {
-
-			// send delete all orders on floor signal
 
 			localMap[def.MY_ID].Door = f
 
@@ -72,12 +99,16 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 			hardware.SetDoorLight(1)
 			msg := def.ConstructChannelMessage(localMap, nil)
 			outDataChan <- msg
-			timer.Reset(2 * time.Second)
+			timer.Reset(DOOR_TIMEOUT * time.Second)
 			state = DOOR_OPEN
 		} else {
+			localMap[def.MY_ID].Buttons[f][b] = 1
+
 			currentDir = chooseDirection(localMap)
 			hardware.SetMotorDir(currentDir)
+
 			localMap[def.MY_ID].Dir = currentDir
+
 			if currentDir != def.STILL {
 				state = MOVING
 			}
@@ -88,6 +119,9 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 		}
 
 	case MOVING:
+		localMap[def.MY_ID].Buttons[f][b] = 1
+		msg := def.ConstructChannelMessage(localMap, nil)
+		outDataChan <- msg
 
 	case DOOR_OPEN:
 		localMap := elevatorMap.GetMap()
@@ -102,22 +136,24 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 
 			outDataChan <- msg
 
-			timer.Reset(2 * time.Second)
+			timer.Reset(DOOR_TIMEOUT * time.Second)
+		} else {
+			localMap[def.MY_ID].Buttons[f][b] = 1
+			msg := def.ConstructChannelMessage(localMap, nil)
+			outDataChan <- msg
 		}
 	}
 }
 
 func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Timer) {
 
+	localMap := elevatorMap.GetMap()
+	localMap[def.MY_ID].Pos = f
+
 	switch state {
 	case MOVING:
-
-		localMap := elevatorMap.GetMap()
-
 		if shouldStop(localMap) {
 			hardware.SetMotorDir(0)
-
-			// send delete all orders on floor signal
 
 			localMap[def.MY_ID].Door = localMap[def.MY_ID].Pos
 
@@ -125,15 +161,19 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 
 			hardware.SetDoorLight(1)
 
-			timer.Reset(2 * time.Second)
-
-			//elevatorMap.ClearRequests(localMap)
+			timer.Reset(DOOR_TIMEOUT * time.Second)
 
 			state = DOOR_OPEN
 
 			msg := def.ConstructChannelMessage(localMap, nil)
 			outDataChan <- msg
+		} else {
+			msg := def.ConstructChannelMessage(localMap, nil)
+			outDataChan <- msg
 		}
+	case IDLE:
+		msg := def.ConstructChannelMessage(localMap, nil)
+		outDataChan <- msg
 	}
 }
 
@@ -160,6 +200,55 @@ func onDoorTimeout(outDataChan chan def.ChannelMessage) {
 		msg := def.ConstructChannelMessage(localMap, nil)
 		outDataChan <- msg
 	}
+}
+
+func forceChooseDirection(m def.ElevMap) int {
+
+	switch currentDir {
+	case UP:
+		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
+			if validOrderOnFloor(m, f) {
+				return UP
+			}
+		}
+		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
+			if validOrderOnFloor(m, f) {
+				return DOWN
+			}
+		}
+		return STILL
+
+	case DOWN:
+		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
+			if validOrderOnFloor(m, f) {
+				return DOWN
+			}
+		}
+		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
+			if validOrderOnFloor(m, f) {
+				return UP
+			}
+		}
+		return STILL
+
+	case STILL:
+		for f := m[def.MY_ID].Pos - 1; f > -1; f-- {
+			if validOrderOnFloor(m, f) {
+				return DOWN
+			}
+		}
+		for f := m[def.MY_ID].Pos + 1; f < def.FLOORS; f++ {
+			if validOrderOnFloor(m, f) {
+				return UP
+			}
+		}
+		return STILL
+
+	default:
+		return STILL
+
+	}
+
 }
 
 func chooseDirection(m def.ElevMap) int {
@@ -233,10 +322,8 @@ func validOrderOnFloor(m def.ElevMap, f int) bool {
 		return true
 	}
 	for e := 0; e < def.ELEVATORS; e++ {
-		for b := 0; b < def.BUTTONS-1; b++ {
-			if m[e].Buttons[f][b] != 1 {
-				return false
-			}
+		if m[e].Buttons[f][def.UP_BUTTON] != 1 && m[e].Buttons[f][def.DOWN_BUTTON] != 1 {
+			return false
 		}
 	}
 	return true
@@ -315,12 +402,20 @@ func shouldStop(m def.ElevMap) bool {
 			return true
 		} else if !isOrderAbove(m) && m[def.MY_ID].Buttons[f][def.DOWN_BUTTON] == 1 {
 			return true
+		} else if !isOrderAbove(m) {
+			return true
+		} else if f == 3 {
+			return true
 		}
 
 	case DOWN:
 		if m[def.MY_ID].Buttons[f][def.DOWN_BUTTON] == 1 || m[def.MY_ID].Buttons[f][def.PANEL_BUTTON] == 1 {
 			return true
 		} else if !isOrderBelow(m) && m[def.MY_ID].Buttons[f][def.UP_BUTTON] == 1 {
+			return true
+		} else if !isOrderBelow(m) {
+			return true
+		} else if f == 0 {
 			return true
 		}
 	}

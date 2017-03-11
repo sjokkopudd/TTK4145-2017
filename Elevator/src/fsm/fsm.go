@@ -47,10 +47,8 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 			case def.ELEVATOR_DEAD:
 				deadElev := data.Event.(def.NewEvent).Data.(int)
-				localMap := elevatorMap.GetMap()
-				localMap[deadElev].IsAlive = 0
-				msg := def.ConstructChannelMessage(localMap, nil)
-				outDataChan <- msg
+				onDeadElevator(deadElev)
+				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 			}
 
@@ -68,6 +66,24 @@ func InitFsm(inDataChan chan def.ChannelMessage, outDataChan chan def.ChannelMes
 		}
 
 	}
+}
+
+func onDeadElevator(deadElev int) {
+	m := elevatorMap.GetMap()
+	m[deadElev].IsAlive = 0
+
+	switch state {
+	case IDLE:
+		dir := chooseDirection(m)
+		hardware.SetMotorDirection(dir)
+		m[MY_ID].Dir = dir
+		if dir != def.STILL {
+			state = MOVING
+		}
+	}
+
+	msg := def.ConstructChannelMessage(m, nil)
+	outDataChan <- msg
 }
 
 func forceOrder(outDataChan chan def.ChannelMessage) {
@@ -328,7 +344,7 @@ func validOrderOnFloor(m def.ElevMap, f int) bool {
 		return true
 	}
 	for e := 0; e < def.ELEVATORS; e++ {
-		if m[e].Buttons[f][def.UP_BUTTON] != 1 && m[e].Buttons[f][def.DOWN_BUTTON] != 1 {
+		if m[e].Buttons[f][def.UP_BUTTON] != 1 && m[e].Buttons[f][def.DOWN_BUTTON] != 1 && m[e].IsAlive == 1 {
 			return false
 		}
 	}
@@ -344,7 +360,7 @@ func iAmClosest(m def.ElevMap, f int) bool {
 
 		for e := 0; e < def.ELEVATORS; e++ {
 
-			if e != def.MY_ID {
+			if e != def.MY_ID && m[e].IsAlive == 1 {
 
 				eDistance := int(math.Abs(float64(m[e].Pos - f)))
 
@@ -370,7 +386,7 @@ func iAmClosest(m def.ElevMap, f int) bool {
 	} else if m[def.MY_ID].Pos > f {
 		for e := 0; e < def.ELEVATORS; e++ {
 
-			if e != def.MY_ID {
+			if e != def.MY_ID && m[e].IsAlive == 1 {
 
 				eDistance := int(math.Abs(float64(m[e].Pos - f)))
 

@@ -21,7 +21,6 @@ func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgCha
 
 	ackChan := make(chan ackInfo, 100)
 
-	receivedPackages = make(map[string]bool)
 	contactDeadElevCounter = 0
 
 	go reciveUdpPacket(msgChan_fromNetwork, ackChan)
@@ -33,8 +32,6 @@ func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgCha
 //-------------------------------------------------------------
 
 var contactDeadElevCounter int
-
-var receivedPackages map[string]bool
 
 const (
 	MAP = 1
@@ -49,22 +46,15 @@ type ackInfo struct {
 type udpPacket struct {
 	Type        int
 	SenderIP    string
-	PacketID    string
 	Data        interface{}
 	AckReceived bool
 }
 
 func constructUdpPacket(m interface{}) udpPacket {
 
-	id, err := exec.Command("uuidgen").Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	newPacket := udpPacket{
 		Type:     MAP,
 		SenderIP: def.IPs[def.MY_ID],
-		PacketID: string(id),
 		Data:     m,
 	}
 
@@ -96,7 +86,6 @@ func (p udpPacket) sendAck() {
 	newPacket := udpPacket{
 		Type:     ACK,
 		SenderIP: def.IPs[def.MY_ID],
-		PacketID: p.PacketID,
 		Data:     true,
 	}
 
@@ -201,17 +190,9 @@ func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan a
 					log.Fatal(err)
 				}
 
-				if true { //!receivedPackages[receivedPacket.PacketID] {
+				msg := def.ConstructChannelMessage(m, nil)
 
-					receivedPackages[receivedPacket.PacketID] = true
-
-					msg := def.ConstructChannelMessage(m, nil)
-
-					msgChan_fromNetwork <- msg
-
-				} else {
-					fmt.Println("RECEIVED AN OLD MAP")
-				}
+				msgChan_fromNetwork <- msg
 
 				receivedPacket.sendAck()
 

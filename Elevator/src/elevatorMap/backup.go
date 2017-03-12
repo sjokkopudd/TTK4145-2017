@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func ReadBackup() def.ElevMap {
+func readBackup() def.ElevMap {
 	backup, err := ioutil.ReadFile("src/elevatorMap/memory.txt")
 
 	if err != nil {
@@ -55,7 +55,7 @@ func ReadBackup() def.ElevMap {
 
 }
 
-func WriteBackup(writeMap def.ElevMap) {
+func writeBackup(writeMap def.ElevMap) {
 	backupFile, err := os.Create("src/elevatorMap/memory.txt")
 
 	if err != nil {

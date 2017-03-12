@@ -14,7 +14,7 @@ import (
 //------------------------- INTERFACE ---------------------------
 //---------------------------------------------------------------
 
-func StartNetworkCommunication(transmitChan chan def.ChannelMessage, receiveChan chan def.ChannelMessage, deadElev chan def.ChannelMessage) {
+func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgChan_fromNetwork chan def.ChannelMessage, deadElev chan def.ChannelMessage) {
 
 	fmt.Println("My IP: ", def.IPs[def.MY_ID])
 	fmt.Println("Trying to setup nettwork connection")
@@ -24,8 +24,8 @@ func StartNetworkCommunication(transmitChan chan def.ChannelMessage, receiveChan
 	receivedPackages = make(map[string]bool)
 	contactDeadElevCounter = 0
 
-	go reciveUdpPacket(receiveChan, ackChan)
-	go transmitUdpPacket(transmitChan, ackChan, deadElev)
+	go reciveUdpPacket(msgChan_fromNetwork, ackChan)
+	go transmitUdpPacket(msgChan_toNetwork, ackChan, deadElev)
 }
 
 //-------------------------------------------------------------
@@ -101,10 +101,10 @@ func (p udpPacket) sendAck() {
 	newPacket.sendAsJSON(p.SenderIP)
 }
 
-func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInfo, deadElev chan def.ChannelMessage) {
+func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan ackInfo, deadElev chan def.ChannelMessage) {
 	for {
 		select {
-		case msg := <-transmitChan:
+		case msg := <-msgChan_toNetwork:
 			localMap := msg.Map.(def.ElevMap)
 			for e := 0; e < def.ELEVATORS; e++ {
 				if e != def.MY_ID && (localMap[e].IsAlive == 1 || contactDeadElevCounter > 5) {
@@ -151,7 +151,7 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 	}
 }
 
-func reciveUdpPacket(receiveChan chan def.ChannelMessage, ackChan chan ackInfo) {
+func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan ackInfo) {
 
 	localAddress, err := net.ResolveUDPAddr("udp", def.PORT)
 	if err != nil {
@@ -179,7 +179,6 @@ func reciveUdpPacket(receiveChan chan def.ChannelMessage, ackChan chan ackInfo) 
 
 			err = json.Unmarshal(receiveBuffer[0:n], &receivedPacket)
 			if err != nil {
-				fmt.Println("umarshal fucked up")
 				log.Fatal(err)
 			}
 

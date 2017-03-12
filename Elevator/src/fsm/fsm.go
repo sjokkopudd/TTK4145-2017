@@ -26,7 +26,7 @@ var currentDir int
 var state int
 var watchdog *time.Timer
 
-func InitFsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_floors chan def.ChannelMessage, msgChan_fromFsm chan def.ChannelMessage, msgChan_deadElevator chan def.ChannelMessage) {
+func Fsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_floors chan def.ChannelMessage, msgChan_fromFsm chan def.ChannelMessage, msgChan_deadElevator chan def.ChannelMessage) {
 
 	timer := time.NewTimer(DOOR_TIMEOUT * time.Second)
 	timer.Stop()

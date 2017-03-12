@@ -26,7 +26,7 @@ func main() {
 
 	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware_buttons, msgChan_fromHardware_floors)
 
-	go fsm.InitFsm(msgChan_buttonEvent, msgChan_fromHardware_floors, msgChan_fromFsm, msgChan_deadElevator)
+	go fsm.Fsm(msgChan_buttonEvent, msgChan_fromHardware_floors, msgChan_fromFsm, msgChan_deadElevator)
 
 	go network.StartNetworkCommunication(msgChan_toNetwork, msgChan_fromNetwork, msgChan_deadElevator)
 
@@ -69,18 +69,6 @@ func main() {
 			if changemade {
 				transmitFlag = true
 			}
-
-			/*case <-transmitTicker.C:
-			if lightFlag {
-				fmt.Println("setting lights")
-				msgChan_toHardware <- newMsg
-				lightFlag = false
-			}
-			if transmitFlag {
-				fmt.Println("transmitting shit")
-				msgChan_toNetwork <- newMsg
-				transmitFlag = false
-			}*/
 		}
 
 		if lightFlag || transmitFlag {

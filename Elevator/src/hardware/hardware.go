@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var conn net.Conn
+var conn *net.Conn
 var mutex = &sync.Mutex{}
 
 // -----------------------------------------------------------------
@@ -19,6 +19,8 @@ var mutex = &sync.Mutex{}
 
 func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW_buttons chan def.ChannelMessage, msgChan_fromHW_floors chan def.ChannelMessage) {
 	if def.USING_SIMULATOR {
+
+		conn = new(net.Conn)
 
 		fmt.Println("Mode: def.USING_SIMULATOR")
 
@@ -29,7 +31,7 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW_buttons c
 		}
 		fmt.Println("ResolveTCPAddr success")
 
-		conn, err = net.DialTCP("tcp", nil, tcpAddr)
+		*conn, err = net.DialTCP("tcp", nil, tcpAddr)
 		if err != nil {
 			fmt.Println("Dial failed:", err.Error())
 			log.Fatal(err)

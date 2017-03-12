@@ -14,7 +14,7 @@ import (
 //------------------------- INTERFACE ---------------------------
 //---------------------------------------------------------------
 
-func StartNetworkCommunication(transmitChan chan def.ChannelMessage, receiveChan chan def.ChannelMessage, deadElev chan def.ChannelMessage) {
+func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgChan_fromNetwork chan def.ChannelMessage, deadElev chan def.ChannelMessage) {
 
 	fmt.Println("My IP: ", def.IPs[def.MY_ID])
 	fmt.Println("Trying to setup nettwork connection")
@@ -22,14 +22,17 @@ func StartNetworkCommunication(transmitChan chan def.ChannelMessage, receiveChan
 	ackChan := make(chan ackInfo, 100)
 
 	receivedPackages = make(map[string]bool)
+	contactDeadElevCounter = 0
 
-	go reciveUdpPacket(receiveChan, ackChan)
-	go transmitUdpPacket(transmitChan, ackChan, deadElev)
+	go reciveUdpPacket(msgChan_fromNetwork, ackChan)
+	go transmitUdpPacket(msgChan_toNetwork, ackChan, deadElev)
 }
 
 //-------------------------------------------------------------
 //------------------------- MODULE ----------------------------
 //-------------------------------------------------------------
+
+var contactDeadElevCounter int
 
 var receivedPackages map[string]bool
 
@@ -98,13 +101,13 @@ func (p udpPacket) sendAck() {
 	newPacket.sendAsJSON(p.SenderIP)
 }
 
-func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInfo, deadElev chan def.ChannelMessage) {
+func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan ackInfo, deadElev chan def.ChannelMessage) {
 	for {
 		select {
-		case msg := <-transmitChan:
+		case msg := <-msgChan_toNetwork:
 			localMap := msg.Map.(def.ElevMap)
 			for e := 0; e < def.ELEVATORS; e++ {
-				if e != def.MY_ID {
+				if e != def.MY_ID && (localMap[e].IsAlive == 1 || contactDeadElevCounter > 5) {
 
 					packet := constructUdpPacket(localMap)
 
@@ -115,7 +118,7 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 
 						packet.sendAsJSON(def.IPs[e])
 
-						time.Sleep(100 * time.Millisecond)
+						time.Sleep(200 * time.Millisecond)
 
 						select {
 						case ackRecived = <-ackChan:
@@ -131,10 +134,16 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 
 						fmt.Println("No acknowledge recieved. ", def.IPs[e], " is dead.")
 
-						//elevatorIsDead := def.NewEvent{def.ELEVATOR_DEAD, e}
-						//deadElev <- elevatorIsDead
+						elevatorIsDead := def.NewEvent{def.ELEVATOR_DEAD, e}
+						msg := def.ConstructChannelMessage(nil, elevatorIsDead)
+						deadElev <- msg
 					}
 				}
+			}
+			if contactDeadElevCounter > 5 {
+				contactDeadElevCounter = 0
+			} else {
+				contactDeadElevCounter++
 			}
 		}
 
@@ -142,7 +151,7 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 	}
 }
 
-func reciveUdpPacket(receiveChan chan def.ChannelMessage, ackChan chan ackInfo) {
+func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan ackInfo) {
 
 	localAddress, err := net.ResolveUDPAddr("udp", def.PORT)
 	if err != nil {
@@ -192,7 +201,7 @@ func reciveUdpPacket(receiveChan chan def.ChannelMessage, ackChan chan ackInfo) 
 					receiveChan <- msg
 
 				} else {
-					fmt.Println("RECEIVED AN OLD MAP - I THREW IT ON THE GROUND!!!")
+					fmt.Println("RECEIVED AN OLD MAP")
 				}
 
 				receivedPacket.sendAck()

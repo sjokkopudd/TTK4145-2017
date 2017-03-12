@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func ReadBackup() def.ElevMap {
+func readBackup() def.ElevMap {
 	backup, err := ioutil.ReadFile("src/elevatorMap/memory.txt")
 
 	if err != nil {
@@ -55,7 +55,7 @@ func ReadBackup() def.ElevMap {
 
 }
 
-func WriteBackup(localMap def.ElevMap) {
+func writeBackup(writeMap def.ElevMap) {
 	backupFile, err := os.Create("src/elevatorMap/memory.txt")
 
 	if err != nil {
@@ -67,18 +67,18 @@ func WriteBackup(localMap def.ElevMap) {
 	stringMatrix := [][]string{}
 
 	for e := 0; e < def.ELEVATORS; e++ {
-		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].ID)})
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(writeMap[e].ID)})
 		for f := 0; f < def.FLOORS; f++ {
 			stringArray := []string{}
 			for b := 0; b < def.BUTTONS; b++ {
-				stringArray = append(stringArray, strconv.Itoa(localMap[e].Buttons[f][b]))
+				stringArray = append(stringArray, strconv.Itoa(writeMap[e].Buttons[f][b]))
 			}
 			stringMatrix = append(stringMatrix, stringArray)
 		}
-		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Dir)})
-		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Pos)})
-		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].Door)})
-		stringMatrix = append(stringMatrix, []string{strconv.Itoa(localMap[e].IsAlive)})
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(writeMap[e].Dir)})
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(writeMap[e].Pos)})
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(writeMap[e].Door)})
+		stringMatrix = append(stringMatrix, []string{strconv.Itoa(writeMap[e].IsAlive)})
 	}
 	backupWriter := csv.NewWriter(backupFile)
 	err = backupWriter.WriteAll(stringMatrix)

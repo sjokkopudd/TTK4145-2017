@@ -3,7 +3,7 @@ package main
 import (
 	"def"
 	"elevatorMap"
-	"fmt"
+	//"fmt"
 	"fsm"
 	"hardware"
 	"network"
@@ -12,69 +12,79 @@ import (
 
 func main() {
 
-	fmt.Println("hello")
-
 	msgChan_toNetwork := make(chan def.ChannelMessage, 100)
 	msgChan_fromNetwork := make(chan def.ChannelMessage, 100)
 	msgChan_deadElevator := make(chan def.ChannelMessage, 100)
 	msgChan_toHardware := make(chan def.ChannelMessage, 100)
-	msgChan_fromHardware := make(chan def.ChannelMessage, 100)
-	msgChan_toFsm := make(chan def.ChannelMessage, 100)
+	msgChan_buttonEvent := make(chan def.ChannelMessage, 100)
+	msgChan_fromHardware_buttons := make(chan def.ChannelMessage, 100)
+	msgChan_fromHardware_floors := make(chan def.ChannelMessage, 100)
 	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
-
-	fmt.Println("hello")
-
 	elevatorMap.InitMap()
-
-	fmt.Println("hello")
 
 	time.Sleep(500 * time.Millisecond)
 
-	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware)
+	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware_buttons, msgChan_fromHardware_floors)
 
-	go fsm.InitFsm(msgChan_toFsm, msgChan_fromFsm)
+	go fsm.Fsm(msgChan_buttonEvent, msgChan_fromHardware_floors, msgChan_fromFsm, msgChan_deadElevator)
 
 	go network.StartNetworkCommunication(msgChan_toNetwork, msgChan_fromNetwork, msgChan_deadElevator)
 
 	time.Sleep(500 * time.Millisecond)
-	fmt.Println("hello")
+
+	transmitTicker := time.NewTicker(100 * time.Millisecond)
+
+	transmitFlag := false
+
+	lightFlag := false
+
+	var newMsg def.ChannelMessage
 
 	for {
-		select {
-		case msg := <-msgChan_fromHardware:
 
-			msgChan_toFsm <- msg
+		select {
+		case msg := <-msgChan_fromHardware_buttons:
+			msgChan_buttonEvent <- msg
 
 		case msg := <-msgChan_fromNetwork:
-
 			receivedMap := msg.Map.(def.ElevMap)
 
 			fsmEvent, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
-			// AddNewMapChanges() skal luke ut om det er gjort en fms_trigger event
-			// og returnere et event, det nye mappet og om alle er eninge
 
-			newMsg := def.ConstructChannelMessage(currentMap, fsmEvent)
+			newMsg = def.ConstructChannelMessage(currentMap, fsmEvent)
 
-			msgChan_toHardware <- newMsg
+			msgChan_buttonEvent <- newMsg
 
-			msgChan_toFsm <- newMsg
+			lightFlag = true
 
 		case msg := <-msgChan_fromFsm:
-
 			receivedMap := msg.Map.(def.ElevMap)
 
 			currentMap, changemade := elevatorMap.AddNewMapChanges(receivedMap, 0)
 
-			newMsg := def.ConstructChannelMessage(currentMap, nil)
+			newMsg = def.ConstructChannelMessage(currentMap, nil)
 
-			msgChan_toHardware <- newMsg
+			lightFlag = true
 
 			if changemade {
-				msgChan_toNetwork <- newMsg
+				transmitFlag = true
 			}
-		default:
-
 		}
-		time.Sleep(50 * time.Millisecond)
+
+		if lightFlag || transmitFlag {
+			select {
+			case <-transmitTicker.C:
+				if lightFlag {
+					msgChan_toHardware <- newMsg
+					lightFlag = false
+				}
+				if transmitFlag {
+					if newMsg.Map != nil {
+						msgChan_toNetwork <- newMsg
+						transmitFlag = false
+					}
+				}
+			}
+		}
 	}
 }

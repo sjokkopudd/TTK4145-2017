@@ -17,7 +17,7 @@ var mutex = &sync.Mutex{}
 // ----------------------- Interface -------------------------------
 // -----------------------------------------------------------------
 
-func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.ChannelMessage) {
+func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW_buttons chan def.ChannelMessage, msgChan_fromHW_floors chan def.ChannelMessage) {
 	if def.USING_SIMULATOR {
 
 		fmt.Println("Mode: def.USING_SIMULATOR")
@@ -36,9 +36,11 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 		}
 		fmt.Println("Dial success")
 
-		goToNearestFloor()
+		GoToNearestFloor()
 
-		go pollNewEvents(msgChan_fromHW)
+		go pollButtonEvents(msgChan_fromHW_buttons)
+
+		go pollFloorEvents(msgChan_fromHW_floors)
 
 		go setLights(msgChan_toHW)
 
@@ -50,15 +52,17 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW chan def.
 			log.Fatal(errors.New("Unsucsessful init of IO"))
 		}
 
-		goToNearestFloor()
+		GoToNearestFloor()
 
-		go pollNewEvents(msgChan_fromHW)
+		go pollButtonEvents(msgChan_fromHW_buttons)
+
+		go pollFloorEvents(msgChan_fromHW_floors)
 
 		go setLights(msgChan_toHW)
 	}
 }
 
-func goToNearestFloor() {
+func GoToNearestFloor() {
 	if readFloor() == -1 {
 		SetMotorDir(-1)
 	}
@@ -106,49 +110,46 @@ func setLights(msgChan_toHW chan def.ChannelMessage) {
 
 }
 
-func pollNewEvents(msgChan_fromHW chan def.ChannelMessage) {
-	lastPos := -1
+func pollButtonEvents(msgChan_fromHW_buttons chan def.ChannelMessage) {
+	buttonTicker := time.NewTicker(200 * time.Millisecond)
+
 	var buttonState [def.FLOORS][def.BUTTONS]bool
 	for {
-		newPos := readFloor()
-		if (newPos != -1) && (newPos != lastPos) {
-			newEvent := def.NewEvent{def.FLOOR_ARRIVAL, newPos}
-			newMsg := def.ConstructChannelMessage(nil, newEvent)
-			msgChan_fromHW <- newMsg
-			lastPos = newPos
-		}
-		for f := 0; f < def.FLOORS; f++ {
-			for b := 0; b < def.BUTTONS; b++ {
-				if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
-					if readButton(f, b) && buttonState[f][b] == false {
-						newEvent := def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
-						newMsg := def.ConstructChannelMessage(nil, newEvent)
-						msgChan_fromHW <- newMsg
-						buttonState[f][b] = true
+		select {
+		case <-buttonTicker.C:
+			for f := 0; f < def.FLOORS; f++ {
+				for b := 0; b < def.BUTTONS; b++ {
+					if !((f == 0) && (b == 1)) && !((f == def.FLOORS-1) && (b == 0)) {
+						if readButton(f, b) && buttonState[f][b] == false {
+							newEvent := def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
+							newMsg := def.ConstructChannelMessage(nil, newEvent)
+							msgChan_fromHW_buttons <- newMsg
+							buttonState[f][b] = true
 
-					} else if !readButton(f, b) {
-						buttonState[f][b] = false
+						} else if !readButton(f, b) {
+							buttonState[f][b] = false
 
+						}
 					}
 				}
 			}
 		}
-		time.Sleep(10 * time.Millisecond)
 	}
 }
 
-func goUpAndDown() {
-	SetMotorDir(-1)
-	dir := -1
-
+func pollFloorEvents(msgChan_fromHW_floors chan def.ChannelMessage) {
+	lastPos := -1
+	floorTicker := time.NewTicker(50 * time.Millisecond)
 	for {
-		if readFloor() == 0 && dir == -1 {
-			SetMotorDir(1)
-			dir = 1
-		}
-		if readFloor() == 3 && dir == 1 {
-			SetMotorDir(-1)
-			dir = -1
+		select {
+		case <-floorTicker.C:
+			newPos := readFloor()
+			if (newPos != -1) && (newPos != lastPos) {
+				newEvent := def.NewEvent{def.FLOOR_ARRIVAL, newPos}
+				newMsg := def.ConstructChannelMessage(nil, newEvent)
+				msgChan_fromHW_floors <- newMsg
+				lastPos = newPos
+			}
 		}
 	}
 }

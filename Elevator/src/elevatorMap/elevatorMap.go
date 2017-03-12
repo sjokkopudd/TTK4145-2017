@@ -14,7 +14,7 @@ func InitMap() {
 	localMap = new(def.ElevMap)
 	localMap = def.NewCleanElevMap()
 
-	WriteBackup(*localMap)
+	writeBackup(*localMap)
 
 }
 
@@ -72,7 +72,7 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.ElevMap, bool) {
 	}
 
 	setMap(currentMap)
-	WriteBackup(currentMap)
+	writeBackup(currentMap)
 	return currentMap, changeMade
 }
 
@@ -121,7 +121,7 @@ func GetEventFromNetwork(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap) {
 	}
 
 	setMap(currentMap)
-	WriteBackup(currentMap)
+	writeBackup(currentMap)
 	return fsmEvent, currentMap
 }
 
@@ -143,45 +143,13 @@ func AddNewEvent(newEvent def.NewEvent) (def.ElevMap, bool) {
 			changeMade = true
 		}
 	}
-	setMap(currentMap)
 
 	if changeMade {
-		WriteBackup(currentMap)
+		setMap(currentMap)
+		writeBackup(currentMap)
 	}
 
 	return currentMap, changeMade
-
-}
-
-func PrintMap(elevatorMap def.ElevMap) {
-	for e := 0; e < def.ELEVATORS; e++ {
-		if e == def.MY_ID {
-			fmt.Println(elevatorMap[e].ID, " - My Map ")
-
-		} else {
-			fmt.Println(elevatorMap[e].ID)
-		}
-		for f := 0; f < def.FLOORS; f++ {
-			fmt.Println(elevatorMap[e].Buttons[f])
-		}
-		fmt.Println(elevatorMap[e].Dir)
-		fmt.Println(elevatorMap[e].Pos)
-		fmt.Println(elevatorMap[e].Door)
-		fmt.Println(elevatorMap[e].IsAlive)
-
-	}
-}
-
-func PrintEvent(event def.NewEvent) {
-	switch event.EventType {
-
-	case def.FLOOR_ARRIVAL:
-		fmt.Println("Event: elevator arrival at floor: ", event.Data)
-
-	case def.BUTTON_PUSH:
-		fmt.Println("Event: button pressed: ", event.Data)
-
-	}
 
 }
 

@@ -22,6 +22,7 @@ func StartNetworkCommunication(transmitChan chan def.ChannelMessage, receiveChan
 	ackChan := make(chan ackInfo, 100)
 
 	receivedPackages = make(map[string]bool)
+	contactDeadElevCounter = 0
 
 	go reciveUdpPacket(receiveChan, ackChan)
 	go transmitUdpPacket(transmitChan, ackChan, deadElev)
@@ -30,6 +31,8 @@ func StartNetworkCommunication(transmitChan chan def.ChannelMessage, receiveChan
 //-------------------------------------------------------------
 //------------------------- MODULE ----------------------------
 //-------------------------------------------------------------
+
+var contactDeadElevCounter int
 
 var receivedPackages map[string]bool
 
@@ -104,7 +107,7 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 		case msg := <-transmitChan:
 			localMap := msg.Map.(def.ElevMap)
 			for e := 0; e < def.ELEVATORS; e++ {
-				if e != def.MY_ID && localMap[e].IsAlive == 1 {
+				if e != def.MY_ID && (localMap[e].IsAlive == 1 || contactDeadElevCounter > 5) {
 
 					packet := constructUdpPacket(localMap)
 
@@ -136,6 +139,11 @@ func transmitUdpPacket(transmitChan chan def.ChannelMessage, ackChan chan ackInf
 						deadElev <- msg
 					}
 				}
+			}
+			if contactDeadElevCounter > 5 {
+				contactDeadElevCounter = 0
+			} else {
+				contactDeadElevCounter++
 			}
 		}
 

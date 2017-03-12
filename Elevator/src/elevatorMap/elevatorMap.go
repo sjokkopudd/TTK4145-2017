@@ -27,8 +27,10 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.ElevMap, bool) {
 	changeMade := false
 	floorWithDoorOpen := -1
 
-	if receivedMap[def.MY_ID].Door != -1 {
-		floorWithDoorOpen = receivedMap[def.MY_ID].Door
+	if receivedMap[def.MY_ID].Door != currentMap[def.MY_ID].Door {
+		if receivedMap[def.MY_ID].Door != -1 {
+			floorWithDoorOpen = receivedMap[def.MY_ID].Door
+		}
 		currentMap[def.MY_ID].Door = receivedMap[def.MY_ID].Door
 		changeMade = true
 	}

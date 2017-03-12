@@ -88,9 +88,6 @@ func GetEventFromNetwork(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap) {
 	for e := 0; e < def.ELEVATORS; e++ {
 		if receivedMap[e].Door != -1 {
 			floorWithDoorOpen = receivedMap[e].Door
-			if e == def.MY_ID {
-				currentMap[e].Door = receivedMap[e].Door
-			}
 		}
 	}
 

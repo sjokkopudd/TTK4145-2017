@@ -10,11 +10,11 @@ const (
 	BUTTONS      = 3
 
 	//Identification constants
-	MY_ID       = 0
+	MY_ID       = 2
 	ELEV_1      = "129.241.187.140:20517"
 	ELEV_2      = "129.241.187.150:20518"
 	ELEV_3      = "129.241.187.154:20519"
-	PORT        = ":20517"
+	PORT        = ":20519"
 	BACKUP_IP   = "127.0.0.1:30000"
 	BACKUP_PORT = ":30000"
 

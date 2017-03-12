@@ -201,7 +201,7 @@ func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan a
 					log.Fatal(err)
 				}
 
-				if !receivedPackages[receivedPacket.PacketID] {
+				if true { //!receivedPackages[receivedPacket.PacketID] {
 
 					receivedPackages[receivedPacket.PacketID] = true
 

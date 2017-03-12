@@ -37,7 +37,7 @@ const (
 	USING_SIMULATOR = false
 )
 
-var IPs = [ELEVATORS]string{ELEV_1} //, ELEV_2, ELEV_3}
+var IPs = [ELEVATORS]string{ELEV_1}
 
 type NewEvent struct {
 	EventType int

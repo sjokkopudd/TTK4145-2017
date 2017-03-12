@@ -91,7 +91,7 @@ func writeBackup(writeMap def.ElevMap) {
 	}
 }
 
-func SoftwareBackup() {
+func InitSoftwareBackup() {
 	backupTicker := time.NewTicker(1 * time.Second)
 	newBackup := exec.Command("gnome-terminal", "-x", "sh", "-c", "make run")
 	err := newBackup.Run()

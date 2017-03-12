@@ -16,7 +16,7 @@ import (
 
 func main() {
 
-	amBackup()
+	backup := amIBackup()
 
 	msgChan_toNetwork := make(chan def.ChannelMessage, 100)
 	msgChan_fromNetwork := make(chan def.ChannelMessage, 100)
@@ -27,11 +27,11 @@ func main() {
 	msgChan_fromHardware_floors := make(chan def.ChannelMessage, 100)
 	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
 
-	elevatorMap.InitMap()
+	elevatorMap.InitMap(backup)
 
 	time.Sleep(500 * time.Millisecond)
 
-	go elevatorMap.SoftwareBackup()
+	go elevatorMap.InitSoftwareBackup()
 
 	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware_buttons, msgChan_fromHardware_floors)
 
@@ -98,7 +98,7 @@ func main() {
 	}
 }
 
-func amBackup() {
+func amIBackup() bool {
 
 	var msg bool
 
@@ -126,7 +126,7 @@ func amBackup() {
 			}
 		} else {
 			fmt.Println("Elevator not alive, I'm taking over")
-			break
+			return msg
 		}
 	}
 

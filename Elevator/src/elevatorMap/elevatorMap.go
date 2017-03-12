@@ -8,11 +8,14 @@ import (
 var mapMutex = &sync.Mutex{}
 var localMap *def.ElevMap
 
-func InitMap() {
+func InitMap(backup bool) {
 	mapMutex.Lock()
-
 	localMap = new(def.ElevMap)
-	localMap = def.NewCleanElevMap()
+	if backup {
+		*localMap = readBackup()
+	} else {
+		localMap = def.NewCleanElevMap()
+	}
 
 	writeBackup(*localMap)
 	mapMutex.Unlock()

@@ -159,6 +159,13 @@ func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan a
 	}
 	receiveConnection, err := net.ListenUDP("udp", localAddress)
 	if err != nil {
+		//restart?
+		newBackup := exec.Command("gnome-terminal", "-x", "sh", "-c", "make run")
+		err1 := newBackup.Run()
+		if err1 != nil {
+			fmt.Println("Unable to spawn backup; you're on your own.")
+			log.Fatal(err)
+		}
 		log.Fatal(err)
 	}
 

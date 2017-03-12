@@ -421,8 +421,6 @@ func iAmClosest(m def.ElevMap, f int) bool {
 				} else if eDistance == myDistance && (m[e].Dir == UP || m[e].Dir == IDLE) { // Om en annen heis er like nærme order og skal opp eller idle
 					if e < def.MY_ID { // Den med lavest ID tar ordren
 						result = false
-					} else {
-						result = true
 					}
 				}
 			}

@@ -36,6 +36,7 @@ func InitFsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_f
 
 		select {
 		case floorMsg := <-msgChan_fromHardware_floors:
+			fmt.Println("Floorevent")
 			switch floorMsg.Event.(def.NewEvent).EventType {
 
 			case def.FLOOR_ARRIVAL:
@@ -44,6 +45,7 @@ func InitFsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_f
 			}
 
 		case buttonMsg := <-msgChan_buttonEvent:
+			fmt.Println("Buttonevent")
 			switch buttonMsg.Event.(def.NewEvent).EventType {
 
 			case def.BUTTON_PUSH:
@@ -53,6 +55,7 @@ func InitFsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_f
 			}
 
 		case deadElevatorMsg := <-msgChan_deadElevator:
+			fmt.Println("Deadevent")
 			switch deadElevatorMsg.Event.(def.NewEvent).EventType {
 			case def.ELEVATOR_DEAD:
 				deadElev := deadElevatorMsg.Event.(def.NewEvent).Data.(int)
@@ -62,11 +65,12 @@ func InitFsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_f
 			}
 
 		case <-timer.C:
-
+			fmt.Println("Door")
 			onDoorTimeout(msgChan_fromFsm)
 			watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 		case <-watchdog.C:
+			fmt.Println("Deadevent")
 			forceOrder(msgChan_fromFsm)
 			watchdog.Reset(IDLE_TIMEOUT * time.Second)
 

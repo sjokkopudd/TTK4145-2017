@@ -2,7 +2,7 @@ package def
 
 const (
 	//Physical constants
-	ELEVATORS    = 1
+	ELEVATORS    = 3
 	FLOORS       = 4
 	UP_BUTTON    = 0
 	DOWN_BUTTON  = 1
@@ -37,7 +37,7 @@ const (
 	USING_SIMULATOR = false
 )
 
-var IPs = [ELEVATORS]string{ELEV_1}
+var IPs = [ELEVATORS]string{ELEV_1, ELEV_2, ELEV_3}
 
 type NewEvent struct {
 	EventType int

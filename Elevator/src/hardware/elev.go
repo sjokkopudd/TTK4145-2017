@@ -14,18 +14,15 @@ import (
 func readFloor() int {
 	if def.USING_SIMULATOR {
 		mutex.Lock()
-		_, err := conn.Write([]byte{7, byte(0), byte(0), byte(0)})
-		mutex.Unlock()
+		_, err := (*conn).Write([]byte{7, byte(0), byte(0), byte(0)})
 		if err != nil {
 			fmt.Println("Write to server failed:", err.Error())
 			log.Fatal(err)
 		}
 
 		buffer := make([]byte, 4)
-		mutex.Lock()
-		conn.Read(buffer)
+		(*conn).Read(buffer)
 		mutex.Unlock()
-		time.Sleep(5 * time.Millisecond)
 		if buffer[1] == 1 {
 			return int(buffer[2])
 		} else {
@@ -52,18 +49,17 @@ func readFloor() int {
 func readButton(floor int, button int) bool {
 	if def.USING_SIMULATOR {
 		mutex.Lock()
-		_, err := conn.Write([]byte{6, byte(button), byte(floor), byte(0)})
-		mutex.Unlock()
+		_, err := (*conn).Write([]byte{6, byte(button), byte(floor), byte(0)})
 		if err != nil {
 			fmt.Println("Write to server failed:", err.Error())
 			log.Fatal(err)
 		}
 
 		buffer := make([]byte, 4)
-		mutex.Lock()
-		conn.Read(buffer)
+		(*conn).Read(buffer)
 		mutex.Unlock()
-		time.Sleep(5 * time.Millisecond)
+
+		fmt.Println("readButton buffer: ", buffer)
 		if buffer[1] == 1 {
 			return true
 		} else {
@@ -105,9 +101,8 @@ func readButton(floor int, button int) bool {
 func SetMotorDir(dir int) {
 	if def.USING_SIMULATOR {
 		mutex.Lock()
-		_, err := conn.Write([]byte{1, byte(dir), byte(0), byte(0)})
+		_, err := (*conn).Write([]byte{1, byte(dir), byte(0), byte(0)})
 		mutex.Unlock()
-		time.Sleep(5 * time.Millisecond)
 		if err != nil {
 			fmt.Println("Write to server failed:", err.Error())
 			log.Fatal(err)
@@ -130,9 +125,8 @@ func SetMotorDir(dir int) {
 func setFloorIndicator(floor int) {
 	if def.USING_SIMULATOR {
 		mutex.Lock()
-		_, err := conn.Write([]byte{3, byte(floor), byte(0), byte(0)})
+		_, err := (*conn).Write([]byte{3, byte(floor), byte(0), byte(0)})
 		mutex.Unlock()
-		time.Sleep(5 * time.Millisecond)
 		if err != nil {
 			fmt.Println("Write to server failed:", err.Error())
 			log.Fatal(err)
@@ -164,9 +158,8 @@ func setOrderLight(f byte, b byte, val byte) {
 
 	if def.USING_SIMULATOR {
 		mutex.Lock()
-		_, err := conn.Write([]byte{2, byte(b), byte(f), byte(val)})
+		_, err := (*conn).Write([]byte{2, byte(b), byte(f), byte(val)})
 		mutex.Unlock()
-		time.Sleep(5 * time.Millisecond)
 		if err != nil {
 			fmt.Println("Write to server failed:", err.Error())
 			log.Fatal(err)
@@ -186,9 +179,8 @@ func SetDoorLight(val int) {
 
 	if def.USING_SIMULATOR {
 		mutex.Lock()
-		_, err := conn.Write([]byte{4, byte(val), byte(0), byte(0)})
+		_, err := (*conn).Write([]byte{4, byte(val), byte(0), byte(0)})
 		mutex.Unlock()
-		time.Sleep(5 * time.Millisecond)
 		if err != nil {
 			fmt.Println("Write to server failed:", err.Error())
 			log.Fatal(err)

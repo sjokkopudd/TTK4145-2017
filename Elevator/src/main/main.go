@@ -3,7 +3,7 @@ package main
 import (
 	"def"
 	"elevatorMap"
-	"fmt"
+	//"fmt"
 	"fsm"
 	"hardware"
 	"network"

@@ -121,7 +121,7 @@ func onRequestButtonPressed(f int, b int, msgChan_fromFsm chan def.ChannelMessag
 	localMap := elevatorMap.GetMap()
 	switch state {
 	case IDLE:
-
+		fmt.Println("Pos: ", localMap[def.MY_ID].Pos, ". Button pushed at floor: ", f)
 		if localMap[def.MY_ID].Pos == f {
 
 			localMap[def.MY_ID].Door = f
@@ -134,22 +134,21 @@ func onRequestButtonPressed(f int, b int, msgChan_fromFsm chan def.ChannelMessag
 			timer.Reset(DOOR_TIMEOUT * time.Second)
 			state = DOOR_OPEN
 		} else {
-			if localMap[def.MY_ID].Buttons[f][b] != 1 {
 
-				localMap[def.MY_ID].Buttons[f][b] = 1
+			localMap[def.MY_ID].Buttons[f][b] = 1
 
-				currentDir = chooseDirection(localMap)
-				hardware.SetMotorDir(currentDir)
+			currentDir = chooseDirection(localMap)
+			hardware.SetMotorDir(currentDir)
 
-				localMap[def.MY_ID].Dir = currentDir
+			localMap[def.MY_ID].Dir = currentDir
 
-				if currentDir != def.STILL {
-					state = MOVING
-				}
-
-				msg := def.ConstructChannelMessage(localMap, nil)
-				msgChan_fromFsm <- msg
+			if currentDir != def.STILL {
+				state = MOVING
 			}
+
+			msg := def.ConstructChannelMessage(localMap, nil)
+			msgChan_fromFsm <- msg
+
 		}
 
 	case MOVING:
@@ -404,6 +403,9 @@ func iAmClosest(m def.ElevMap, f int) bool {
 			if e != def.MY_ID && m[e].IsAlive == 1 {
 
 				eDistance := int(math.Abs(float64(m[e].Pos - f)))
+
+				fmt.Println("My dist: ", myDistance)
+				fmt.Println("elev ", e, ": ", eDistance)
 
 				if eDistance < myDistance { // Om en annen heis er nærmere order
 

@@ -3,13 +3,17 @@ package elevatorMap
 import (
 	"def"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func readBackup() def.ElevMap {
@@ -85,4 +89,36 @@ func writeBackup(writeMap def.ElevMap) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func SoftwareBackup() {
+	backupTicker := time.NewTicker(1 * time.Second)
+	newBackup := exec.Command("gnome-terminal", "-x", "sh", "-c", "make run")
+	err := newBackup.Run()
+	if err != nil {
+		fmt.Println("Unable to spawn backup; you're on your own.")
+		log.Fatal(err)
+	}
+
+	backupAdr, err := net.ResolveUDPAddr("udp", def.BACKUP_IP)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	backupConn, err := net.DialUDP("udp", nil, backupAdr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	aliveMsg := true
+
+	for {
+		select {
+		case <-backupTicker.C:
+			jsonBuf, _ := json.Marshal(aliveMsg)
+			backupConn.Write(jsonBuf)
+		}
+
+	}
+
 }

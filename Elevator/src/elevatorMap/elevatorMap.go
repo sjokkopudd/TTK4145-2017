@@ -2,19 +2,25 @@ package elevatorMap
 
 import (
 	"def"
-	"fmt"
 	"sync"
 )
 
 var mapMutex = &sync.Mutex{}
 var localMap *def.ElevMap
 
-func InitMap() {
+func InitMap(first bool) {
+	mapMutex.Lock()
 
 	localMap = new(def.ElevMap)
-	localMap = def.NewCleanElevMap()
+	if first {
+		*localMap = readBackup()
+
+	} else {
+		localMap = def.NewCleanElevMap()
+	}
 
 	writeBackup(*localMap)
+	mapMutex.Unlock()
 
 }
 

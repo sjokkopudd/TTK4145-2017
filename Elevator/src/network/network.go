@@ -198,7 +198,7 @@ func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan a
 
 					msg := def.ConstructChannelMessage(m, nil)
 
-					receiveChan <- msg
+					msgChan_fromNetwork <- msg
 
 				} else {
 					fmt.Println("RECEIVED AN OLD MAP")

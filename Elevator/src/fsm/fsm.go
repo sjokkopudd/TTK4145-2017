@@ -3,7 +3,6 @@ package fsm
 import (
 	"def"
 	"elevatorMap"
-	"fmt"
 	"hardware"
 	"math"
 	"time"
@@ -121,7 +120,7 @@ func onRequestButtonPressed(f int, b int, msgChan_fromFsm chan def.ChannelMessag
 	localMap := elevatorMap.GetMap()
 	switch state {
 	case IDLE:
-		fmt.Println("Pos: ", localMap[def.MY_ID].Pos, ". Button pushed at floor: ", f)
+
 		if localMap[def.MY_ID].Pos == f {
 
 			localMap[def.MY_ID].Door = f
@@ -185,8 +184,6 @@ func onFloorArrival(f int, msgChan_fromFsm chan def.ChannelMessage, timer *time.
 
 	localMap := elevatorMap.GetMap()
 	localMap[def.MY_ID].Pos = f
-
-	fmt.Println("New floor: ", f)
 
 	switch state {
 	case MOVING:
@@ -403,9 +400,6 @@ func iAmClosest(m def.ElevMap, f int) bool {
 			if e != def.MY_ID && m[e].IsAlive == 1 {
 
 				eDistance := int(math.Abs(float64(m[e].Pos - f)))
-
-				fmt.Println("My dist: ", myDistance)
-				fmt.Println("elev ", e, ": ", eDistance)
 
 				if eDistance < myDistance { // Om en annen heis er nærmere order
 

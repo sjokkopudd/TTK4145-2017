@@ -21,7 +21,6 @@ func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgCha
 
 	ackChan := make(chan ackInfo, 100)
 
-	receivedPackages = make(map[string]bool)
 	contactDeadElevCounter = 0
 
 	go reciveUdpPacket(msgChan_fromNetwork, ackChan)
@@ -33,8 +32,6 @@ func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgCha
 //-------------------------------------------------------------
 
 var contactDeadElevCounter int
-
-var receivedPackages map[string]bool
 
 const (
 	MAP = 1
@@ -49,52 +46,46 @@ type ackInfo struct {
 type udpPacket struct {
 	Type        int
 	SenderIP    string
-	PacketID    string
 	Data        interface{}
 	AckReceived bool
 }
 
 func constructUdpPacket(m interface{}) udpPacket {
 
-	id, err := exec.Command("uuidgen").Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	newPacket := udpPacket{
 		Type:     MAP,
 		SenderIP: def.IPs[def.MY_ID],
-		PacketID: string(id),
 		Data:     m,
 	}
 
 	return newPacket
 }
 
-func (p udpPacket) sendAsJSON(r string) {
+func (p udpPacket) sendAsJSON(r string) bool {
 
 	json_buffer, _ := json.Marshal(p)
 
 	destination_addr, err := net.ResolveUDPAddr("udp", r)
 	if err != nil {
-		log.Fatal(err)
+		return true
 	}
 
 	send_conn, err := net.DialUDP("udp", nil, destination_addr)
 	if err != nil {
-		log.Fatal(err)
+		return true
 	}
 
 	defer send_conn.Close()
 
 	send_conn.Write(json_buffer)
+
+	return false
 }
 
 func (p udpPacket) sendAck() {
 	newPacket := udpPacket{
 		Type:     ACK,
 		SenderIP: def.IPs[def.MY_ID],
-		PacketID: p.PacketID,
 		Data:     true,
 	}
 
@@ -112,11 +103,12 @@ func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan a
 					packet := constructUdpPacket(localMap)
 
 					var ackRecived ackInfo
+					var noConnection bool
 
 				WAIT_FOR_ACK:
 					for a := 0; a < 5; a++ {
 
-						packet.sendAsJSON(def.IPs[e])
+						noConnection = packet.sendAsJSON(def.IPs[e])
 
 						time.Sleep(200 * time.Millisecond)
 
@@ -130,7 +122,7 @@ func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan a
 						}
 					}
 
-					if !ackRecived.Value {
+					if !ackRecived.Value || noConnection {
 
 						fmt.Println("No acknowledge recieved. ", def.IPs[e], " is dead.")
 
@@ -159,6 +151,12 @@ func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan a
 	}
 	receiveConnection, err := net.ListenUDP("udp", localAddress)
 	if err != nil {
+		newBackup := exec.Command("gnome-terminal", "-x", "sh", "-c", "make run")
+		err1 := newBackup.Run()
+		if err1 != nil {
+			fmt.Println("Unable to spawn backup; you're on your own.")
+			log.Fatal(err)
+		}
 		log.Fatal(err)
 	}
 
@@ -192,17 +190,9 @@ func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan a
 					log.Fatal(err)
 				}
 
-				if !receivedPackages[receivedPacket.PacketID] {
+				msg := def.ConstructChannelMessage(m, nil)
 
-					receivedPackages[receivedPacket.PacketID] = true
-
-					msg := def.ConstructChannelMessage(m, nil)
-
-					receiveChan <- msg
-
-				} else {
-					fmt.Println("RECEIVED AN OLD MAP")
-				}
+				msgChan_fromNetwork <- msg
 
 				receivedPacket.sendAck()
 

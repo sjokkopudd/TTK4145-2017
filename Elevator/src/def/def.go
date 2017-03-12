@@ -10,11 +10,13 @@ const (
 	BUTTONS      = 3
 
 	//Identification constants
-	MY_ID  = 0
-	ELEV_1 = "127.0.0.1:20005"
-	ELEV_2 = "127.0.0.1:20010"
-	ELEV_3 = "127.0.0.1:20015"
-	PORT   = ":20005"
+	MY_ID       = 0
+	ELEV_1      = "129.241.187.140:20517"
+	ELEV_2      = "129.241.187.150:20518"
+	ELEV_3      = "129.241.187.154:20519"
+	PORT        = ":20517"
+	BACKUP_IP   = "127.0.0.1:30000"
+	BACKUP_PORT = ":30000"
 
 	//Event types
 	FLOOR_ARRIVAL = 1

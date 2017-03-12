@@ -2,19 +2,23 @@ package elevatorMap
 
 import (
 	"def"
-	"fmt"
 	"sync"
 )
 
 var mapMutex = &sync.Mutex{}
 var localMap *def.ElevMap
 
-func InitMap() {
-
+func InitMap(backup bool) {
+	mapMutex.Lock()
 	localMap = new(def.ElevMap)
-	localMap = def.NewCleanElevMap()
+	if backup {
+		*localMap = readBackup()
+	} else {
+		localMap = def.NewCleanElevMap()
+	}
 
 	writeBackup(*localMap)
+	mapMutex.Unlock()
 
 }
 
@@ -23,8 +27,10 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.ElevMap, bool) {
 	changeMade := false
 	floorWithDoorOpen := -1
 
-	if receivedMap[def.MY_ID].Door != -1 {
-		floorWithDoorOpen = receivedMap[def.MY_ID].Door
+	if receivedMap[def.MY_ID].Door != currentMap[def.MY_ID].Door {
+		if receivedMap[def.MY_ID].Door != -1 {
+			floorWithDoorOpen = receivedMap[def.MY_ID].Door
+		}
 		currentMap[def.MY_ID].Door = receivedMap[def.MY_ID].Door
 		changeMade = true
 	}
@@ -84,9 +90,6 @@ func GetEventFromNetwork(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap) {
 	for e := 0; e < def.ELEVATORS; e++ {
 		if receivedMap[e].Door != -1 {
 			floorWithDoorOpen = receivedMap[e].Door
-			if e == def.MY_ID {
-				currentMap[e].Door = receivedMap[e].Door
-			}
 		}
 	}
 

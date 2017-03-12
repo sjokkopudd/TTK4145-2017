@@ -3,7 +3,6 @@ package fsm
 import (
 	"def"
 	"elevatorMap"
-	"fmt"
 	"hardware"
 	"math"
 	"time"
@@ -134,22 +133,21 @@ func onRequestButtonPressed(f int, b int, msgChan_fromFsm chan def.ChannelMessag
 			timer.Reset(DOOR_TIMEOUT * time.Second)
 			state = DOOR_OPEN
 		} else {
-			if localMap[def.MY_ID].Buttons[f][b] != 1 {
 
-				localMap[def.MY_ID].Buttons[f][b] = 1
+			localMap[def.MY_ID].Buttons[f][b] = 1
 
-				currentDir = chooseDirection(localMap)
-				hardware.SetMotorDir(currentDir)
+			currentDir = chooseDirection(localMap)
+			hardware.SetMotorDir(currentDir)
 
-				localMap[def.MY_ID].Dir = currentDir
+			localMap[def.MY_ID].Dir = currentDir
 
-				if currentDir != def.STILL {
-					state = MOVING
-				}
-
-				msg := def.ConstructChannelMessage(localMap, nil)
-				msgChan_fromFsm <- msg
+			if currentDir != def.STILL {
+				state = MOVING
 			}
+
+			msg := def.ConstructChannelMessage(localMap, nil)
+			msgChan_fromFsm <- msg
+
 		}
 
 	case MOVING:
@@ -186,8 +184,6 @@ func onFloorArrival(f int, msgChan_fromFsm chan def.ChannelMessage, timer *time.
 
 	localMap := elevatorMap.GetMap()
 	localMap[def.MY_ID].Pos = f
-
-	fmt.Println("New floor: ", f)
 
 	switch state {
 	case MOVING:
@@ -419,8 +415,6 @@ func iAmClosest(m def.ElevMap, f int) bool {
 				} else if eDistance == myDistance && (m[e].Dir == UP || m[e].Dir == IDLE) { // Om en annen heis er like nærme order og skal opp eller idle
 					if e < def.MY_ID { // Den med lavest ID tar ordren
 						result = false
-					} else {
-						result = true
 					}
 				}
 			}
@@ -447,8 +441,6 @@ func iAmClosest(m def.ElevMap, f int) bool {
 				} else if eDistance == myDistance && (m[e].Dir == DOWN || m[e].Dir == IDLE) { // Om en annen heis er like nærme order og skal ned eller idle
 					if m[e].ID < m[def.MY_ID].ID { // Den med lavest ID tar ordren
 						result = false
-					} else {
-						result = true
 					}
 				}
 

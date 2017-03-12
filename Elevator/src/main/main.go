@@ -4,13 +4,19 @@ import (
 	"def"
 	"elevatorMap"
 	//"fmt"
+	"encoding/json"
+	"fmt"
 	"fsm"
 	"hardware"
+	"log"
+	"net"
 	"network"
 	"time"
 )
 
 func main() {
+
+	//backup := amIBackup()
 
 	msgChan_toNetwork := make(chan def.ChannelMessage, 100)
 	msgChan_fromNetwork := make(chan def.ChannelMessage, 100)
@@ -20,9 +26,12 @@ func main() {
 	msgChan_fromHardware_buttons := make(chan def.ChannelMessage, 100)
 	msgChan_fromHardware_floors := make(chan def.ChannelMessage, 100)
 	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
-	elevatorMap.InitMap()
+
+	elevatorMap.InitMap(false)
 
 	time.Sleep(500 * time.Millisecond)
+
+	//go elevatorMap.InitSoftwareBackup()
 
 	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware_buttons, msgChan_fromHardware_floors)
 
@@ -87,4 +96,38 @@ func main() {
 			}
 		}
 	}
+}
+
+func amIBackup() bool {
+
+	var msg bool
+
+	addr, err := net.ResolveUDPAddr("udp", def.BACKUP_PORT)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	listenCon, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer listenCon.Close()
+
+	buffer := make([]byte, 16)
+
+	for {
+		listenCon.SetReadDeadline(time.Now().Add(2 * time.Second))
+		n, _, err := listenCon.ReadFromUDP(buffer[:])
+		if n > 0 {
+			json.Unmarshal(buffer[0:n], &msg)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			fmt.Println("Elevator not alive, I'm taking over")
+			return msg
+		}
+	}
+
 }

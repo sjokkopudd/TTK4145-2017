@@ -26,7 +26,7 @@ var currentDir int
 var state int
 var watchdog *time.Timer
 
-func InitFsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_floors chan def.ChannelMessage, outDataChan chan def.ChannelMessage, msgChan_deadElevator chan def.ChannelMessage) {
+func InitFsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_floors chan def.ChannelMessage, msgChan_fromFsm chan def.ChannelMessage, msgChan_deadElevator chan def.ChannelMessage) {
 
 	timer := time.NewTimer(DOOR_TIMEOUT * time.Second)
 	timer.Stop()
@@ -35,39 +35,39 @@ func InitFsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_f
 	for {
 
 		select {
-		case floorEvent := <-msgChan_fromHardware_floors:
-			switch floorEvent.Event.(def.NewEvent).EventType {
+		case floorMsg := <-msgChan_fromHardware_floors:
+			switch floorMsg.Event.(def.NewEvent).EventType {
 
 			case def.FLOOR_ARRIVAL:
-				onFloorArrival(floorEvent.Event.(def.NewEvent).Data.(int), outDataChan, timer)
+				onFloorArrival(floorMsg.Event.(def.NewEvent).Data.(int), msgChan_fromFsm, timer)
 				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 			}
 
-		case buttonEvent := <-msgChan_buttonEvent:
-			switch buttonEvent.Event.(def.NewEvent).EventType {
+		case buttonMsg := <-msgChan_buttonEvent:
+			switch buttonMsg.Event.(def.NewEvent).EventType {
 
 			case def.BUTTON_PUSH:
-				button := buttonEvent.Event.(def.NewEvent).Data.([]int)
-				onRequestButtonPressed(button[0], button[1], outDataChan, timer)
+				button := buttonMsg.Event.(def.NewEvent).Data.([]int)
+				onRequestButtonPressed(button[0], button[1], msgChan_fromFsm, timer)
 				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 			}
 
-		case deadElevatorEvent := <-msgChan_deadElevator:
-			switch deadElevatorEvent.Event.(def.NewEvent).EventType {
+		case deadElevatorMsg := <-msgChan_deadElevator:
+			switch deadElevatorMsg.Event.(def.NewEvent).EventType {
 			case def.ELEVATOR_DEAD:
-				deadElev := deadElevatorEvent.Event.(def.NewEvent).Data.(int)
-				onDeadElevator(deadElev, outDataChan)
+				deadElev := deadElevatorMsg.Event.(def.NewEvent).Data.(int)
+				onDeadElevator(deadElev, msgChan_fromFsm)
 				watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 			}
 
 		case <-timer.C:
 
-			onDoorTimeout(outDataChan)
+			onDoorTimeout(msgChan_fromFsm)
 			watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 		case <-watchdog.C:
-			forceOrder(outDataChan)
+			forceOrder(msgChan_fromFsm)
 			watchdog.Reset(IDLE_TIMEOUT * time.Second)
 
 		default:
@@ -77,7 +77,7 @@ func InitFsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_f
 	}
 }
 
-func onDeadElevator(deadElev int, outDataChan chan def.ChannelMessage) {
+func onDeadElevator(deadElev int, msgChan_fromFsm chan def.ChannelMessage) {
 
 	m := elevatorMap.GetMap()
 	m[deadElev].IsAlive = 0
@@ -93,10 +93,10 @@ func onDeadElevator(deadElev int, outDataChan chan def.ChannelMessage) {
 	}
 
 	msg := def.ConstructChannelMessage(m, nil)
-	outDataChan <- msg
+	msgChan_fromFsm <- msg
 }
 
-func forceOrder(outDataChan chan def.ChannelMessage) {
+func forceOrder(msgChan_fromFsm chan def.ChannelMessage) {
 
 	hardware.GoToNearestFloor()
 
@@ -114,12 +114,12 @@ func forceOrder(outDataChan chan def.ChannelMessage) {
 		}
 
 		msg := def.ConstructChannelMessage(localMap, nil)
-		outDataChan <- msg
+		msgChan_fromFsm <- msg
 
 	}
 }
 
-func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, timer *time.Timer) {
+func onRequestButtonPressed(f int, b int, msgChan_fromFsm chan def.ChannelMessage, timer *time.Timer) {
 	localMap := elevatorMap.GetMap()
 	switch state {
 	case IDLE:
@@ -132,7 +132,7 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 
 			hardware.SetDoorLight(1)
 			msg := def.ConstructChannelMessage(localMap, nil)
-			outDataChan <- msg
+			msgChan_fromFsm <- msg
 			timer.Reset(DOOR_TIMEOUT * time.Second)
 			state = DOOR_OPEN
 		} else {
@@ -150,7 +150,7 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 				}
 
 				msg := def.ConstructChannelMessage(localMap, nil)
-				outDataChan <- msg
+				msgChan_fromFsm <- msg
 			}
 		}
 
@@ -158,7 +158,7 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 		if localMap[def.MY_ID].Buttons[f][b] != 1 {
 			localMap[def.MY_ID].Buttons[f][b] = 1
 			msg := def.ConstructChannelMessage(localMap, nil)
-			outDataChan <- msg
+			msgChan_fromFsm <- msg
 		}
 
 	case DOOR_OPEN:
@@ -171,20 +171,20 @@ func onRequestButtonPressed(f int, b int, outDataChan chan def.ChannelMessage, t
 
 			msg := def.ConstructChannelMessage(localMap, nil)
 
-			outDataChan <- msg
+			msgChan_fromFsm <- msg
 
 			timer.Reset(DOOR_TIMEOUT * time.Second)
 		} else {
 			if localMap[def.MY_ID].Buttons[f][b] != 1 {
 				localMap[def.MY_ID].Buttons[f][b] = 1
 				msg := def.ConstructChannelMessage(localMap, nil)
-				outDataChan <- msg
+				msgChan_fromFsm <- msg
 			}
 		}
 	}
 }
 
-func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Timer) {
+func onFloorArrival(f int, msgChan_fromFsm chan def.ChannelMessage, timer *time.Timer) {
 
 	localMap := elevatorMap.GetMap()
 	localMap[def.MY_ID].Pos = f
@@ -207,18 +207,18 @@ func onFloorArrival(f int, outDataChan chan def.ChannelMessage, timer *time.Time
 			state = DOOR_OPEN
 
 			msg := def.ConstructChannelMessage(localMap, nil)
-			outDataChan <- msg
+			msgChan_fromFsm <- msg
 		} else {
 			msg := def.ConstructChannelMessage(localMap, nil)
-			outDataChan <- msg
+			msgChan_fromFsm <- msg
 		}
 	case IDLE:
 		msg := def.ConstructChannelMessage(localMap, nil)
-		outDataChan <- msg
+		msgChan_fromFsm <- msg
 	}
 }
 
-func onDoorTimeout(outDataChan chan def.ChannelMessage) {
+func onDoorTimeout(msgChan_fromFsm chan def.ChannelMessage) {
 
 	switch state {
 	case DOOR_OPEN:
@@ -239,7 +239,7 @@ func onDoorTimeout(outDataChan chan def.ChannelMessage) {
 		}
 
 		msg := def.ConstructChannelMessage(localMap, nil)
-		outDataChan <- msg
+		msgChan_fromFsm <- msg
 	}
 }
 

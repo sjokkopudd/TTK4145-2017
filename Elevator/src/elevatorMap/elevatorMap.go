@@ -6,11 +6,6 @@ import (
 	"sync"
 )
 
-const (
-	FSM     = 0
-	NETWORK = 1
-)
-
 var mapMutex = &sync.Mutex{}
 var localMap *def.ElevMap
 

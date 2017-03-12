@@ -171,6 +171,7 @@ func reciveUdpPacket(receiveChan chan def.ChannelMessage, ackChan chan ackInfo) 
 
 			err = json.Unmarshal(receiveBuffer[0:n], &receivedPacket)
 			if err != nil {
+				fmt.Println("umarshal fucked up")
 				log.Fatal(err)
 			}
 

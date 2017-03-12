@@ -34,7 +34,6 @@ func readBackup() def.ElevMap {
 			break
 		}
 		if err != nil {
-			fmt.Println("this error")
 			log.Fatal(err)
 		}
 		stringMatrix = append(stringMatrix, csvLine)
@@ -97,17 +96,17 @@ func InitSoftwareBackup() {
 	err := newBackup.Run()
 	if err != nil {
 		fmt.Println("Unable to spawn backup; you're on your own.")
-		log.Fatal(err)
+		return
 	}
 
 	backupAdr, err := net.ResolveUDPAddr("udp", def.BACKUP_IP)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	backupConn, err := net.DialUDP("udp", nil, backupAdr)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	aliveMsg := true

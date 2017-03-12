@@ -36,7 +36,7 @@ func main() {
 
 	transmitFlag := false
 
-	ligthFlag := false
+	lightFlag := false
 
 	var newMsg def.ChannelMessage
 
@@ -55,7 +55,7 @@ func main() {
 
 			msgChan_buttonEvent <- newMsg
 
-			ligthFlag = true
+			lightFlag = true
 
 		case msg := <-msgChan_fromFsm:
 			receivedMap := msg.Map.(def.ElevMap)
@@ -64,17 +64,17 @@ func main() {
 
 			newMsg = def.ConstructChannelMessage(currentMap, nil)
 
-			ligthFlag = true
+			lightFlag = true
 
 			if changemade {
 				transmitFlag = true
 			}
 
 			/*case <-transmitTicker.C:
-			if ligthFlag {
+			if lightFlag {
 				fmt.Println("setting lights")
 				msgChan_toHardware <- newMsg
-				ligthFlag = false
+				lightFlag = false
 			}
 			if transmitFlag {
 				fmt.Println("transmitting shit")
@@ -83,16 +83,18 @@ func main() {
 			}*/
 		}
 
-		if ligthFlag || transmitFlag {
+		if lightFlag || transmitFlag {
 			select {
 			case <-transmitTicker.C:
-				if ligthFlag {
+				if lightFlag {
 					msgChan_toHardware <- newMsg
-					ligthFlag = false
+					lightFlag = false
 				}
 				if transmitFlag {
-					msgChan_toNetwork <- newMsg
-					transmitFlag = false
+					if newMsg.Map != nil {
+						msgChan_toNetwork <- newMsg
+						transmitFlag = false
+					}
 				}
 			}
 		}

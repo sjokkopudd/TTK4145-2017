@@ -44,11 +44,9 @@ func main() {
 
 		select {
 		case msg := <-msgChan_fromHardware_buttons:
-			fmt.Println("Buttons from hardware")
 			msgChan_buttonEvent <- msg
 
 		case msg := <-msgChan_fromNetwork:
-			fmt.Println("Received map from network")
 			receivedMap := msg.Map.(def.ElevMap)
 
 			fsmEvent, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
@@ -60,7 +58,6 @@ func main() {
 			ligthFlag = true
 
 		case msg := <-msgChan_fromFsm:
-			fmt.Println("Received map from FSM")
 			receivedMap := msg.Map.(def.ElevMap)
 
 			currentMap, changemade := elevatorMap.AddNewMapChanges(receivedMap, 0)
@@ -90,12 +87,10 @@ func main() {
 			select {
 			case <-transmitTicker.C:
 				if ligthFlag {
-					fmt.Println("setting lights")
 					msgChan_toHardware <- newMsg
 					ligthFlag = false
 				}
 				if transmitFlag {
-					fmt.Println("transmitting shit")
 					msgChan_toNetwork <- newMsg
 					transmitFlag = false
 				}

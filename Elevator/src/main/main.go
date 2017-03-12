@@ -16,7 +16,7 @@ import (
 
 func main() {
 
-	first := amBackup()
+	amBackup()
 
 	msgChan_toNetwork := make(chan def.ChannelMessage, 100)
 	msgChan_fromNetwork := make(chan def.ChannelMessage, 100)
@@ -27,7 +27,7 @@ func main() {
 	msgChan_fromHardware_floors := make(chan def.ChannelMessage, 100)
 	msgChan_fromFsm := make(chan def.ChannelMessage, 100)
 
-	elevatorMap.InitMap(first)
+	elevatorMap.InitMap()
 
 	time.Sleep(500 * time.Millisecond)
 
@@ -98,7 +98,8 @@ func main() {
 	}
 }
 
-func amBackup() bool {
+func amBackup() {
+
 	var msg bool
 
 	addr, err := net.ResolveUDPAddr("udp", def.BACKUP_PORT)
@@ -125,8 +126,7 @@ func amBackup() bool {
 			}
 		} else {
 			fmt.Println("Elevator not alive, I'm taking over")
-			fmt.Println(msg)
-			return msg
+			break
 		}
 	}
 

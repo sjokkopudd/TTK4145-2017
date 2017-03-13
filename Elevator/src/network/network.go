@@ -31,7 +31,7 @@ const (
 	PORT      = ":20517"
 )
 
-var IPs = [3]string{IP_ELEV_1, IP_ELEV_2, IP_ELEV_3}
+var IPs = [def.ELEVATORS]string{IP_ELEV_1, IP_ELEV_2, IP_ELEV_3}
 
 type ackInfo struct {
 	IP    string

@@ -6,15 +6,15 @@ import (
 )
 
 var mapMutex = &sync.Mutex{}
-var localMap *def.ElevMap
+var localMap *ElevMap
 
 func InitMap(backup bool) {
 	mapMutex.Lock()
-	localMap = new(def.ElevMap)
+	localMap = new(ElevMap)
 	if backup {
 		*localMap = readBackup()
 	} else {
-		localMap = def.NewCleanElevMap()
+		localMap = NewCleanElevMap()
 	}
 
 	writeBackup(*localMap)
@@ -22,8 +22,8 @@ func InitMap(backup bool) {
 
 }
 
-func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.ElevMap, bool) {
-	currentMap := GetMap()
+func AddNewMapChanges(receivedMap ElevMap, user int) (ElevMap, bool) {
+	currentMap := GetLocalMap()
 	changeMade := false
 	floorWithDoorOpen := -1
 
@@ -35,13 +35,13 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.ElevMap, bool) {
 		changeMade = true
 	}
 
-	if receivedMap[def.MY_ID].Dir != currentMap[def.MY_ID].Dir {
-		currentMap[def.MY_ID].Dir = receivedMap[def.MY_ID].Dir
+	if receivedMap[def.MY_ID].Direction != currentMap[def.MY_ID].Direction {
+		currentMap[def.MY_ID].Direction = receivedMap[def.MY_ID].Direction
 		changeMade = true
 	}
 
-	if receivedMap[def.MY_ID].Pos != currentMap[def.MY_ID].Pos {
-		currentMap[def.MY_ID].Pos = receivedMap[def.MY_ID].Pos
+	if receivedMap[def.MY_ID].Position != currentMap[def.MY_ID].Position {
+		currentMap[def.MY_ID].Position = receivedMap[def.MY_ID].Position
 		changeMade = true
 	}
 
@@ -77,13 +77,13 @@ func AddNewMapChanges(receivedMap def.ElevMap, user int) (def.ElevMap, bool) {
 
 	}
 
-	setMap(currentMap)
+	setLocalMap(currentMap)
 	writeBackup(currentMap)
 	return currentMap, changeMade
 }
 
-func GetEventFromNetwork(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap) {
-	currentMap := GetMap()
+func GetEventFromNetwork(receivedMap ElevMap) (def.NewEvent, ElevMap) {
+	currentMap := GetLocalMap()
 	var fsmEvent def.NewEvent
 	floorWithDoorOpen := -1
 
@@ -111,11 +111,11 @@ func GetEventFromNetwork(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap) {
 				}
 			}
 
-			if receivedMap[e].Dir != currentMap[e].Dir && e != def.MY_ID {
-				currentMap[e].Dir = receivedMap[e].Dir
+			if receivedMap[e].Direction != currentMap[e].Direction && e != def.MY_ID {
+				currentMap[e].Direction = receivedMap[e].Direction
 			}
-			if receivedMap[e].Pos != currentMap[e].Pos && e != def.MY_ID {
-				currentMap[e].Pos = receivedMap[e].Pos
+			if receivedMap[e].Position != currentMap[e].Position && e != def.MY_ID {
+				currentMap[e].Position = receivedMap[e].Position
 			}
 			if currentMap[e].IsAlive != 1 {
 				currentMap[e].IsAlive = 1
@@ -123,47 +123,40 @@ func GetEventFromNetwork(receivedMap def.ElevMap) (def.NewEvent, def.ElevMap) {
 		}
 	}
 
-	setMap(currentMap)
+	setLocalMap(currentMap)
 	writeBackup(currentMap)
 	return fsmEvent, currentMap
 }
 
-func AddNewEvent(newEvent def.NewEvent) (def.ElevMap, bool) {
-	changeMade := false
-	currentMap := GetMap()
-	switch newEvent.EventType {
-
-	case def.FLOOR_ARRIVAL:
-		if currentMap[def.MY_ID].Pos != newEvent.Data.(int) {
-			currentMap[def.MY_ID].Pos = newEvent.Data.(int)
-			changeMade = true
-		}
-
-	case def.BUTTON_PUSH:
-		data := newEvent.Data.([]int)
-		if currentMap[def.MY_ID].Buttons[data[0]][data[1]] != 1 {
-			currentMap[def.MY_ID].Buttons[data[0]][data[1]] = 1
-			changeMade = true
-		}
-	}
-
-	if changeMade {
-		setMap(currentMap)
-		writeBackup(currentMap)
-	}
-
-	return currentMap, changeMade
-
-}
-
-func GetMap() def.ElevMap {
+func GetLocalMap() ElevMap {
 	mapMutex.Lock()
 	currentMap := *localMap
 	mapMutex.Unlock()
 	return currentMap
 }
 
-func setMap(newMap def.ElevMap) {
+type ElevMap [def.ELEVATORS]def.ElevatorInfo
+
+func NewCleanElevMap() *ElevMap {
+
+	newMap := new(ElevMap)
+
+	for e := 0; e < def.ELEVATORS; e++ {
+		newMap[e].ID = e
+		for f := 0; f < def.FLOORS; f++ {
+			for b := 0; b < def.BUTTONS; b++ {
+				newMap[e].Buttons[f][b] = 0
+			}
+		}
+		newMap[e].Direction = def.STILL
+		newMap[e].Position = 0
+		newMap[e].Door = -1
+		newMap[e].IsAlive = 1
+	}
+	return newMap
+}
+
+func setLocalMap(newMap ElevMap) {
 	mapMutex.Lock()
 	*localMap = newMap
 	mapMutex.Unlock()

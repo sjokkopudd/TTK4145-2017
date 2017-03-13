@@ -6,6 +6,18 @@ import (
 	"log"
 )
 
+func GoToNearestFloor() {
+	if readFloor() == -1 {
+		SetMotorDir(-1)
+	}
+	for {
+		if readFloor() != -1 {
+			SetMotorDir(0)
+			break
+		}
+	}
+}
+
 // ----------------------------------------------------------
 // -------------------- Inputs ------------------------------
 // ----------------------------------------------------------
@@ -121,6 +133,27 @@ func SetMotorDir(dir int) {
 	}
 }
 
+func SetDoorLight(val int) {
+
+	if def.USING_SIMULATOR {
+		mutex.Lock()
+		_, err := (*conn).Write([]byte{4, byte(val), byte(0), byte(0)})
+		mutex.Unlock()
+		if err != nil {
+			fmt.Println("Write to server failed:", err.Error())
+			log.Fatal(err)
+		}
+	}
+	if !def.USING_SIMULATOR {
+		if val == 1 {
+			IoSetBit(LIGHT_DOOR_OPEN)
+		} else {
+			IoClearBit(LIGHT_DOOR_OPEN)
+		}
+	}
+
+}
+
 func setFloorIndicator(floor int) {
 	if def.USING_SIMULATOR {
 		mutex.Lock()
@@ -169,27 +202,6 @@ func setOrderLight(f byte, b byte, val byte) {
 			IoSetBit(lightChannelMatrix[f][b])
 		} else {
 			IoClearBit(lightChannelMatrix[f][b])
-		}
-	}
-
-}
-
-func SetDoorLight(val int) {
-
-	if def.USING_SIMULATOR {
-		mutex.Lock()
-		_, err := (*conn).Write([]byte{4, byte(val), byte(0), byte(0)})
-		mutex.Unlock()
-		if err != nil {
-			fmt.Println("Write to server failed:", err.Error())
-			log.Fatal(err)
-		}
-	}
-	if !def.USING_SIMULATOR {
-		if val == 1 {
-			IoSetBit(LIGHT_DOOR_OPEN)
-		} else {
-			IoClearBit(LIGHT_DOOR_OPEN)
 		}
 	}
 

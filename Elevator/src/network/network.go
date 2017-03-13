@@ -2,6 +2,7 @@ package network
 
 import (
 	"def"
+	"elevatorMap"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,13 +11,9 @@ import (
 	"time"
 )
 
-//---------------------------------------------------------------
-//------------------------- INTERFACE ---------------------------
-//---------------------------------------------------------------
+func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgChan_fromNetwork chan def.ChannelMessage, deadElevatorChan chan def.ChannelMessage) {
 
-func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgChan_fromNetwork chan def.ChannelMessage, deadElev chan def.ChannelMessage) {
-
-	fmt.Println("My IP: ", def.IPs[def.MY_ID])
+	fmt.Println("My IP: ", IPs[def.MY_ID])
 	fmt.Println("Trying to setup nettwork connection")
 
 	ackChan := make(chan ackInfo, 100)
@@ -24,19 +21,21 @@ func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgCha
 	contactDeadElevCounter = 0
 
 	go reciveUdpPacket(msgChan_fromNetwork, ackChan)
-	go transmitUdpPacket(msgChan_toNetwork, ackChan, deadElev)
+	go transmitUdpPacket(msgChan_toNetwork, ackChan, deadElevatorChan)
 }
-
-//-------------------------------------------------------------
-//------------------------- MODULE ----------------------------
-//-------------------------------------------------------------
 
 var contactDeadElevCounter int
 
 const (
-	MAP = 1
-	ACK = 2
+	MAP       = 1
+	ACK       = 2
+	IP_ELEV_1 = "129.241.187.140:20517"
+	IP_ELEV_2 = "129.241.187.150:20518"
+	IP_ELEV_3 = "129.241.187.154:20519"
+	PORT      = ":20517"
 )
+
+var IPs = [def.ELEVATORS]string{IP_ELEV_1, IP_ELEV_2, IP_ELEV_3}
 
 type ackInfo struct {
 	IP    string
@@ -44,59 +43,58 @@ type ackInfo struct {
 }
 
 type udpPacket struct {
-	Type        int
-	SenderIP    string
-	Data        interface{}
-	AckReceived bool
+	Type     int
+	SenderIP string
+	Data     interface{}
 }
 
-func constructUdpPacket(m interface{}) udpPacket {
+func constructUdpPacket(localMap interface{}) udpPacket {
 
 	newPacket := udpPacket{
 		Type:     MAP,
-		SenderIP: def.IPs[def.MY_ID],
-		Data:     m,
+		SenderIP: IPs[def.MY_ID],
+		Data:     localMap,
 	}
 
 	return newPacket
 }
 
-func (p udpPacket) sendAsJSON(r string) bool {
+func (packet udpPacket) sendAsJSON(recipientIP string) bool {
 
-	json_buffer, _ := json.Marshal(p)
+	jsonBuffer, _ := json.Marshal(packet)
 
-	destination_addr, err := net.ResolveUDPAddr("udp", r)
+	destinationAddr, err := net.ResolveUDPAddr("udp", recipientIP)
 	if err != nil {
 		return true
 	}
 
-	send_conn, err := net.DialUDP("udp", nil, destination_addr)
+	sendConn, err := net.DialUDP("udp", nil, destinationAddr)
 	if err != nil {
 		return true
 	}
 
-	defer send_conn.Close()
+	defer sendConn.Close()
 
-	send_conn.Write(json_buffer)
+	sendConn.Write(jsonBuffer)
 
 	return false
 }
 
-func (p udpPacket) sendAck() {
+func (packet udpPacket) sendAck() {
 	newPacket := udpPacket{
 		Type:     ACK,
-		SenderIP: def.IPs[def.MY_ID],
+		SenderIP: IPs[def.MY_ID],
 		Data:     true,
 	}
 
-	newPacket.sendAsJSON(p.SenderIP)
+	newPacket.sendAsJSON(packet.SenderIP)
 }
 
-func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan ackInfo, deadElev chan def.ChannelMessage) {
+func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan ackInfo, deadElevatorChan chan def.ChannelMessage) {
 	for {
 		select {
 		case msg := <-msgChan_toNetwork:
-			localMap := msg.Map.(def.ElevMap)
+			localMap := msg.Map.(elevatorMap.ElevMap)
 			for e := 0; e < def.ELEVATORS; e++ {
 				if e != def.MY_ID && (localMap[e].IsAlive == 1 || contactDeadElevCounter > 5) {
 
@@ -108,13 +106,13 @@ func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan a
 				WAIT_FOR_ACK:
 					for a := 0; a < 5; a++ {
 
-						noConnection = packet.sendAsJSON(def.IPs[e])
+						noConnection = packet.sendAsJSON(IPs[e])
 
 						time.Sleep(200 * time.Millisecond)
 
 						select {
 						case ackRecived = <-ackChan:
-							if ackRecived.IP == def.IPs[e] {
+							if ackRecived.IP == IPs[e] {
 								break WAIT_FOR_ACK
 							}
 						default:
@@ -124,11 +122,11 @@ func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan a
 
 					if !ackRecived.Value || noConnection {
 
-						fmt.Println("No acknowledge recieved. ", def.IPs[e], " is dead.")
+						fmt.Println("No acknowledge recieved. ", IPs[e], " is dead.")
 
 						elevatorIsDead := def.NewEvent{def.ELEVATOR_DEAD, e}
 						msg := def.ConstructChannelMessage(nil, elevatorIsDead)
-						deadElev <- msg
+						deadElevatorChan <- msg
 					}
 				}
 			}
@@ -145,7 +143,7 @@ func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan a
 
 func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan ackInfo) {
 
-	localAddress, err := net.ResolveUDPAddr("udp", def.PORT)
+	localAddress, err := net.ResolveUDPAddr("udp", PORT)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -183,14 +181,14 @@ func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan a
 			switch receivedPacket.Type {
 			case MAP:
 
-				var m def.ElevMap
+				var receivedMap elevatorMap.ElevMap
 
-				err = json.Unmarshal(data, &m)
+				err = json.Unmarshal(data, &receivedMap)
 				if err != nil {
 					log.Fatal(err)
 				}
 
-				msg := def.ConstructChannelMessage(m, nil)
+				msg := def.ConstructChannelMessage(receivedMap, nil)
 
 				msgChan_fromNetwork <- msg
 
@@ -198,19 +196,19 @@ func reciveUdpPacket(msgChan_fromNetwork chan def.ChannelMessage, ackChan chan a
 
 			case ACK:
 
-				var v bool
+				var val bool
 
-				err = json.Unmarshal(data, &v)
+				err = json.Unmarshal(data, &val)
 				if err != nil {
 					log.Fatal(err)
 				}
 
-				a := ackInfo{
+				ack := ackInfo{
 					IP:    receivedPacket.SenderIP,
-					Value: v,
+					Value: val,
 				}
 
-				ackChan <- a
+				ackChan <- ack
 
 			}
 		}

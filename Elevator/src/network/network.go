@@ -29,9 +29,9 @@ var contactDeadElevCounter int
 const (
 	MAP       = 1
 	ACK       = 2
-	IP_ELEV_1 = "129.241.187.140:20517"
-	IP_ELEV_2 = "129.241.187.150:20517"
-	IP_ELEV_3 = "129.241.187.154:20517"
+	IP_ELEV_1 = "127.0.0.1:20517"
+	IP_ELEV_2 = "127.0.0.1:20518"
+	IP_ELEV_3 = "127.0.0.1:20519"
 	PORT      = ":20517"
 )
 

@@ -2,6 +2,7 @@ package elevatorMap
 
 import (
 	"def"
+	"fmt"
 	"sync"
 )
 
@@ -55,6 +56,7 @@ func AddNewMapChanges(receivedMap ElevMap, user int) (ElevMap, bool) {
 
 					if receivedMap[e].Buttons[f][b] == 1 && currentMap[e].Buttons[f][b] != 1 {
 						if b != def.PANEL_BUTTON {
+							fmt.Println("hello")
 							currentMap[e].Buttons[f][b] = receivedMap[e].Buttons[f][b]
 							currentMap[def.MY_ID].Buttons[f][b] = receivedMap[e].Buttons[f][b]
 							changeMade = true
@@ -94,6 +96,9 @@ func GetEventFromNetwork(receivedMap ElevMap) (def.NewEvent, ElevMap) {
 	}
 
 	for e := 0; e < def.ELEVATORS; e++ {
+		if currentMap[e].IsAlive != 1 {
+			currentMap[e].IsAlive = 1
+		}
 		if receivedMap[e].IsAlive == 1 {
 			for f := 0; f < def.FLOORS; f++ {
 				for b := 0; b < def.BUTTONS; b++ {
@@ -117,9 +122,7 @@ func GetEventFromNetwork(receivedMap ElevMap) (def.NewEvent, ElevMap) {
 			if receivedMap[e].Position != currentMap[e].Position && e != def.MY_ID {
 				currentMap[e].Position = receivedMap[e].Position
 			}
-			if currentMap[e].IsAlive != 1 {
-				currentMap[e].IsAlive = 1
-			}
+
 		}
 	}
 

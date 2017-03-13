@@ -2,7 +2,7 @@ package elevatorMap
 
 import (
 	"def"
-	"fmt"
+	//"fmt"
 	"sync"
 )
 
@@ -56,7 +56,6 @@ func AddNewMapChanges(receivedMap ElevMap, user int) (ElevMap, bool) {
 
 					if receivedMap[e].Buttons[f][b] == 1 && currentMap[e].Buttons[f][b] != 1 {
 						if b != def.PANEL_BUTTON {
-							fmt.Println("hello")
 							currentMap[e].Buttons[f][b] = receivedMap[e].Buttons[f][b]
 							currentMap[def.MY_ID].Buttons[f][b] = receivedMap[e].Buttons[f][b]
 							changeMade = true
@@ -84,7 +83,7 @@ func AddNewMapChanges(receivedMap ElevMap, user int) (ElevMap, bool) {
 	return currentMap, changeMade
 }
 
-func GetEventFromNetwork(receivedMap ElevMap) (def.NewEvent, ElevMap) {
+func GetEventFromNetwork(receivedMap ElevMap, buttonEventChan chan def.ChannelMessage) (def.NewEvent, ElevMap) {
 	currentMap := GetLocalMap()
 	var fsmEvent def.NewEvent
 	floorWithDoorOpen := -1
@@ -107,6 +106,8 @@ func GetEventFromNetwork(receivedMap ElevMap) (def.NewEvent, ElevMap) {
 						if b != def.PANEL_BUTTON {
 							currentMap[e].Buttons[f][b] = receivedMap[e].Buttons[f][b]
 							fsmEvent = def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
+							msg := def.ConstructChannelMessage(nil, fsmEvent)
+							buttonEventChan <- msg
 						} else {
 							currentMap[e].Buttons[f][b] = receivedMap[e].Buttons[f][b]
 						}

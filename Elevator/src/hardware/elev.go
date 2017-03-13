@@ -70,7 +70,6 @@ func readButton(floor int, button int) bool {
 		(*conn).Read(buffer)
 		mutex.Unlock()
 
-		fmt.Println("readButton buffer: ", buffer)
 		if buffer[1] == 1 {
 			return true
 		} else {

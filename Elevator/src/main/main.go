@@ -42,8 +42,6 @@ func main() {
 
 	transmitFlag := false
 
-	lightFlag := false
-
 	var newMsg def.ChannelMessage
 
 	for {
@@ -57,6 +55,10 @@ func main() {
 
 			buttonPushes, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
 
+			newMsg = def.ConstructChannelMessage(currentMap, nil)
+
+			msgChan_toHardware <- newMsg
+
 			for _, push := range buttonPushes {
 
 				fsmEvent := def.NewEvent{def.BUTTON_PUSH, []int{push[0], push[1]}}
@@ -67,8 +69,6 @@ func main() {
 
 			}
 
-			lightFlag = true
-
 		case msg := <-msgChan_fromFsm:
 			receivedMap := msg.Map.(elevatorMap.ElevMap)
 
@@ -76,7 +76,7 @@ func main() {
 
 			newMsg = def.ConstructChannelMessage(currentMap, nil)
 
-			lightFlag = true
+			msgChan_toHardware <- newMsg
 
 			if changemade {
 				transmitFlag = true
@@ -85,19 +85,15 @@ func main() {
 
 		}
 
-		if lightFlag || transmitFlag {
-			select {
-			case <-transmitTicker.C:
-				if lightFlag {
-					msgChan_toHardware <- newMsg
-					lightFlag = false
+		select {
+		case <-transmitTicker.C:
+			if transmitFlag {
+
+				if newMsg.Map != nil {
+					msgChan_toNetwork <- newMsg
+					transmitFlag = false
 				}
-				if transmitFlag {
-					if newMsg.Map != nil {
-						msgChan_toNetwork <- newMsg
-						transmitFlag = false
-					}
-				}
+
 			}
 
 		}

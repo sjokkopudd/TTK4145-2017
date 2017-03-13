@@ -80,6 +80,8 @@ func Fsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_floor
 			forceOrder(msgChan_fromFsm)
 			idleTimeoutTimer.Reset(IDLE_TIMEOUT * time.Second)
 
+		default:
+
 		}
 
 	}

@@ -1,7 +1,7 @@
 package def
 
 const (
-	ELEVATORS    = 3
+	ELEVATORS    = 2
 	FLOORS       = 4
 	UP_BUTTON    = 0
 	DOWN_BUTTON  = 1

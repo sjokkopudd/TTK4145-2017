@@ -42,16 +42,16 @@ func readBackup() def.ElevMap {
 	newMap := *def.NewCleanElevMap()
 
 	for e := 0; e < def.ELEVATORS; e++ {
-		newMap[e].ID, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)][0])
+		newMap[e].ID, _ = strconv.Atoi(stringMatrix[e*(5+def.FLOORS)][0])
 		for f := 0; f < def.FLOORS; f++ {
 			for b := 0; b < def.BUTTONS; b++ {
-				newMap[e].Buttons[f][b], _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+1+f][b])
+				newMap[e].Buttons[f][b], _ = strconv.Atoi(stringMatrix[e*(5+def.FLOORS)+1+f][b])
 			}
 		}
-		newMap[e].Dir, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+1][0])
-		newMap[e].Pos, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+2][0])
-		newMap[e].Door, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+3][0])
-		newMap[e].IsAlive, _ = strconv.Atoi(stringMatrix[e*(3+def.FLOORS)+def.FLOORS+4][0])
+		newMap[e].Dir, _ = strconv.Atoi(stringMatrix[e*(5+def.FLOORS)+def.FLOORS+1][0])
+		newMap[e].Pos, _ = strconv.Atoi(stringMatrix[e*(5+def.FLOORS)+def.FLOORS+2][0])
+		newMap[e].Door, _ = strconv.Atoi(stringMatrix[e*(5+def.FLOORS)+def.FLOORS+3][0])
+		newMap[e].IsAlive, _ = strconv.Atoi(stringMatrix[e*(5+def.FLOORS)+def.FLOORS+4][0])
 	}
 
 	return newMap

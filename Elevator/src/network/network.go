@@ -24,8 +24,6 @@ func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgCha
 	go transmitUdpPacket(msgChan_toNetwork, ackChan, deadElevatorChan)
 }
 
-var contactDeadElevCounter int
-
 const (
 	MAP       = 1
 	ACK       = 2
@@ -96,15 +94,21 @@ func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan a
 		case msg := <-msgChan_toNetwork:
 			localMap := msg.Map.(elevatorMap.ElevMap)
 			for e := 0; e < def.ELEVATORS; e++ {
-				if e != def.MY_ID && (localMap[e].IsAlive == 1 || contactDeadElevCounter > 5) {
+				if e != def.MY_ID {
 
 					packet := constructUdpPacket(localMap)
 
 					var ackRecived ackInfo
 					var noConnection bool
 
+					if localMap[e].IsAlive {
+						b = 5
+					} else {
+						b = 1
+					}
+
 				WAIT_FOR_ACK:
-					for a := 0; a < 5; a++ {
+					for a := 0; a < b; a++ {
 
 						noConnection = packet.sendAsJSON(IPs[e])
 
@@ -120,7 +124,7 @@ func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan a
 						}
 					}
 
-					if !ackRecived.Value || noConnection {
+					if (!ackRecived.Value || noConnection) && localMap[e].IsAlive == 1 {
 
 						fmt.Println("No acknowledge recieved. ", IPs[e], " is dead.")
 
@@ -130,11 +134,7 @@ func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan a
 					}
 				}
 			}
-			if contactDeadElevCounter > 5 {
-				contactDeadElevCounter = 0
-			} else {
-				contactDeadElevCounter++
-			}
+
 		}
 
 		time.Sleep(2 * time.Millisecond)

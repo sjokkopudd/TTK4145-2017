@@ -38,7 +38,7 @@ func main() {
 
 	time.Sleep(500 * time.Millisecond)
 
-	//transmitTicker := time.NewTicker(100 * time.Millisecond)
+	transmitTicker := time.NewTicker(100 * time.Millisecond)
 
 	transmitFlag := false
 
@@ -55,11 +55,17 @@ func main() {
 		case msg := <-msgChan_fromNetwork:
 			receivedMap := msg.Map.(elevatorMap.ElevMap)
 
-			elevatorMap.GetEventFromNetwork(receivedMap, msgChan_buttonEvent)
+			buttonPushes, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
 
-			/*newMsg = def.ConstructChannelMessage(currentMap, fsmEvent)
+			for _, push := range buttonPushes {
 
-			msgChan_buttonEvent <- newMsg*/
+				fsmEvent := def.NewEvent{def.BUTTON_PUSH, []int{push[0], push[1]}}
+
+				newMsg = def.ConstructChannelMessage(currentMap, fsmEvent)
+
+				msgChan_buttonEvent <- newMsg
+
+			}
 
 			lightFlag = true
 
@@ -79,17 +85,18 @@ func main() {
 
 		}
 
-		if lightFlag || true {
-			//select {
-			//case <-transmitTicker.C:
-			if lightFlag {
-				msgChan_toHardware <- newMsg
-				lightFlag = false
-			}
-			if transmitFlag {
-				if newMsg.Map != nil {
-					msgChan_toNetwork <- newMsg
-					transmitFlag = false
+		if lightFlag || transmitFlag {
+			select {
+			case <-transmitTicker.C:
+				if lightFlag {
+					msgChan_toHardware <- newMsg
+					lightFlag = false
+				}
+				if transmitFlag {
+					if newMsg.Map != nil {
+						msgChan_toNetwork <- newMsg
+						transmitFlag = false
+					}
 				}
 			}
 

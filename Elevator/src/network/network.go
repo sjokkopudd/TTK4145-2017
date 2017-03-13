@@ -18,8 +18,6 @@ func StartNetworkCommunication(msgChan_toNetwork chan def.ChannelMessage, msgCha
 
 	ackChan := make(chan ackInfo, 100)
 
-	contactDeadElevCounter = 0
-
 	go reciveUdpPacket(msgChan_fromNetwork, ackChan)
 	go transmitUdpPacket(msgChan_toNetwork, ackChan, deadElevatorChan)
 }
@@ -100,8 +98,9 @@ func transmitUdpPacket(msgChan_toNetwork chan def.ChannelMessage, ackChan chan a
 
 					var ackRecived ackInfo
 					var noConnection bool
+					var b int
 
-					if localMap[e].IsAlive {
+					if localMap[e].IsAlive == 1 {
 						b = 5
 					} else {
 						b = 1

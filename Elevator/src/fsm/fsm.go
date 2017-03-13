@@ -51,7 +51,9 @@ func Fsm(msgChan_buttonEvent chan def.ChannelMessage, msgChan_fromHardware_floor
 			case def.BUTTON_PUSH:
 
 				button := buttonMsg.Event.(def.NewEvent).Data.([]int)
+
 				onRequestButtonPressed(button[0], button[1], msgChan_fromFsm, doorTimer)
+
 				idleTimeoutTimer.Reset(IDLE_TIMEOUT * time.Second)
 
 			}

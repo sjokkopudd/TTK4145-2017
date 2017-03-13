@@ -28,9 +28,7 @@ func main() {
 
 	elevatorMap.InitMap(backup)
 
-	time.Sleep(500 * time.Millisecond)
-
-	go elevatorMap.InitSoftwareBackup()
+	go elevatorMap.SoftwareBackup()
 
 	go hardware.InitHardware(msgChan_toHardware, msgChan_fromHardware_buttons, msgChan_fromHardware_floors)
 
@@ -44,8 +42,6 @@ func main() {
 
 	transmitFlag := false
 
-	lightFlag := false
-
 	var newMsg def.ChannelMessage
 
 	for {
@@ -55,44 +51,51 @@ func main() {
 			msgChan_buttonEvent <- msg
 
 		case msg := <-msgChan_fromNetwork:
-			receivedMap := msg.Map.(def.ElevMap)
+			receivedMap := msg.Map.(elevatorMap.ElevMap)
 
-			fsmEvent, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
+			buttonPushes, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
 
-			newMsg = def.ConstructChannelMessage(currentMap, fsmEvent)
+			newMsg = def.ConstructChannelMessage(currentMap, nil)
 
-			msgChan_buttonEvent <- newMsg
+			msgChan_toHardware <- newMsg
 
-			lightFlag = true
+			for _, push := range buttonPushes {
+
+				fsmEvent := def.NewEvent{def.BUTTON_PUSH, []int{push[0], push[1]}}
+
+				newMsg = def.ConstructChannelMessage(currentMap, fsmEvent)
+
+				msgChan_buttonEvent <- newMsg
+
+			}
 
 		case msg := <-msgChan_fromFsm:
-			receivedMap := msg.Map.(def.ElevMap)
+			receivedMap := msg.Map.(elevatorMap.ElevMap)
 
 			currentMap, changemade := elevatorMap.AddNewMapChanges(receivedMap, 0)
 
 			newMsg = def.ConstructChannelMessage(currentMap, nil)
 
-			lightFlag = true
+			msgChan_toHardware <- newMsg
 
 			if changemade {
 				transmitFlag = true
 			}
+		default:
+
 		}
 
-		if lightFlag || transmitFlag {
-			select {
-			case <-transmitTicker.C:
-				if lightFlag {
-					msgChan_toHardware <- newMsg
-					lightFlag = false
+		select {
+		case <-transmitTicker.C:
+			if transmitFlag {
+
+				if newMsg.Map != nil {
+					msgChan_toNetwork <- newMsg
+					transmitFlag = false
 				}
-				if transmitFlag {
-					if newMsg.Map != nil {
-						msgChan_toNetwork <- newMsg
-						transmitFlag = false
-					}
-				}
+
 			}
+
 		}
 	}
 }
@@ -116,7 +119,7 @@ func amIBackup() bool {
 	buffer := make([]byte, 16)
 
 	for {
-		listenCon.SetReadDeadline(time.Now().Add(2 * time.Second))
+		listenCon.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
 		n, _, err := listenCon.ReadFromUDP(buffer[:])
 		if n > 0 {
 			json.Unmarshal(buffer[0:n], &msg)

@@ -2,6 +2,7 @@ package hardware
 
 import (
 	"def"
+	"elevatorMap"
 	"errors"
 	"fmt"
 	"log"
@@ -12,10 +13,6 @@ import (
 
 var conn *net.Conn
 var mutex = &sync.Mutex{}
-
-// -----------------------------------------------------------------
-// ----------------------- Interface -------------------------------
-// -----------------------------------------------------------------
 
 func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW_buttons chan def.ChannelMessage, msgChan_fromHW_floors chan def.ChannelMessage) {
 	if def.USING_SIMULATOR {
@@ -50,7 +47,7 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW_buttons c
 
 	if !def.USING_SIMULATOR {
 
-		if IoInit() != true {
+		if InitIO() != true {
 			log.Fatal(errors.New("Unsucsessful init of IO"))
 		}
 
@@ -64,27 +61,11 @@ func InitHardware(msgChan_toHW chan def.ChannelMessage, msgChan_fromHW_buttons c
 	}
 }
 
-func GoToNearestFloor() {
-	if readFloor() == -1 {
-		SetMotorDir(-1)
-	}
-	for {
-		if readFloor() != -1 {
-			SetMotorDir(0)
-			break
-		}
-	}
-}
-
-// -------------------------------------------------------------------------
-// ----------------------------- LOOPS -------------------------------------
-// -------------------------------------------------------------------------
-
 func setLights(msgChan_toHW chan def.ChannelMessage) {
 	for {
 		select {
 		case msg := <-msgChan_toHW:
-			currentMap := msg.Map.(def.ElevMap)
+			currentMap := msg.Map.(elevatorMap.ElevMap)
 			for b := 0; b < def.BUTTONS; b++ {
 				for f := 0; f < def.FLOORS; f++ {
 					lightVal := 1
@@ -105,7 +86,7 @@ func setLights(msgChan_toHW chan def.ChannelMessage) {
 
 				}
 			}
-			setFloorIndicator(currentMap[def.MY_ID].Pos)
+			setFloorIndicator(currentMap[def.MY_ID].Position)
 		}
 		time.Sleep(10 * time.Millisecond)
 	}

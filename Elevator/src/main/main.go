@@ -53,21 +53,13 @@ func main() {
 		case msg := <-msgChan_fromNetwork:
 			receivedMap := msg.Map.(elevatorMap.ElevMap)
 
-			buttonPushes, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
+			fsmEvent, currentMap := elevatorMap.GetEventFromNetwork(receivedMap)
 
-			newMsg = def.ConstructChannelMessage(currentMap, nil)
+			newMsg = def.ConstructChannelMessage(currentMap, fsmEvent)
+
+			msgChan_buttonEvent <- newMsg
 
 			msgChan_toHardware <- newMsg
-
-			for _, push := range buttonPushes {
-
-				fsmEvent := def.NewEvent{def.BUTTON_PUSH, []int{push[0], push[1]}}
-
-				newMsg = def.ConstructChannelMessage(currentMap, fsmEvent)
-
-				msgChan_buttonEvent <- newMsg
-
-			}
 
 		case msg := <-msgChan_fromFsm:
 			receivedMap := msg.Map.(elevatorMap.ElevMap)

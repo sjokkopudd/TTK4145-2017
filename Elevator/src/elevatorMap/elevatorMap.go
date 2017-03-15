@@ -83,10 +83,10 @@ func AddNewMapChanges(receivedMap ElevMap, user int) (ElevMap, bool) {
 	return currentMap, changeMade
 }
 
-func GetEventFromNetwork(receivedMap ElevMap) ([][]int, ElevMap) {
+func GetEventFromNetwork(receivedMap ElevMap) (def.NewEvent, ElevMap) {
 	currentMap := GetLocalMap()
 	floorWithDoorOpen := -1
-	var newButtonPushes [][]int
+	var fsmEvent def.NewEvent
 
 	for e := 0; e < def.ELEVATORS; e++ {
 		if receivedMap[e].Door != -1 {
@@ -105,7 +105,7 @@ func GetEventFromNetwork(receivedMap ElevMap) ([][]int, ElevMap) {
 					if receivedMap[e].Buttons[f][b] == 1 && currentMap[e].Buttons[f][b] != 1 {
 						if b != def.PANEL_BUTTON {
 							currentMap[e].Buttons[f][b] = receivedMap[e].Buttons[f][b]
-							newButtonPushes = append(newButtonPushes, []int{f, b})
+							fsmEvent = def.NewEvent{def.BUTTON_PUSH, []int{f, b}}
 
 						} else {
 							currentMap[e].Buttons[f][b] = receivedMap[e].Buttons[f][b]
@@ -128,7 +128,7 @@ func GetEventFromNetwork(receivedMap ElevMap) ([][]int, ElevMap) {
 
 	setLocalMap(currentMap)
 	writeBackup(currentMap)
-	return newButtonPushes, currentMap
+	return fsmEvent, currentMap
 }
 
 func GetLocalMap() ElevMap {

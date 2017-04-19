@@ -61,9 +61,9 @@ __Task 4__
   
  - Perform the utilization test for task set 2. Is the task set schedulable?
   
- U = 15/50 + 10/30 + 5/20 = 0.8833, 3*(2^(1/3)-1) = 0.7798
- 
- Since 0.8833 > 0.7798, the utilization test fails, and we might not be able to schedule the task set. 
+   U = 15/50 + 10/30 + 5/20 = 0.8833, 3*(2^(1/3)-1) = 0.7798
+
+   Since 0.8833 > 0.7798, the utilization test fails, and we might not be able to schedule the task set. 
  
 - Perform response-time analysis for task set 2. Is the task set schedulable? If you got different results than in 2), explain why.
 

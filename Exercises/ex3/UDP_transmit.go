@@ -9,7 +9,7 @@ import (
 
 func main() {
 	//send
-	destination_addr, err := net.ResolveUDPAddr("udp", "129.241.187.255:20005")
+	destination_addr, err := net.ResolveUDPAddr("udp", "129.241.187.38:20005")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func main() {
 	defer recive_conn.Close()
 
 	for {
-		msg := "Ferdig med heisen enda?"
+		msg := "Test studass"
 		fmt.Println("Sending: ", msg, "\n")
 		send_conn.Write([]byte(msg))
 

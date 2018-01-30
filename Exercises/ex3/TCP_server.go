@@ -10,7 +10,7 @@ import (
 func main() {
 
 	//
-	destination_addr, err := net.ResolveTCPAddr("tcp", "129.241.187.43:33546")
+	destination_addr, err := net.ResolveTCPAddr("tcp", "129.241.187.38:33546")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,10 +20,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	connect_order := "Connect to: 129.241.187.143:20005\x00"
+	connect_order := "Connect to: 10.24.38.226:20005\x00"
 
 	//
-	local_addr, err := net.ResolveTCPAddr("tcp", "129.241.187.143:20005")
+	local_addr, err := net.ResolveTCPAddr("tcp", "10.24.38.226:20005")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func main() {
 
 	for {
 
-		msg := "This is a message \x00"
+		msg := "Test studass\x00"
 		fmt.Println("Sending message: ", msg, "\n")
 		client_conn.Write([]byte(msg))
 

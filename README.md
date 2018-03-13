@@ -1,6 +1,6 @@
 # TTK4145
 Real Time Programming.
 
-Merge taskhandler + map
+Keep in mind that the elevator project specs changed in 2018. 
 
-updatemap -> taskhandler
+This project does **not** use the (awesome) handed out packages: https://github.com/TTK4145/driver-go and https://github.com/TTK4145/Network-go. Which I regret. 
